@@ -1,15 +1,16 @@
 FROM php:8.2-fpm
 
-# Installer extensions PHP
-RUN apt-get update && apt-get install -y \
-    git unzip libicu-dev libxml2-dev \
-    && docker-php-ext-install intl pdo pdo_mysql
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git unzip libicu-dev libzip-dev \
+  && docker-php-ext-install -j$(nproc) pdo_mysql intl zip \
+  && rm -rf /var/lib/apt/lists/*
 
-# Installer Composer depuis l'image officielle
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
 WORKDIR /var/www/html
+
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --no-progress --no-scripts
 
 COPY . .
 
-RUN composer install
+EXPOSE 9000
