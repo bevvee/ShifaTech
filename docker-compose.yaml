@@ -10,6 +10,7 @@ services:
       - rdv-service
       - patient-service
       - infirmier-service
+      - doctor-service
     ports:
       - "8082:80"
     volumes:
@@ -21,16 +22,10 @@ services:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
     restart: always
-    depends_on:
-      - auth-db
-      - rdv-db
-      - patient-db
-      - infirmier-db
     environment:
-      PMA_HOSTS: auth-db,rdv-db,patient-db,infirmier-db
+      PMA_HOSTS: auth-db,rdv-db,patient-db,infirmier-db,doctor-db
       PMA_USER: root
       PMA_PASSWORD: root
-      PMA_ARBITRARY: 1
     ports:
       - "8083:80"
     networks:
@@ -51,9 +46,7 @@ services:
       - shifatech-net
 
   auth-service:
-    build:
-      context: ./Backend/auth-service
-      dockerfile: Dockerfile
+    build: ./Backend/auth-service
     container_name: auth-service
     restart: always
     depends_on:
@@ -62,11 +55,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://auth-db:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: authuser
       SPRING_DATASOURCE_PASSWORD: authpass
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
       SERVER_PORT: 8080
-    ports:
-      - "8081:8080"
+    expose:
+      - "8080"
     networks:
       - shifatech-net
 
@@ -85,18 +76,13 @@ services:
       - shifatech-net
 
   rdv-service:
-    build:
-      context: ./Backend/rdv-service
-      dockerfile: Dockerfile
+    build: ./Backend/rdv-service
     container_name: rdv-service
     restart: unless-stopped
-    working_dir: /var/www/html
-    volumes:
-      - ./Backend/rdv-service:/var/www/html
     depends_on:
       - rdv-db
     environment:
-      DATABASE_URL: "mysql://rdvuser:rdvpass@rdv-db:3306/rdvdb?serverVersion=8.3&charset=utf8mb4"
+      DATABASE_URL: mysql://rdvuser:rdvpass@rdv-db:3306/rdvdb
     expose:
       - "9000"
     networks:
@@ -115,28 +101,20 @@ services:
       - patient_mysql_data:/var/lib/mysql
     networks:
       - shifatech-net
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
 
   patient-service:
-    build:
-      context: ./Backend/patient-service
-      dockerfile: Dockerfile
+    build: ./Backend/patient-service
     container_name: patient-service
     restart: always
-    ports:
-      - "8080:8080"
     depends_on:
-      patient-db:
-        condition: service_healthy
+      - patient-db
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://patient-db:3306/patientdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: user123
-      JWT_SECRET: shifatech-secret-key-for-jwt-token-generation-and-validation-minimum-256-bits
       AUTH_SERVICE_URL: http://auth-service:8080
+    expose:
+      - "8080"
     networks:
       - shifatech-net
 
@@ -155,20 +133,45 @@ services:
       - shifatech-net
 
   infirmier-service:
-    build:
-      context: ./Backend/infirmier-service
-      dockerfile: Dockerfile
+    build: ./Backend/infirmier-service
     container_name: infirmier-service
     restart: unless-stopped
-    working_dir: /var/www/html
-    volumes:
-      - ./Backend/infirmier-service:/var/www/html
     depends_on:
       - infirmier-db
     environment:
-      DATABASE_URL: "mysql://infirmieruser:infirmierpass@infirmier-db:3306/infirmierdb?serverVersion=8.3&charset=utf8mb4"
+      DATABASE_URL: mysql://infirmieruser:infirmierpass@infirmier-db:3306/infirmierdb
     expose:
       - "9000"
+    networks:
+      - shifatech-net
+
+  doctor-db:
+    image: mysql:8.3
+    container_name: doctor-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: doctordb
+      MYSQL_USER: doctoruser
+      MYSQL_PASSWORD: doctorpass
+    volumes:
+      - doctor_mysql_data:/var/lib/mysql
+    networks:
+      - shifatech-net
+
+  doctor-service:
+    build: ./Backend/doctor-service
+    container_name: doctor-service
+    restart: always
+    depends_on:
+      - doctor-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://doctor-db:3306/doctordb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: doctoruser
+      SPRING_DATASOURCE_PASSWORD: doctorpass
+      SERVER_PORT: 8080
+    expose:
+      - "8080"
     networks:
       - shifatech-net
 
@@ -180,3 +183,4 @@ volumes:
   rdv_mysql_data:
   patient_mysql_data:
   infirmier_mysql_data:
+  doctor_mysql_data:

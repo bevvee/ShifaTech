@@ -5,7 +5,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="34393847-a048-48eb-ac66-82b1ae67d369" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Backend/patient-service/docker-compose.yml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/.dockerignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/Dockerfile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/DoctorServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/controller/DoctorController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/entity/Doctor.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/repository/DoctorRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/service/DoctorService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/src/main/resources/application.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/doctor-service/src/test/java/com/ShifaTech/DoctorService/DoctorServiceApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,21 +67,20 @@
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/dell/Desktop/shifaTech",
+    "last_opened_file_path": "C:/Users/dell/Desktop/ShifaTech/Backend/doctor-service",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="SharedIndexes">
-    <attachedChunks>
-      <set>
-        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.28238.7" />
-      </set>
-    </attachedChunks>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\dell\Desktop\ShifaTech\Backend\doctor-service" />
+    </key>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
