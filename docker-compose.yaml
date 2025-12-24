@@ -1,15 +1,15 @@
 
 services:
   nginx:
-    image: nginx:1.27-alpine
+    image: openresty/openresty:alpine
     container_name: nginx-gateway
     restart: always
     depends_on:
       - auth-service
-      - rdv-service
       - patient-service
-      - infirmier-service
       - doctor-service
+      - infirmier-service
+      - rdv-service
     ports:
       - "8082:80"
     volumes:
