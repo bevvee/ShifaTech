@@ -50,7 +50,7 @@ services:
 
   auth-service:
     build:
-      context: ./auth-service
+      context: ./Backend/auth-service
       dockerfile: Dockerfile
     container_name: auth-service
     restart: always
@@ -86,7 +86,7 @@ services:
 
   rdv-service:
     build:
-      context: ./rdv-service
+      context: ./Backend/rdv-service
       dockerfile: Dockerfile
     container_name: rdv-service
     restart: unless-stopped
