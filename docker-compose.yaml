@@ -92,7 +92,7 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     volumes:
-      - ./rdv-service:/var/www/html
+      - ./Backend/rdv-service:/var/www/html
     depends_on:
       - rdv-db
     environment:
