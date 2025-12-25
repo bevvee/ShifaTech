@@ -15,4 +15,12 @@ final class RendezVousController extends AbstractController
             'controller_name' => 'Api/RendezVousController',
         ]);
     }
+
+    #[Route('/health', name: 'health', methods: ['GET'])]
+    public function healthCheck(): Response
+    {
+        return new Response(
+            'rdv Service is running!',
+        );
+    }
 }
