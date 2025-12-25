@@ -11,13 +11,13 @@ RUN npm install
 COPY . .
 
 # Build the Angular app
-RUN npm run build -- --output-path=dist --configuration=production
+RUN npm run build -- --output-path=dist/shifatech-frontend --configuration=production
 
 # Stage 2: Serve with NGINX
 FROM nginx:alpine
 
 # Copy built app to NGINX html folder
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/dist/shifatech-frontend /usr/share/nginx/html
 
 # Copy custom NGINX config (optional)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
