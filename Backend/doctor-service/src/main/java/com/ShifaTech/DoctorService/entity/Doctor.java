@@ -16,7 +16,7 @@ public class Doctor {
     // Constructeurs
     public Doctor() {}
 
-    public Doctor(Long id, String name) {
+    public Doctor(Long id, String name) {git
         this.id = id;
         this.name = name;
     }
