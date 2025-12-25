@@ -41,4 +41,9 @@ public class AuthController {
         authService.logout(request);
         return ResponseEntity.ok(new ApiResponse(false, "Logged out successfully"));
     }
+    // ✅ Health check route
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("Auth Service is running");
+    }
 }
