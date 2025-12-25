@@ -71,4 +71,12 @@ public class DoctorController {
         long count = doctorService.countDoctors();
         return ResponseEntity.ok(count);
     }
+    /**
+     * Health check
+     * GET /api/doctors/health
+     */
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("Doctor Service is running!");
+    }
 }
