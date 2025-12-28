@@ -6,12 +6,14 @@ import com.shifatech.authservice.repository.*;
 import com.shifatech.authservice.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import java.sql.SQLException;
 import java.time.Instant;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -22,81 +24,117 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final RevokedTokenRepository revokedTokenRepository;
 
+    // Register with friendly messages
+    public ApiResponse register(RegisterRequest request) {
+        if (!request.getPassword().equals(request.getPasswordConfirmation())) {
+            return new ApiResponse(true, "Password and password confirmation do not match");
+        }
 
-    public void register(RegisterRequest request) {
+        try {
+            User user = new User();
+            user.setNom(request.getNom());
+            user.setPrenom(request.getPrenom());
+            user.setCin(request.getCin());
+            user.setEmail(request.getEmail());
+            user.setMotDePasse(passwordEncoder.encode(request.getPassword()));
+            user.setRole(request.getRole());
+            user.setSexe(request.getSexe());
+            user.setDateNaissance(request.getDateNaissance());
+            user.setTelephone(request.getTelephone());
+            user.setAdresse(request.getAdresse());
+            user.setStatut(false);
 
-        User user = new User();
+            userRepository.save(user);
+            return new ApiResponse(false, "User registered successfully");
 
-        user.setNom(request.getNom());
-        user.setPrenom(request.getPrenom());
-        user.setCin(request.getCin());
-        user.setEmail(request.getEmail());
-
-        user.setMotDePasse(
-                passwordEncoder.encode(request.getPassword())
-        );
-
-        user.setRole(request.getRole());
-        user.setSexe(request.getSexe());
-        user.setDateNaissance(request.getDateNaissance());
-        user.setTelephone(request.getTelephone());
-        user.setAdresse(request.getAdresse());
-
-        user.setStatut(false); // default
-
-        userRepository.save(user);
+        } catch (DataIntegrityViolationException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof ConstraintViolationException cve) {
+                SQLException sqlEx = cve.getSQLException();
+                if (sqlEx.getErrorCode() == 1062) {
+                    String msg = sqlEx.getMessage();
+                    if (msg.contains(request.getEmail())) return new ApiResponse(true, "Email is already used");
+                    if (msg.contains(request.getCin())) return new ApiResponse(true, "CIN is already used");
+                    if (msg.contains(request.getTelephone())) return new ApiResponse(true, "Telephone is already used");
+                    return new ApiResponse(true, "Duplicate value found");
+                }
+            }
+            return new ApiResponse(true, "Data integrity violation");
+        } catch (Exception ex) {
+            return new ApiResponse(true, "Something went wrong");
+        }
     }
 
-
+    // Login with friendly messages
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        try {
+            User user = userRepository.findByEmail(request.getEmail()).orElse(null);
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getMotDePasse())) {
-            throw new RuntimeException("Invalid credentials");
+            if (user == null || !passwordEncoder.matches(request.getPassword(), user.getMotDePasse())) {
+                return new LoginResponse(true, "Invalid email or password", null);
+            }
+
+            String token = jwtUtil.generateToken(user);
+            return new LoginResponse(false, "Login successful", token);
+
+        } catch (Exception ex) {
+            return new LoginResponse(true, "Something went wrong", null);
         }
-
-        String token = jwtUtil.generateToken(user);
-
-        UserDto userDto = mapToDto(user);
-        return new LoginResponse(token, userDto);
     }
 
-    public UserProfileResponse getProfile(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Missing or invalid Authorization header");
-        }
+    // Get user profile
+    public Object getProfile() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                return new ApiResponse(true, "User not authenticated");
+            }
 
-        String token = authHeader.substring(7); // remove "Bearer "
-        Long userId = Long.parseLong(jwtUtil.extractClaims(token).getSubject());
+            Long userId = Long.parseLong(auth.getName());
+            User user = userRepository.findById(Math.toIntExact(userId)).orElse(null);
 
-        User user = userRepository.findById(Math.toIntExact(userId))
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            if (user == null) {
+                return new ApiResponse(true, "User not found");
+            }
 
-        return new UserProfileResponse(
-                user.getIdUser(),
-                user.getNom(),
-                user.getPrenom(),
-                user.getEmail(),
-                user.getRole().name()
-        );
-    }
-    public void logout(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            revokedTokenRepository.save(
-                    RevokedToken.builder()
-                            .token(token)
-                            .revokedAt(Instant.now())
-                            .build()
+            return new UserProfileResponse(
+                    user.getIdUser(),
+                    user.getNom(),
+                    user.getPrenom(),
+                    user.getEmail(),
+                    user.getRole().name()
             );
+
+        } catch (Exception ex) {
+            return new ApiResponse(true, "Something went wrong");
+        }
+    }
+    // Logout user
+    public ApiResponse logout(HttpServletRequest request) {
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                revokedTokenRepository.save(RevokedToken.builder()
+                        .token(token)
+                        .revokedAt(Instant.now())
+                        .build());
+            }
+            return new ApiResponse(false, "Logged out successfully");
+        } catch (Exception ex) {
+            return new ApiResponse(true, "Something went wrong during logout");
         }
     }
 
-    public boolean isTokenValid(String token) {
-        return !revokedTokenRepository.existsByToken(token);
+    // Validate token
+    public ApiResponse isTokenValid(String token) {
+        try {
+            boolean valid = !revokedTokenRepository.existsByToken(token);
+            return valid ? new ApiResponse(false, "Token is valid") :
+                    new ApiResponse(true, "Token is revoked or invalid");
+        } catch (Exception ex) {
+            return new ApiResponse(true, "Could not validate token");
+        }
     }
 
     private UserDto mapToDto(User user) {

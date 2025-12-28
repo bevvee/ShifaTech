@@ -1,8 +1,10 @@
 package com.shifatech.authservice.service;
 
+import com.shifatech.authservice.Enum.RoleEnum;
 import com.shifatech.authservice.repository.RevokedTokenRepository;
 import com.shifatech.authservice.util.JwtUtil;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,28 +35,52 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            writeError(response, "User not authenticated");
+            return;
+        }
 
-            // Check if token is revoked
-            if (revokedTokenRepository.existsByToken(token)) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token is invalid or revoked");
-                return;
-            }
+        String token = authHeader.substring(7);
 
+        if (revokedTokenRepository.existsByToken(token)) {
+            writeError(response, "Token revoked");
+            return;
+        }
+
+        try {
             Claims claims = jwtUtil.extractClaims(token);
-            String role = claims.get("role", String.class);
-
-            UsernamePasswordAuthenticationToken authentication =
+            String roleStr = claims.get("role", String.class);
+            UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(
                             claims.getSubject(),
                             null,
-                            List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                            List.of(new SimpleGrantedAuthority("ROLE_" + roleStr))
                     );
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+        } catch (ExpiredJwtException e) {
+            writeError(response, "Token expired");
+            return;
+        } catch (Exception e) {
+            writeError(response, "Invalid token");
+            return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void writeError(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\":true,\"message\":\"" + message + "\"}");
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.equals("/api/auth/login") ||
+                path.equals("/api/auth/register") ||
+                path.equals("/api/auth/health");
     }
 }

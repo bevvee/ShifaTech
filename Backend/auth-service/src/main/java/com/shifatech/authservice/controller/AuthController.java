@@ -11,37 +11,46 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
 
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
-
+    // Register
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse> register(@RequestBody RegisterRequest request) {
-        authService.register(request);
-        return ResponseEntity.ok(
-                new ApiResponse(false, "Inscription réussie")
-        );
+    public ResponseEntity<ApiResponse> register(@RequestBody @Valid RegisterRequest request) {
+        ApiResponse response = authService.register(request);
+        HttpStatus status = response.isError() ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
+        return new ResponseEntity<>(response, status);
     }
 
+    // Login
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
-        return authService.login(request);
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+        LoginResponse response = authService.login(request);
+        HttpStatus status = response.isError() ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
+        return new ResponseEntity<>(response, status);
     }
+
+    // Profile
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponse> getProfile(HttpServletRequest request) {
-        UserProfileResponse profile = authService.getProfile(request);
-        return ResponseEntity.ok(profile);
+    public ResponseEntity<?> getProfile() {
+        Object result = authService.getProfile();
+        if (result instanceof ApiResponse api) {
+            HttpStatus status = api.getMessage().equals("User not authenticated") ?
+                    HttpStatus.UNAUTHORIZED : HttpStatus.BAD_REQUEST;
+            return new ResponseEntity<>(api, status);
+        }
+        return ResponseEntity.ok(result);
     }
+    // Logout
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse> logout(HttpServletRequest request) {
         authService.logout(request);
         return ResponseEntity.ok(new ApiResponse(false, "Logged out successfully"));
     }
-    // ✅ Health check route
+
+    // Health check
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("Auth Service is running");

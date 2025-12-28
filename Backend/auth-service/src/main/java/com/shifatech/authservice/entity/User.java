@@ -2,17 +2,25 @@ package com.shifatech.authservice.entity;
 
 import com.shifatech.authservice.Enum.RoleEnum;
 import com.shifatech.authservice.Enum.SexeEnum;
-import com.shifatech.authservice.dto.UserDto;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "cin"),
+                @UniqueConstraint(columnNames = "email"),
+                @UniqueConstraint(columnNames = "telephone")
+        }
+)
 public class User {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,10 +30,10 @@ public class User {
     private String nom;
     private String prenom;
 
-    @Column(unique = true)
+    @Column(nullable = false)
     private String cin;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String email;
 
     @Column(name = "mot_de_passe")
@@ -42,7 +50,9 @@ public class User {
     @Column(name = "date_naissance")
     private LocalDate dateNaissance;
 
+    @Column(nullable = false)
     private String telephone;
+
     private String adresse;
 
     private LocalDateTime createdAt = LocalDateTime.now();
