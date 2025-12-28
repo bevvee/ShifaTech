@@ -8,6 +8,7 @@ use App\Enum\StatutRendezVous;
 use App\Repository\DocteurRepository;
 use App\Repository\PatientRepository;
 use App\Repository\RendezVousRepository;
+use Symfony\Component\HttpFoundation\Response;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +19,16 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class RendezVousController extends AbstractController
 {
+    #[Route('/health', name: 'inf_health', methods: ['GET'])]
+    public function healthCheck(): Response
+    {
+        return new Response('infi Service is UP');
+    }
+
+
+
+
+
     #[Route('/api/{role}/rdv', name: 'api_list_rdv', methods: ['GET'])]
     public function list(RendezVousRepository          $rendezVousRepository,
                          string                        $role): JsonResponse
