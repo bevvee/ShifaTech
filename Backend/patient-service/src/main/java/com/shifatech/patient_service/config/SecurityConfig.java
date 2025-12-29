@@ -33,13 +33,22 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // Désactiver complètement la sécurité pour tous les endpoints en mode développement
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // Ajouter le filtre JWT seulement si activé
+        // Configuration des autorisations
         if (jwtEnabled) {
+            http.authorizeHttpRequests(auth -> auth
+                // Permettre l'accès aux endpoints internes sans authentification (pour les appels inter-services)
+                .requestMatchers("/api/patient/internal/**").permitAll()
+                // Permettre l'accès au health check
+                .requestMatchers("/api/patient/health").permitAll()
+                // Tous les autres endpoints nécessitent une authentification
+                .anyRequest().authenticated()
+            );
             http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        } else {
+            // Mode développement : permettre l'accès à tous les endpoints sans authentification
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         }
 
         return http.build();

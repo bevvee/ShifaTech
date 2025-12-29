@@ -8,6 +8,8 @@ Le micro-service Patient est un service autonome, dédié exclusivement aux fonc
 
 ### Fonctionnalités
 
+- ✅ CRUD complet pour la gestion des patients (création, lecture, mise à jour, suppression)
+- ✅ Endpoints internes pour permettre aux autres services de consommer les APIs
 - ✅ Gestion du profil patient (consultation et mise à jour des informations personnelles)
 - ✅ Consultation de sa fiche patient (affiche)
 - ✅ Consultation de ses ordonnances
@@ -128,6 +130,22 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 ### Health Check
 - `GET /api/patient/health` - Vérifier l'état du service (sans authentification)
 
+### CRUD Patients
+- `POST /api/patient/patients` - Créer un nouveau patient
+- `GET /api/patient/patients` - Lister tous les patients
+- `GET /api/patient/patients/{id}` - Obtenir un patient par son ID
+- `PUT /api/patient/patients/{id}` - Mettre à jour un patient
+- `DELETE /api/patient/patients/{id}` - Supprimer un patient
+
+### Endpoints Internes (pour les autres services)
+Ces endpoints sont accessibles sans authentification pour permettre la communication inter-services :
+- `POST /api/patient/internal/patients` - Créer un patient (appel interne)
+- `GET /api/patient/internal/patients` - Lister tous les patients (appel interne)
+- `GET /api/patient/internal/patients/{id}` - Obtenir un patient par ID (appel interne)
+- `GET /api/patient/internal/patients/user/{idUser}` - Obtenir un patient par ID utilisateur (appel interne)
+- `PUT /api/patient/internal/patients/{id}` - Mettre à jour un patient (appel interne)
+- `DELETE /api/patient/internal/patients/{id}` - Supprimer un patient (appel interne)
+
 ### Profil Patient
 - `GET /api/patient/profile/{idUser}` - Consulter son profil
 - `PUT /api/patient/profile/{idUser}` - Mettre à jour son profil (poids, taille, téléphone, adresse)
@@ -174,6 +192,25 @@ security.jwt.enabled=${JWT_ENABLED:false}
 
 ```
 Authorization: Bearer <votre_token_jwt>
+```
+
+### Endpoints Internes
+
+Les endpoints sous `/api/patient/internal/**` sont accessibles **sans authentification** pour permettre aux autres services de consommer les APIs patient. Ces endpoints sont optimisés pour les communications inter-services :
+
+- **Accès public** : Pas besoin de token JWT
+- **Préfixe** : Tous les endpoints internes commencent par `/api/patient/internal`
+- **Utilisation** : Appels depuis d'autres micro-services (doctor-service, infirmier-service, etc.)
+
+Exemple d'utilisation depuis un autre service :
+```bash
+# Obtenir un patient par ID
+curl http://patient-service:8080/api/patient/internal/patients/1
+
+# Créer un patient
+curl -X POST http://patient-service:8080/api/patient/internal/patients \
+  -H "Content-Type: application/json" \
+  -d '{"idUser": 1, "numDossier": "DOS-001", "poids": 70.5, "taille": 175.0}'
 ```
 
 ## 🗄️ Base de données
