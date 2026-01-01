@@ -2,56 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>ShifatechFrontend</title>
+  <title>Web</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-  <!-- App Loader Overlay: removed after Angular bootstrap -->
-  <div id="app-loader" class="loader-overlay" aria-hidden="true">
-    <div class="loader-brand" aria-label="ShifaTech">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="280" height="280" class="loader-svg">
-        <style>
-          .loader-overlay{ position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background:#fff; z-index: 9999; }
-          .loader-brand{ display:flex; align-items:center; justify-content:center; padding:16px; }
-          .loader-svg{ width: clamp(160px, 28vw, 280px); height: auto; }
-          @media (max-width: 420px){ .loader-brand{ padding:8px; } }
-          @media (prefers-reduced-motion: reduce){
-            .ring, .letterStroke, .letterFill{ animation: none !important; }
-          }
-          @keyframes fillIn { to { fill-opacity: 1; } }
-          @keyframes strokeOut { to { stroke-opacity: 0; } }
-          .ring{ fill:none; stroke: var(--blue); stroke-width:16; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray: var(--dash); stroke-dashoffset: var(--dash); animation: draw 1.4s ease-out forwards; }
-          .letterStroke{ fill:none; stroke-width:8; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray: var(--dash); stroke-dashoffset: var(--dash); stroke-opacity:1; animation: draw 1.4s ease-out forwards, strokeOut .35s ease forwards; }
-          .letterFill{ stroke:none; fill-opacity:0; animation: fillIn .55s ease forwards; }
-          .S-stroke { animation-delay: .35s, 2.25s; }
-          .S-fill { animation-delay: 1.75s; }
-          .F-stroke { animation-delay: .70s, 2.60s; }
-          .F-fill { animation-delay: 2.10s; }
-        </style>
-          <body class="loading">
-        <defs>
-          <path id="SPath" d="M212.057983,152.740173 C227.718628,153.564133 242.360077,156.006546 254.126404,166.897232 C261.666412,173.876144 265.523041,182.743729 267.252167,192.667297 C267.905365,196.416031 266.941010,198.883682 262.364349,198.378479 C260.224396,198.142273 258.014160,198.142975 255.873886,198.380157 C247.471725,199.311218 241.495422,198.213425 237.612350,188.494995 C233.321075,177.754852 220.931381,175.414856 208.171066,176.707916 C204.720505,177.057587 201.294510,177.896301 198.087189,179.408600 C190.919754,182.788132 186.958832,188.677734 186.616119,196.302780 C186.296143,203.422104 189.864426,209.062744 196.156128,212.728058 C204.111160,217.362381 212.702240,220.540833 221.293381,223.731094 C231.297134,227.445938 241.062057,231.616104 250.065964,237.496017 C274.261475,253.296616 274.544617,287.710266 259.323761,304.275482 C249.935196,314.493286 237.982971,319.313751 224.478699,320.770935 C207.653229,322.586456 191.508820,320.490936 177.020294,311.133698 C164.935806,303.329102 158.417480,291.952820 157.054230,277.611359 C156.736649,274.270447 157.884048,272.593323 161.452896,272.661194 C167.282974,272.772034 173.117554,272.734467 178.948822,272.655457 C181.543503,272.620300 182.712753,273.707764 183.400726,276.267639 C187.165314,290.275208 195.818802,297.058533 210.265274,297.730652 C218.168884,298.098358 225.907654,297.796478 233.030060,293.704376 C246.413345,286.015167 247.640930,269.050934 235.464493,259.517181 C229.19075,254.605057 221.770172,252.01503 214.465225,249.216156 C204.059784,245.229309 193.319733,242.143448 183.33844,237.020233 C167.705582,228.996201 159.739456,216.400101 160.284302,198.793457 C160.86937,179.886307 168.721542,165.523697 186.784286,157.794632 C194.722397,154.397919 203.100769,153.350739 212.057983,152.740173 z"/>
-          <path id="FPath" d="M314.350586,296.000061 C314.347626,317.991638 314.351379,339.483154 314.337158,360.974701 C314.333008,367.262878 314.156769,367.414551 307.865845,367.402649 C302.701233,367.392853 297.532074,367.24585 292.373505,367.417572 C288.446259,367.548309 286.919922,365.6073 286.884064,362.014679 C286.835785,357.183655 286.814606,352.352112 286.81781,347.520813 C286.835083,321.697693 286.781342,295.873962 286.962372,270.051941 C286.995728,265.290863 286.294617,262.246063 280.526154,262.961365 C277.992767,263.275513 276.203033,262.007965 275.569244,259.144409 C274.266724,253.25946 271.932281,247.740326 268.888306,242.532379 C266.881226,239.098465 268.056854,237.585083 271.825378,237.605133 C272.158569,237.606903 272.491852,237.607269 272.824951,237.600571 C283.098724,237.394073 282.737183,237.359131 283.698883,227.359863 C286.238892,200.949677 298.178223,180.640778 322.873505,169.054077 C334.256104,163.713531 346.323669,160.602539 358.71228,158.755234 C364.622681,157.873917 365.326111,158.634644 365.340973,164.671265 C365.37796,179.685501 362.837524,194.216492 355.786682,207.565689 C347.092316,224.02652 333.922089,233.595398 313.922455,232.525345 C313.041138,226.154678 315.551636,220.527008 317.537933,214.830566 C319.50589,209.186768 323.376709,204.555908 326.763794,198.627441 C323.29834,199.886551 321.572906,201.909775 319.918488,203.859802 C312.576538,212.513412 308.901581,222.722946 307.493011,233.855865 C306.993408,237.80455 309.698273,237.625305 312.292206,237.622437 C326.28656,237.606934 340.283722,237.749359 354.273682,237.494904 C358.77774,237.412994 360.743408,238.656647 360.404694,243.394211 C360.084747,247.86969 360.112885,252.39949 360.392151,256.880188 C360.680206,261.502869 358.652283,263.146454 354.252472,263.105286 C343.091309,263.000854 331.922516,263.300323 320.76889,262.995087 C315.758759,262.858002 314.012939,264.401093 314.242432,269.516113 C314.630341,278.161652 314.349884,286.837158 314.350586,296.000061 z"/>
-          <clipPath id="clipS"><use href="#SPath"/></clipPath>
-          <clipPath id="clipF"><use href="#FPath"/></clipPath>
-        </defs>
-        <use href="#SPath" class="letterStroke S-stroke" clip-path="url(#clipS)" style="stroke:var(--blue); --dash:2400;" />
-                    .loader-svg{ width: clamp(120px, 22vw, 220px); height: auto; }
-                    .loader-overlay{ overflow: hidden; }
-                    body.loading{ overflow: hidden; }
-        <use href="#FPath" class="letterStroke F-stroke" clip-path="url(#clipF)" style="stroke:var(--green); --dash:2600;" />
-        <use href="#FPath" class="letterFill F-fill" style="fill:var(--green);" />
-      </svg>
-    </div>
-  </div>
   <app-root></app-root>
-  <style>
-    .loader-overlay{ position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background:#fff; z-index: 9999; }
-    .loader-brand{ display:flex; align-items:center; justify-content:center; }
-  </style>
 </body>
 </html>

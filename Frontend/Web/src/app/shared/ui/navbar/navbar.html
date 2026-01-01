@@ -1,0 +1,46 @@
+<div class="h-full px-6 flex items-center justify-between">
+  <!-- Center: search -->
+  <div class="hidden lg:flex items-center w-105">
+    <div class="relative w-full">
+      <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+      <input
+        type="text"
+        placeholder="Rechercher..."
+        class="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 bg-gray-50
+               focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+      />
+    </div>
+  </div>
+
+  <!-- Right: actions -->
+  <div class="flex items-center gap-2">
+
+    <!-- Theme (placeholder) -->
+    <button class="h-10 w-10 rounded-xl hover:bg-gray-100 flex items-center justify-center">
+      <span class="material-icons text-gray-600">dark_mode</span>
+    </button>
+
+    <!-- Language -->
+    <button class="h-10 px-3 rounded-xl hover:bg-gray-100 flex items-center gap-2">
+      <span class="material-icons text-gray-600 text-base">language</span>
+      <span class="text-sm text-gray-700">FR</span>
+    </button>
+
+    <!-- Notifications -->
+    <button class="relative h-10 w-10 rounded-xl hover:bg-gray-100 flex items-center justify-center">
+      <span class="material-icons text-gray-600">notifications</span>
+      <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500"></span>
+    </button>
+
+
+    <!-- Profile -->
+    <button class="flex items-center gap-3 pl-2 pr-3 py-2 rounded-xl hover:bg-gray-100">
+      <div class="h-8 w-8 rounded-full bg-gray-200"></div>
+      <div class="hidden md:block text-left">
+        <div class="text-sm font-semibold text-gray-800 leading-4">Admin</div>
+        <div class="text-xs text-gray-500 leading-4">admin@shifatech</div>
+      </div>
+      <span class="material-icons text-gray-500">expand_more</span>
+    </button>
+  </div>
+</div>

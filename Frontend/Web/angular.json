@@ -2,12 +2,11 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm",
-    "analytics": "d3cb0add-d9be-4444-a8bd-4e831f6fbaca"
+    "packageManager": "npm"
   },
   "newProjectRoot": "projects",
   "projects": {
-    "shifatech-frontend": {
+    "Web": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -20,20 +19,17 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
+              "src/favicon.ico",
+              "src/assets",
               {
                 "glob": "**/*",
                 "input": "public"
               }
             ],
             "styles": [
-              "src/custom-theme.scss",
+              "src/material-theme.scss",
               "src/styles.css"
-            ],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
-            "ssr": {
-              "entry": "src/server.ts"
-            }
+            ]
           },
           "configurations": {
             "production": {
@@ -63,10 +59,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "shifatech-frontend:build:production"
+              "buildTarget": "Web:build:production"
             },
             "development": {
-              "buildTarget": "shifatech-frontend:build:development"
+              "buildTarget": "Web:build:development"
             }
           },
           "defaultConfiguration": "development"

@@ -1,4 +1,4 @@
-# ShifatechFrontend
+# Web
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.3.
 
@@ -57,3 +57,99 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+-----------------------------------------------------------------------------------
+
+Here’s a clean README section you can paste. It explains exactly what you chose and why.
+
+````md
+## Frontend Setup (Angular + Material)
+
+This project uses **Angular (Standalone + Routing)** as the frontend for ShifaTech.  
+We selected a **SPA (Single Page Application)** setup (no SSR) because:
+
+- The **management app** is behind authentication (SSR provides little value there).
+- It keeps the build/deployment **simple** inside Docker + NGINX gateway.
+- Better developer experience for a team (fewer moving parts, fewer runtime issues).
+
+### UI Stack
+We use **Angular Material** to speed up development and keep the UI consistent across the team.
+
+**Why Angular Material:**
+- Ready-to-use components (toolbar, sidenav, table, dialog, form-field, inputs, datepicker…)
+- Consistent design system and accessibility by default
+- Reduces custom CSS and merge conflicts in a multi-developer project
+
+### Material Theme
+During installation we chose the **Azure/Blue** prebuilt theme:
+- Professional look (fits medical/clinic UI)
+- Works well for dashboards and public pages
+- Can be replaced later with a custom theme
+
+### Installation Steps
+1. Create Angular project as SPA (Standalone components + Routing, no SSR)
+2. Add Angular Material:
+   ```bash
+   ng add @angular/material
+````
+
+3. Choose:
+
+   * Theme: `Azure/Blue`
+   * Global Typography: `Yes`
+   * Browser Animations: `Yes`
+
+### Notes
+
+* The prompt asking for “AI tools configuration” was skipped (`None`) because it only adds optional editor/config files and does not affect the Angular application build/runtime.
+* The Angular app will be built as static files and served via NGINX inside Docker. Routing is handled by SPA fallback (`try_files ... /index.html`) to support refresh on routes like `/app/dashboard`.
+
+```
+## Frontend Architecture (Public Site + Management App)
+
+We use a single Angular project with two clearly separated route trees:
+
+- **Public website** (clinic introduction pages): `/`
+- **Management application** (dashboard + modules): `/app/*`
+- **Authentication pages**: `/auth/*`
+
+This keeps the codebase clean for a 5-person team and avoids mixing marketing pages with business features.
+
+### Project Structure
+
+```txt
+src/app/
+  core/
+    layouts/
+      public-layout/
+      app-layout/
+    auth/
+      guards/
+      services/
+    interceptors/
+  shared/
+    ui/
+    models/
+  features/
+    public/
+      pages/
+        home/
+        about/
+        services/
+        contact/
+        book/
+      public.routes.ts
+    app/
+      dashboard/
+      appointments/
+      patients/
+      doctors/
+      admin/
+      app.routes.ts
+    auth/
+      pages/login/
+      auth.routes.ts
+
+  app.routes.ts
+  app.config.ts
+  app.component.ts

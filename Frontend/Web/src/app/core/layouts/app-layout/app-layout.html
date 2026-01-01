@@ -1,0 +1,19 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Sidebar fixed -->
+  <div class="fixed left-0 top-0 h-screen w-72">
+    <st-sidebar [items]="menu"></st-sidebar>
+  </div>
+
+  <!-- Main area -->
+  <div class="ml-72">
+    <!-- Navbar fixed -->
+    <header class="fixed top-0 left-72 right-0 h-16 bg-white border-b border-gray-200 z-20">
+<st-navbar title=""></st-navbar>
+    </header>
+
+    <!-- Content scroll -->
+    <main class="pt-16 p-10">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
