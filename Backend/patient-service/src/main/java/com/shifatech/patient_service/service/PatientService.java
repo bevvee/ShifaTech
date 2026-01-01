@@ -64,6 +64,35 @@ public class PatientService {
                 .collect(Collectors.toList());
     }
 
+    // Mettre à jour un patient par ID
+    public PatientDTO updatePatient(Long idPatient, PatientDTO patientDTO) {
+        Patient patient = patientRepository.findById(idPatient)
+                .orElseThrow(() -> new RuntimeException("Patient non trouvé avec l'id: " + idPatient));
+
+        if (patientDTO.getNumDossier() != null) {
+            patient.setNumDossier(patientDTO.getNumDossier());
+        }
+        if (patientDTO.getPoids() != null) {
+            patient.setPoids(patientDTO.getPoids());
+        }
+        if (patientDTO.getTaille() != null) {
+            patient.setTaille(patientDTO.getTaille());
+        }
+        if (patientDTO.getIdUser() != null) {
+            patient.setIdUser(patientDTO.getIdUser());
+        }
+
+        Patient updatedPatient = patientRepository.save(patient);
+        return convertToDTO(updatedPatient);
+    }
+
+    // Supprimer un patient par ID
+    public void deletePatient(Long idPatient) {
+        Patient patient = patientRepository.findById(idPatient)
+                .orElseThrow(() -> new RuntimeException("Patient non trouvé avec l'id: " + idPatient));
+        patientRepository.delete(patient);
+    }
+
     // Conversion
     private PatientDTO convertToDTO(Patient patient) {
         PatientDTO dto = new PatientDTO();
