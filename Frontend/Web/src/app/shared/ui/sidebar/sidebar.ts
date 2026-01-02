@@ -22,6 +22,8 @@ export type SideItem = SideLink | SideGroup;
   standalone: true,
   imports: [NgFor, NgIf, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.html',
+  styleUrls: ['./sidebar.css'],
+
 })
 export class SidebarComponent {
   @Input({ required: true }) items: SideItem[] = [];

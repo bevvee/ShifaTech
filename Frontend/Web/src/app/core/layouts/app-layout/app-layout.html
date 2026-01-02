@@ -1,14 +1,14 @@
 <div class="min-h-screen bg-gray-50">
   <!-- Sidebar fixed -->
-  <div class="fixed left-0 top-0 h-screen w-72">
+  <div class="fixed left-0 top-0 h-screen w-72" [class.hidden]="!sidebarOpen">
     <st-sidebar [items]="menu"></st-sidebar>
   </div>
 
   <!-- Main area -->
-  <div class="ml-72">
+  <div [class.ml-72]="sidebarOpen" [class.ml-0]="!sidebarOpen">
     <!-- Navbar fixed -->
-    <header class="fixed top-0 left-72 right-0 h-16 bg-white border-b border-gray-200 z-20">
-<st-navbar title=""></st-navbar>
+    <header class="fixed top-0 right-0 h-16 bg-white border-b border-gray-200 z-20" [class.left-72]="sidebarOpen" [class.left-0]="!sidebarOpen">
+<st-navbar title="" (menuClick)="toggleSidebar()"></st-navbar>
     </header>
 
     <!-- Content scroll -->

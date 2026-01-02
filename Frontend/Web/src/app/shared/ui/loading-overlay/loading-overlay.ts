@@ -1,11 +1,13 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { LoaderService } from '../../../core/services/loader.service';
 
 @Component({
-  selector: 'app-loading-overlay',
-  imports: [],
+  selector: 'st-loading-overlay',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './loading-overlay.html',
-  styleUrl: './loading-overlay.css',
 })
-export class LoadingOverlay {
-
+export class LoadingOverlayComponent {
+  constructor(public loader: LoaderService) {}
 }

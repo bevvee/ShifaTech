@@ -13,6 +13,7 @@ import { NavbarComponent } from '../../../shared/ui/navbar/navbar';
 })
 
 export class AppLayoutComponent {
+  sidebarOpen = true;
   menu = [
   { label: 'Dashboard', route: '/app/dashboard', icon: 'dashboard' },
 
@@ -23,8 +24,7 @@ export class AppLayoutComponent {
     children: [
       { label: 'Doctors List', route: '/app/doctors' },
       { label: 'Add Doctor', route: '/app/doctors/add' },
-      { label: 'Doctor Schedule', route: '/app/doctors/schedule' },
-      { label: 'Specializations', route: '/app/specializations' },
+      { label: 'Specializations', route: '/app/doctors/specializations' },
     ],
   },
 
@@ -72,4 +72,7 @@ export class AppLayoutComponent {
   { label: 'Staffs', route: '/app/staffs', icon: 'groups' },
 ] as any;
 
+  toggleSidebar() {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
 }

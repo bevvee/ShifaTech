@@ -1,0 +1,195 @@
+<div class="max-w-5xl">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Ajouter un médecin</h1>
+    </div>
+  </div>
+
+  <form class="mt-8 grid gap-6" (ngSubmit)="submit()">
+    <!-- USER CARD -->
+    <div class="bg-white border border-gray-200 rounded-2xl p-6">
+      <h2 class="text-lg font-semibold text-gray-900">Informations utilisateur</h2>
+
+      <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- nom -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Nom</label>
+          <input
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border"
+            [class.border-red-400]="isInvalid('nom')"
+            [class.border-gray-200]="!isInvalid('nom')"
+            formControlName="nom"
+            placeholder="Ex: El Amrani"
+          />
+          <p *ngIf="isInvalid('nom')" class="text-xs text-red-600 mt-1">Nom obligatoire.</p>
+        </div>
+
+        <!-- prenom -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Prénom</label>
+          <input
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border"
+            [class.border-red-400]="isInvalid('prenom')"
+            [class.border-gray-200]="!isInvalid('prenom')"
+            formControlName="prenom"
+            placeholder="Ex: Sara"
+          />
+          <p *ngIf="isInvalid('prenom')" class="text-xs text-red-600 mt-1">Prénom obligatoire.</p>
+        </div>
+
+        <!-- cin -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">CIN</label>
+          <input
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border"
+            [class.border-red-400]="isInvalid('cin')"
+            [class.border-gray-200]="!isInvalid('cin')"
+            formControlName="cin"
+            placeholder="Ex: AB123456"
+          />
+          <p *ngIf="isInvalid('cin')" class="text-xs text-red-600 mt-1">CIN obligatoire.</p>
+        </div>
+
+        <!-- email -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Email</label>
+          <input
+            type="email"
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border"
+            [class.border-red-400]="isInvalid('email')"
+            [class.border-gray-200]="!isInvalid('email')"
+            formControlName="email"
+            placeholder="Ex: doctor@clinic.com"
+          />
+          <p *ngIf="isInvalid('email')" class="text-xs text-red-600 mt-1">Email invalide.</p>
+        </div>
+
+        <!-- password -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Mot de passe</label>
+          <input
+            type="password"
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border"
+            [class.border-red-400]="isInvalid('mot_de_passe')"
+            [class.border-gray-200]="!isInvalid('mot_de_passe')"
+            formControlName="mot_de_passe"
+            placeholder="Min 8 caractères"
+          />
+          <p *ngIf="isInvalid('mot_de_passe')" class="text-xs text-red-600 mt-1">
+            Mot de passe obligatoire (min 8).
+          </p>
+        </div>
+
+        <!-- telephone -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Téléphone</label>
+          <input
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border"
+            [class.border-red-400]="isInvalid('telephone')"
+            [class.border-gray-200]="!isInvalid('telephone')"
+            formControlName="telephone"
+            placeholder="Ex: +2126xxxxxxx"
+          />
+          <p *ngIf="isInvalid('telephone')" class="text-xs text-red-600 mt-1">Téléphone obligatoire.</p>
+        </div>
+
+        <!-- date_naissance -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Date de naissance</label>
+          <input
+            type="date"
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border"
+            [class.border-red-400]="isInvalid('date_naissance')"
+            [class.border-gray-200]="!isInvalid('date_naissance')"
+            formControlName="date_naissance"
+          />
+          <p *ngIf="isInvalid('date_naissance')" class="text-xs text-red-600 mt-1">Date obligatoire.</p>
+        </div>
+
+        <!-- sexe -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Sexe</label>
+          <select
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white"
+            formControlName="sexe"
+          >
+            <option value="F">Femme</option>
+            <option value="M">Homme</option>
+          </select>
+        </div>
+
+        <!-- statut -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Statut</label>
+          <select
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white"
+            formControlName="statut"
+          >
+            <option value="ACTIF">Actif</option>
+            <option value="INACTIF">Inactif</option>
+          </select>
+        </div>
+
+        <!-- adresse -->
+        <div class="md:col-span-2">
+          <label class="text-sm font-medium text-gray-700">Adresse</label>
+          <textarea
+            rows="3"
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border"
+            [class.border-red-400]="isInvalid('adresse')"
+            [class.border-gray-200]="!isInvalid('adresse')"
+            formControlName="adresse"
+            placeholder="Adresse complète..."
+          ></textarea>
+          <p *ngIf="isInvalid('adresse')" class="text-xs text-red-600 mt-1">Adresse obligatoire.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCTOR CARD -->
+    <div class="bg-white border border-gray-200 rounded-2xl p-6">
+      <h2 class="text-lg font-semibold text-gray-900">Informations médecin</h2>
+
+      <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- numero_ordre -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Numéro d'ordre</label>
+          <input
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border"
+            [class.border-red-400]="isInvalid('numero_ordre')"
+            [class.border-gray-200]="!isInvalid('numero_ordre')"
+            formControlName="numero_ordre"
+            placeholder="Ex: ORD-2026-001"
+          />
+          <p *ngIf="isInvalid('numero_ordre')" class="text-xs text-red-600 mt-1">Obligatoire.</p>
+        </div>
+
+        <!-- id_specialite -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Spécialité</label>
+          <select
+            class="mt-1 w-full px-4 py-2.5 rounded-xl border"
+            [class.border-red-400]="isInvalid('id_specialite')"
+            [class.border-gray-200]="!isInvalid('id_specialite')"
+            formControlName="id_specialite"
+          >
+            <option [ngValue]="null">-- Choisir --</option>
+            <option *ngFor="let sp of specialites" [ngValue]="sp.id">{{ sp.name }}</option>
+          </select>
+          <p *ngIf="isInvalid('id_specialite')" class="text-xs text-red-600 mt-1">Choisis une spécialité.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit bottom -->
+    <div class="flex justify-end">
+      <button
+        type="submit"
+        class="px-5 py-3 rounded-xl bg-blue-700 text-white hover:bg-blue-800"
+      >
+        Enregistrer le médecin
+      </button>
+    </div>
+    
+  </form>
+</div>

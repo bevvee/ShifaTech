@@ -2,7 +2,6 @@ import { Routes } from '@angular/router';
 import { PublicLayoutComponent } from './core/layouts/public-layout/public-layout';
 import { AppLayoutComponent } from './core/layouts/app-layout/app-layout';
 
-
 export const routes: Routes = [
   // Public website
   {
@@ -14,7 +13,7 @@ export const routes: Routes = [
 
   // Auth pages
   {
-    path: '',
+    path: 'auth',
     loadChildren: () =>
       import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES),
   },

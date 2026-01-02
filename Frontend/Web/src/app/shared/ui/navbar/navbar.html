@@ -1,46 +1,74 @@
-<div class="h-full px-6 flex items-center justify-between">
-  <!-- Center: search -->
-  <div class="hidden lg:flex items-center w-105">
-    <div class="relative w-full">
-      <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-      <input
-        type="text"
-        placeholder="Rechercher..."
-        class="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 bg-gray-50
-               focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-      />
-    </div>
-  </div>
+<div class="h-14 px-6 flex items-center justify-between">
+  <!-- Left: hamburger -->
+  <button (click)="menuClick.emit()" class="h-10 w-10 rounded-xl hover:bg-gray-100 flex items-center justify-center">
+    <span class="material-icons text-gray-700">menu</span>
+  </button>
 
-  <!-- Right: actions -->
-  <div class="flex items-center gap-2">
-
-    <!-- Theme (placeholder) -->
-    <button class="h-10 w-10 rounded-xl hover:bg-gray-100 flex items-center justify-center">
-      <span class="material-icons text-gray-600">dark_mode</span>
-    </button>
-
-    <!-- Language -->
-    <button class="h-10 px-3 rounded-xl hover:bg-gray-100 flex items-center gap-2">
-      <span class="material-icons text-gray-600 text-base">language</span>
-      <span class="text-sm text-gray-700">FR</span>
+  <!-- Right: minimal actions -->
+  <div class="flex items-center gap-3">
+    <!-- Dark mode icon -->
+    <button class="relative h-10 w-10 rounded-xl hover:bg-gray-100 flex items-center justify-center">
+      <span class="material-icons text-gray-700">dark_mode</span>
+      <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-gray-900"></span>
     </button>
 
     <!-- Notifications -->
-    <button class="relative h-10 w-10 rounded-xl hover:bg-gray-100 flex items-center justify-center">
-      <span class="material-icons text-gray-600">notifications</span>
-      <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500"></span>
-    </button>
-
-
-    <!-- Profile -->
-    <button class="flex items-center gap-3 pl-2 pr-3 py-2 rounded-xl hover:bg-gray-100">
-      <div class="h-8 w-8 rounded-full bg-gray-200"></div>
-      <div class="hidden md:block text-left">
-        <div class="text-sm font-semibold text-gray-800 leading-4">Admin</div>
-        <div class="text-xs text-gray-500 leading-4">admin@shifatech</div>
+    <div class="relative">
+      <button (click)="toggleNotifications()" class="h-10 w-10 rounded-xl hover:bg-gray-100 flex items-center justify-center">
+        <span class="material-icons text-gray-700">notifications</span>
+      </button>
+      <!-- Notifications dropdown -->
+      <div *ngIf="showNotifications" class="absolute right-0 top-12 w-80 bg-white border border-gray-200 rounded-xl shadow-lg">
+        <div class="p-2">
+          <div class="px-3 py-2 text-sm font-semibold text-gray-800">Notifications</div>
+          <div class="divide-y">
+            <div *ngFor="let n of notifications" class="px-3 py-3 flex items-start gap-3 hover:bg-gray-50">
+              <span class="material-icons text-gray-600">notifications</span>
+              <div>
+                <div class="text-sm text-gray-800">{{ n.title }}</div>
+                <div class="text-xs text-gray-500">{{ n.time }} ago</div>
+              </div>
+            </div>
+          </div>
+          <div class="px-3 py-2">
+            <button class="w-full text-sm text-blue-600 hover:underline text-left">View all</button>
+          </div>
+        </div>
       </div>
-      <span class="material-icons text-gray-500">expand_more</span>
-    </button>
+    </div>
+
+    <!-- Avatar with initials + Profile dropdown -->
+    <div class="relative">
+      <button (click)="toggleProfile()" class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-gray-700">
+        SJ
+      </button>
+
+      <!-- Profile dropdown -->
+      <div *ngIf="showProfile" class="absolute right-0 top-12 w-64 bg-white border border-gray-200 rounded-xl shadow-lg">
+        <div class="p-2">
+          <div class="text-sm font-semibold text-gray-800">Dr. Sarah Johnson</div>
+          <div class="text-xs text-gray-500">admin@medixpro.com</div>
+        </div>
+        <div class="border-t">
+          <button class="w-full flex items-center gap-3 px-2 py-1 hover:bg-gray-50">
+            <span class="material-icons text-gray-400">person</span>
+            <span class="text-sm text-gray-800">Profile</span>
+          </button>
+          <button class="w-full flex items-center gap-3 px-2 py-1 hover:bg-gray-50">
+            <span class="material-icons text-gray-400">support_agent</span>
+            <span class="text-sm text-gray-800">Support</span>
+          </button>
+          <button class="w-full flex items-center gap-3 px-2 py-1 hover:bg-gray-50">
+            <span class="material-icons  text-gray-400">settings</span>
+            <span class="text-sm text-gray-800">Settings</span>
+          </button>
+          <div class="border-t my-1"></div>
+          <button class="w-full flex items-center gap-3 px-2 py-1 hover:bg-gray-50">
+            <span class="material-icons text-gray-400">logout</span>
+            <span class="text-sm text-gray-800">Log out</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

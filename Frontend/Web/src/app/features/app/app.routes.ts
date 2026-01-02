@@ -5,7 +5,11 @@ export const APP_ROUTES: Routes = [
 
   {
     path: 'dashboard',
-    loadChildren: () =>
-      import('./dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES),
+    loadChildren: () => import('./dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES),
+  },
+
+  {
+    path: 'doctors',
+    loadChildren: () => import('./doctors/doctors.routes').then(m => m.DOCTORS_ROUTES),
   },
 ];
