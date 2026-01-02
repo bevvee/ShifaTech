@@ -1,11 +1,10 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { NavbarComponent } from '../../../shared/ui/navbar/navbar';
 
 @Component({
   selector: 'st-public-layout',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent],
+  imports: [RouterOutlet],
   template: `
    <!--  <st-navbar
       title="ShifaTech"
@@ -13,7 +12,7 @@ import { NavbarComponent } from '../../../shared/ui/navbar/navbar';
       [rightItems]="rightItems">
     </st-navbar> -->
 
-    <main class="p-6">
+    <main>
       <router-outlet></router-outlet>
     </main>
   `,
