@@ -1,16 +1,20 @@
 FROM php:8.2-cli
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git unzip libicu-dev libzip-dev \
- && docker-php-ext-install intl zip pdo pdo_mysql \
- && rm -rf /var/lib/apt/lists/*
-
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+RUN apt-get update && apt-get install -y \
+    git unzip libzip-dev libicu-dev \
+    && docker-php-ext-install pdo pdo_mysql intl zip
 
 WORKDIR /var/www/html
 
-# copy EVERYTHING first so bin/console exists
 COPY . .
 
-# then install deps
+COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 RUN composer install --no-interaction --no-progress
+
+
+EXPOSE 9000
+
+CMD ["php", "-S", "0.0.0.0:9000", "-t", "public"]

@@ -9,7 +9,7 @@ services:
       - auth-service
       - patient-service
       - doctor-service
-      # - infirmier-service
+      - infirmier-service
       - rdv-service
     ports:
       - "8082:80"
@@ -146,18 +146,20 @@ services:
     networks:
       - shifatech-net
 
-  # infirmier-service:
-  #   build: ./Backend/infirmier-service
-  #   container_name: infirmier-service
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - infirmier-db
-  #   environment:
-  #     DATABASE_URL: mysql://infirmieruser:infirmierpass@infirmier-db:3306/infirmierdb
-  #   expose:
-  #     - "9000"
-  #   networks:
-  #     - shifatech-net
+  infirmier-service:
+    build: ./Backend/infirmier-service
+    container_name: infirmier-service
+    restart: unless-stopped
+    depends_on:
+      - infirmier-db
+    environment:
+      DATABASE_URL: mysql://infirmieruser:infirmierpass@infirmier-db:3306/infirmierdb
+    ports:
+    - "9002:9000"  
+    expose:
+      - "9000"
+    networks:
+      - shifatech-net
 
   doctor-db:
     image: mysql:8.3
