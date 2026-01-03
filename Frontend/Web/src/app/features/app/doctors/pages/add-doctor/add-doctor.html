@@ -1,11 +1,11 @@
-<div class="max-w-5xl">
-  <div class="flex items-center justify-between">
+<div class="px-2 sm:px-4 lg:px-2 py-4">
+  <div class="flex items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl font-semibold text-gray-900">Ajouter un médecin</h1>
     </div>
   </div>
 
-  <form class="mt-8 grid gap-6" (ngSubmit)="submit()">
+  <form class="mt-8 grid gap-6" [formGroup]="form" (ngSubmit)="submit()">
     <!-- USER CARD -->
     <div class="bg-white border border-gray-200 rounded-2xl p-6">
       <h2 class="text-lg font-semibold text-gray-900">Informations utilisateur</h2>
