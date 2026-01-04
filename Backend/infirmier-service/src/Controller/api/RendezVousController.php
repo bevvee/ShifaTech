@@ -61,7 +61,7 @@ class RendezVousController extends AbstractController
             'message' => "Rendez-vous {$id} supprimé"
         ]);
     }
-    #[Route("/health", name: 'infirmier_health', methods: ['GET'])]
+    #[Route('/health', name: 'infirmier_health', methods: ['GET'])]
     public function healthCheck(): Response
     {
         return new Response('Infirmier Service is running!', Response::HTTP_OK);

@@ -12,7 +12,7 @@ COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-RUN composer install --no-interaction --no-progress
+RUN composer install --no-interaction
 
 
 EXPOSE 9000
