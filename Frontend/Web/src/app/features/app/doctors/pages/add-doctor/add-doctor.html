@@ -1,16 +1,31 @@
-<div class="px-2 sm:px-4 lg:px-2 py-4">
-  <div class="flex items-center justify-between gap-4">
+<div class="max-w-5xl">
+  <div class="flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-semibold text-gray-900">Ajouter un médecin</h1>
+      <p class="text-gray-500 mt-1">Créer un compte utilisateur + informations médecin.</p>
     </div>
+
+    <button
+      type="button"
+      (click)="submit()"
+      class="px-4 py-2 rounded-xl bg-blue-700 text-white hover:bg-blue-800"
+    >
+      Enregistrer
+    </button>
   </div>
 
-  <form class="mt-8 grid gap-6" [formGroup]="form" (ngSubmit)="submit()">
+  <form class="mt-8 grid gap-6" (ngSubmit)="submit()" [formGroup]="form">
     <!-- USER CARD -->
     <div class="bg-white border border-gray-200 rounded-2xl p-6">
       <h2 class="text-lg font-semibold text-gray-900">Informations utilisateur</h2>
 
       <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <st-profile-image
+  label="Upload photo"
+  [initialUrl]="null"
+  (fileChange)="selectedPhoto = $event">
+</st-profile-image>
+
         <!-- nom -->
         <div>
           <label class="text-sm font-medium text-gray-700">Nom</label>
@@ -143,6 +158,14 @@
           ></textarea>
           <p *ngIf="isInvalid('adresse')" class="text-xs text-red-600 mt-1">Adresse obligatoire.</p>
         </div>
+
+
+        <st-file-upload-drop
+  accept="image/*"
+  [maxSizeMb]="2"
+  (fileChange)="photo = $event">
+</st-file-upload-drop>
+
       </div>
     </div>
 
@@ -190,6 +213,5 @@
         Enregistrer le médecin
       </button>
     </div>
-    
   </form>
 </div>

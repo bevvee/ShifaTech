@@ -1,0 +1,54 @@
+<section class="bg-white border border-slate-200 rounded-2xl">
+  <div class="p-5 flex items-center justify-between">
+    <h2 class="text-lg font-bold text-slate-900">Appointment Statistics</h2>
+    <button class="h-10 px-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold">
+      Monthly
+    </button>
+  </div>
+
+  <div class="px-5 pb-5">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+      <div *ngFor="let t of tabs" class="rounded-2xl border border-slate-200 p-4 bg-slate-50">
+        <div class="flex items-center gap-2 text-slate-600">
+          <span class="h-2 w-2 rounded-full" [ngClass]="t.dot"></span>
+          <span class="text-sm font-semibold">{{ t.label }}</span>
+        </div>
+        <div class="text-xl font-bold text-slate-900 mt-1">{{ t.value }}</div>
+      </div>
+    </div>
+
+    <div class="h-72 rounded-2xl border border-slate-200 bg-white p-4">
+      <div class="flex h-full">
+        <div class="w-12 text-xs text-slate-400 flex flex-col justify-between pr-2">
+          <div>5K</div><div>4K</div><div>3K</div><div>2K</div><div>1K</div><div>0K</div>
+        </div>
+
+        <div class="flex-1">
+          <div class="h-full relative">
+            <div class="absolute inset-0 flex flex-col justify-between">
+              <div class="border-t border-dashed border-slate-200"></div>
+              <div class="border-t border-dashed border-slate-200"></div>
+              <div class="border-t border-dashed border-slate-200"></div>
+              <div class="border-t border-dashed border-slate-200"></div>
+              <div class="border-t border-dashed border-slate-200"></div>
+              <div class="border-t border-dashed border-slate-200"></div>
+            </div>
+
+            <div class="relative z-10 h-full flex items-end justify-between gap-3 px-2">
+              <div *ngFor="let b of bars; let i = index" class="flex flex-col items-center gap-2 w-full">
+                <div class="w-7 md:w-8 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex flex-col justify-end"
+                     style="height: 210px;">
+                  <div class="w-full bg-indigo-600/90" [style.height.%]="clampPct(b.rescheduled)"></div>
+                  <div class="w-full bg-blue-500/90" [style.height.%]="clampPct(b.ongoing)"></div>
+                  <div class="w-full bg-emerald-400/90" [style.height.%]="clampPct(b.completed)"></div>
+                </div>
+                <div class="text-xs text-slate-500">{{ months[i] }}</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

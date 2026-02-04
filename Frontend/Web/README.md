@@ -13,39 +13,143 @@ Tech:
 
 ## 1) Project Structure
 
-Main folders:
+Architecture tree:
 
-src/app/
-core/
-layouts/
-public-layout/
-app-layout/
-auth/
-guards/
-services/
-interceptors/
-services/ # global services (loader, auth, storage...)
-shared/
-models/ # interfaces/types
-ui/ # reusable components (table, sidebar, navbar, cards...)
-features/
-public/
-pages/ # landing pages
-public.routes.ts
-app/
-dashboard/
-doctors/
-patients/
-appointments/
-...
-app.routes.ts
-auth/
-pages/login/
-auth.routes.ts
+```text
+Web/
+├─ .editorconfig
+├─ .gitignore
+├─ .postcssrc.json
+├─ angular.json
+├─ Dockerfile
+├─ package.json
+├─ README.md
+├─ tsconfig.json
+├─ tsconfig.app.json
+├─ tsconfig.spec.json
+├─ .angular/
+│  └─ cache/21.0.4/Web/
+├─ .vscode/
+│  ├─ extensions.json
+│  ├─ launch.json
+│  └─ tasks.json
+├─ public/
+└─ src/
+	├─ index.html
+	├─ main.ts
+	├─ material-theme.scss
+	├─ styles.css
+	├─ assets/
+	│  └─ images/
+	├─ environments/
+	│  └─ environment.ts
+	└─ app/
+		├─ app.ts
+		├─ app.html
+		├─ app.css
+		├─ app.config.ts
+		├─ app.routes.ts
+		├─ app.spec.ts
+		├─ core/
+		│  ├─ auth/
+		│  │  ├─ guards/
+		│  │  └─ services/
+		│  ├─ interceptors/
+		│  │  └─ auth.interceptor.ts
+		│  ├─ layouts/
+		│  │  ├─ app-layout/
+		│  │  │  ├─ app-layout.ts
+		│  │  │  ├─ app-layout.html
+		│  │  │  └─ app-layout.css
+		│  │  └─ public-layout/
+		│  │     ├─ public-layout.ts
+		│  │     ├─ public-layout.html
+		│  │     └─ public-layout.css
+		│  ├─ services/
+		│  │  ├─ api.service.ts
+		│  │  └─ loader.service.ts
+		│  └─ ui/
+		│     ├─ sidebar/
+		│     │  ├─ sidebar.ts
+		│     │  ├─ sidebar.html
+		│     │  └─ sidebar.css
+		│     └─ topbar/
+		│        ├─ topbar.ts
+		│        ├─ topbar.html
+		│        └─ topbar.css
+		├─ shared/
+		│  ├─ models/
+		│  └─ ui/
+		│     ├─ navbar/
+		│     │  ├─ navbar.ts
+		│     │  ├─ navbar.html
+		│     │  └─ navbar.css
+		│     ├─ panel/
+		│     │  ├─ panel.ts
+		│     │  ├─ panel.html
+		│     │  └─ panel.css
+		│     ├─ page-header/
+		│     │  ├─ page-header.ts
+		│     │  ├─ page-header.html
+		│     │  └─ page-header.css
+		│     ├─ sidebar/
+		│     │  ├─ sidebar.ts
+		│     │  ├─ sidebar.html
+		│     │  └─ sidebar.css
+		│     ├─ data-table/
+		│     │  ├─ data-table.ts
+		│     │  ├─ data-table.html
+		│     │  └─ data-table.css
+		│     ├─ confirm-dialog/
+		│     │  ├─ confirm-dialog.ts
+		│     │  ├─ confirm-dialog.html
+		│     │  └─ confirm-dialog.css
+		│     ├─ loading-overlay/
+		│     │  ├─ loading-overlay.ts
+		│     │  ├─ loading-overlay.html
+		│     │  └─ loading-overlay.css
+		│     └─ form/
+		│        ├─ input/
+		│        ├─ select/
+		│        ├─ textarea/
+		│        ├─ checkbox/
+		│        ├─ radio-group/
+		│        ├─ file/
+		│        └─ search/
+		└─ features/
+			├─ app/
+			│  ├─ app.routes.ts
+			│  ├─ admin/
+			│  ├─ appointments/
+			│  ├─ dashboard/
+			│  │  ├─ dashboard.routes.ts
+			│  │  ├─ pages/
+			│  │  └─ ui/
+			│  │     └─ appointments-widget/ (generated)
+			│  ├─ doctors/
+			│  │  ├─ doctors.routes.ts
+			│  │  └─ pages/
+			│  └─ patients/
+			├─ auth/
+			│  ├─ auth.routes.ts
+			│  └─ pages/
+			│     └─ login/
+			└─ public/
+				├─ public.routes.ts
+				└─ pages/
+					├─ home/
+					├─ about/
+					├─ services/
+					├─ book/
+					└─ contact/
+```
 
-app.routes.ts # root routing
-app.config.ts
-app.component.ts
+Key files:
+- `src/app/app.routes.ts`: root routes and lazy-loading.
+- `src/app/app.config.ts`: bootstrap providers.
+- `src/app/core/interceptors/auth.interceptor.ts`: attach/handle auth headers.
+- `src/app/core/services/api.service.ts`: HTTP client to backend.
+- `src/app/shared/ui/*`: reusable UI components.
 
 
 ### Core idea

@@ -13,7 +13,7 @@ export const routes: Routes = [
 
   // Auth pages
   {
-    path: 'auth',
+    path: '',
     loadChildren: () =>
       import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES),
   },

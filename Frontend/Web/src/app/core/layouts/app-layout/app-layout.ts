@@ -1,78 +1,45 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { SidebarComponent } from '../../../shared/ui/sidebar/sidebar';
-
-// ✅ change this path to your real navbar path
-import { NavbarComponent } from '../../../shared/ui/navbar/navbar';
+import { Component, inject } from '@angular/core';
+import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { SidebarComponent, NavItem } from '../../ui/sidebar/sidebar';
+import { TopbarComponent } from '../../ui/topbar/topbar';
 
 @Component({
   selector: 'st-app-layout',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, NavbarComponent],
+  imports: [RouterOutlet, SidebarComponent, TopbarComponent],
   templateUrl: './app-layout.html',
 })
-
 export class AppLayoutComponent {
-  sidebarOpen = true;
-  menu = [
-  { label: 'Dashboard', route: '/app/dashboard', icon: 'dashboard' },
+  private router = inject(Router);
 
-  {
-    type: 'group',
-    label: 'Doctors',
-    icon: 'medical_services',
-    children: [
-      { label: 'Doctors List', route: '/app/doctors' },
-      { label: 'Add Doctor', route: '/app/doctors/add' },
-      { label: 'Specializations', route: '/app/doctors/specializations' },
-    ],
-  },
+  clinicName = 'Trustcare Clinic';
+  clinicCity = 'Lasvegas';
 
-  {
-    type: 'group',
-    label: 'Patients',
-    icon: 'person',
-    children: [
-      { label: 'Patients List', route: '/app/patients' },
-      { label: 'Add Patient', route: '/app/patients/add' },
-    ],
-  },
+  activeRoute = this.router.url;
 
-  {
-    type: 'group',
-    label: 'Appointments',
-    icon: 'event',
-    children: [
-      { label: 'Appointments List', route: '/app/appointments' },
-      { label: 'Create Appointment', route: '/app/appointments/add' },
-      { label: 'Calendar', route: '/app/appointments/calendar' },
-    ],
-  },
+  items: NavItem[] = [
+    { label: 'Dashboard', icon: 'dashboard', route: '/app/dashboard' },
+    { label: 'Applications', icon: 'apps', route: '/app/apps' },
+    { label: 'Layouts', icon: 'view_quilt', route: '/app/layouts' },
 
-  {
-    type: 'group',
-    label: 'Spécialisation',
-    icon: 'category',
-    children: [
-      { label: 'All Specializations', route: '/app/specializations' },
-      { label: 'Add Specialization', route: '/app/specializations/add' },
-    ],
-  },
+    {
+      label: 'Clinic',
+      icon: 'local_hospital',
+      children: [
+        { label: 'Doctors', route: '/app/doctors' },
+        { label: 'Patients', route: '/app/patients' },
+        { label: 'Appointments', route: '/app/appointments' },
+        { label: 'Locations', route: '/app/locations' },
+        { label: 'Services', route: '/app/services' },
+        { label: 'Specializations', route: '/app/specializations' },
+      ],
+    },
+  ];
 
-  {
-    type: 'group',
-    label: 'Services',
-    icon: 'build',
-    children: [
-      { label: 'Services List', route: '/app/services' },
-      { label: 'Add Service', route: '/app/services/add' },
-    ],
-  },
-
-  { label: 'Staffs', route: '/app/staffs', icon: 'groups' },
-] as any;
-
-  toggleSidebar() {
-    this.sidebarOpen = !this.sidebarOpen;
+  constructor() {
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((e) => (this.activeRoute = e.urlAfterRedirects));
   }
 }
