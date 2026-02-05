@@ -146,7 +146,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         cookie_name?: scalar|null, // The name of the cookie to use when using stateless protection. // Default: "csrf-token"
  *     },
  *     form?: bool|array{ // Form configuration
- *         enabled?: bool, // Default: true
+ *         enabled?: bool, // Default: false
  *         csrf_protection?: array{
  *             enabled?: scalar|null, // Default: null
  *             token_id?: scalar|null, // Default: null
@@ -281,7 +281,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         }>,
  *     },
  *     asset_mapper?: bool|array{ // Asset Mapper configuration
- *         enabled?: bool, // Default: true
+ *         enabled?: bool, // Default: false
  *         paths?: array<string, scalar|null>,
  *         excluded_patterns?: list<scalar|null>,
  *         exclude_dotfiles?: bool, // If true, any files starting with "." will be excluded from the asset mapper. // Default: true
@@ -300,7 +300,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         },
  *     },
  *     translator?: bool|array{ // Translator configuration
- *         enabled?: bool, // Default: true
+ *         enabled?: bool, // Default: false
  *         fallbacks?: list<scalar|null>,
  *         logging?: bool, // Default: false
  *         formatter?: scalar|null, // Default: "translator.formatter.default"
@@ -424,7 +424,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         resources?: array<string, scalar|null>,
  *     },
  *     messenger?: bool|array{ // Messenger configuration
- *         enabled?: bool, // Default: true
+ *         enabled?: bool, // Default: false
  *         routing?: array<string, array{ // Default: []
  *             senders?: list<scalar|null>,
  *         }>,
@@ -470,11 +470,11 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     },
  *     disallow_search_engine_index?: bool, // Enabled by default when debug is enabled. // Default: true
  *     http_client?: bool|array{ // HTTP Client configuration
- *         enabled?: bool, // Default: true
+ *         enabled?: bool, // Default: false
  *         max_host_connections?: int, // The maximum number of connections to a single host.
  *         default_options?: array{
  *             headers?: array<string, mixed>,
- *             vars?: list<mixed>,
+ *             vars?: array<string, mixed>,
  *             max_redirects?: int, // The maximum number of redirects to follow.
  *             http_version?: scalar|null, // The default HTTP version, typically 1.1 or 2.0, leave to null for the best version.
  *             resolve?: array<string, scalar|null>,
@@ -497,7 +497,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *                 md5?: mixed,
  *             },
  *             crypto_method?: scalar|null, // The minimum version of TLS to accept; must be one of STREAM_CRYPTO_METHOD_TLSv*_CLIENT constants.
- *             extra?: list<mixed>,
+ *             extra?: array<string, mixed>,
  *             rate_limiter?: scalar|null, // Rate limiter name to use for throttling requests. // Default: null
  *             caching?: bool|array{ // Caching configuration.
  *                 enabled?: bool, // Default: false
@@ -550,7 +550,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *                 md5?: mixed,
  *             },
  *             crypto_method?: scalar|null, // The minimum version of TLS to accept; must be one of STREAM_CRYPTO_METHOD_TLSv*_CLIENT constants.
- *             extra?: list<mixed>,
+ *             extra?: array<string, mixed>,
  *             rate_limiter?: scalar|null, // Rate limiter name to use for throttling requests. // Default: null
  *             caching?: bool|array{ // Caching configuration.
  *                 enabled?: bool, // Default: false
@@ -574,7 +574,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         }>,
  *     },
  *     mailer?: bool|array{ // Mailer configuration
- *         enabled?: bool, // Default: true
+ *         enabled?: bool, // Default: false
  *         message_bus?: scalar|null, // The message bus to use. Defaults to the default bus if the Messenger component is installed. // Default: null
  *         dsn?: scalar|null, // Default: null
  *         transports?: array<string, scalar|null>,
@@ -615,7 +615,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         decryption_env_var?: scalar|null, // Default: "base64:default::SYMFONY_DECRYPTION_SECRET"
  *     },
  *     notifier?: bool|array{ // Notifier configuration
- *         enabled?: bool, // Default: true
+ *         enabled?: bool, // Default: false
  *         message_bus?: scalar|null, // The message bus to use. Defaults to the default bus if the Messenger component is installed. // Default: null
  *         chatter_transports?: array<string, scalar|null>,
  *         texter_transports?: array<string, scalar|null>,
@@ -745,7 +745,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *             options?: array<string, mixed>,
  *             mapping_types?: array<string, scalar|null>,
  *             default_table_options?: array<string, scalar|null>,
- *             schema_manager_factory?: scalar|null, // Default: "doctrine.dbal.default_schema_manager_factory"
+ *             schema_manager_factory?: scalar|null, // Default: "doctrine.dbal.legacy_schema_manager_factory"
  *             result_cache?: scalar|null,
  *             slaves?: array<string, array{ // Default: []
  *                 url?: scalar|null, // A URL with connection information; any parameter value parsed from this string will override explicitly set parameters
@@ -941,12 +941,10 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     enable_profiler?: bool, // Whether or not to enable the profiler collector to calculate and visualize migration status. This adds some queries overhead. // Default: false
  *     transactional?: bool, // Whether or not to wrap migrations in a single transaction. // Default: true
  * }
- * @psalm-type DebugConfig = array{
- *     max_items?: int, // Max number of displayed items past the first level, -1 means no limit. // Default: 2500
- *     min_depth?: int, // Minimum tree depth to clone all the items, 1 is default. // Default: 1
- *     max_string_length?: int, // Max length of displayed strings, -1 means no limit. // Default: -1
- *     dump_destination?: scalar|null, // A stream URL where dumps should be written to. // Default: null
- *     theme?: "dark"|"light", // Changes the color of the dump() output when rendered directly on the templating. "dark" (default) or "light". // Default: "dark"
+ * @psalm-type MakerConfig = array{
+ *     root_namespace?: scalar|null, // Default: "App"
+ *     generate_final_classes?: bool, // Default: true
+ *     generate_final_entities?: bool, // Default: false
  * }
  * @psalm-type TwigConfig = array{
  *     form_themes?: list<scalar|null>,
@@ -979,75 +977,6 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     },
  *     mailer?: array{
  *         html_to_text_converter?: scalar|null, // A service implementing the "Symfony\Component\Mime\HtmlToTextConverter\HtmlToTextConverterInterface". // Default: null
- *     },
- * }
- * @psalm-type WebProfilerConfig = array{
- *     toolbar?: bool|array{ // Profiler toolbar configuration
- *         enabled?: bool, // Default: false
- *         ajax_replace?: bool, // Replace toolbar on AJAX requests // Default: false
- *     },
- *     intercept_redirects?: bool, // Default: false
- *     excluded_ajax_paths?: scalar|null, // Default: "^/((index|app(_[\\w]+)?)\\.php/)?_wdt"
- * }
- * @psalm-type StimulusConfig = array{
- *     controller_paths?: list<scalar|null>,
- *     controllers_json?: scalar|null, // Default: "%kernel.project_dir%/assets/controllers.json"
- * }
- * @psalm-type TurboConfig = array{
- *     broadcast?: bool|array{
- *         enabled?: bool, // Default: true
- *         entity_template_prefixes?: list<scalar|null>,
- *         doctrine_orm?: bool|array{ // Enable the Doctrine ORM integration
- *             enabled?: bool, // Default: true
- *         },
- *     },
- *     default_transport?: scalar|null, // Default: "default"
- * }
- * @psalm-type TwigExtraConfig = array{
- *     cache?: bool|array{
- *         enabled?: bool, // Default: false
- *     },
- *     html?: bool|array{
- *         enabled?: bool, // Default: false
- *     },
- *     markdown?: bool|array{
- *         enabled?: bool, // Default: false
- *     },
- *     intl?: bool|array{
- *         enabled?: bool, // Default: false
- *     },
- *     cssinliner?: bool|array{
- *         enabled?: bool, // Default: false
- *     },
- *     inky?: bool|array{
- *         enabled?: bool, // Default: false
- *     },
- *     string?: bool|array{
- *         enabled?: bool, // Default: false
- *     },
- *     commonmark?: array{
- *         renderer?: array{ // Array of options for rendering HTML.
- *             block_separator?: scalar|null,
- *             inner_separator?: scalar|null,
- *             soft_break?: scalar|null,
- *         },
- *         html_input?: "strip"|"allow"|"escape", // How to handle HTML input.
- *         allow_unsafe_links?: bool, // Remove risky link and image URLs by setting this to false. // Default: true
- *         max_nesting_level?: int, // The maximum nesting level for blocks. // Default: 9223372036854775807
- *         max_delimiters_per_line?: int, // The maximum number of strong/emphasis delimiters per line. // Default: 9223372036854775807
- *         slug_normalizer?: array{ // Array of options for configuring how URL-safe slugs are created.
- *             instance?: mixed,
- *             max_length?: int, // Default: 255
- *             unique?: mixed,
- *         },
- *         commonmark?: array{ // Array of options for configuring the CommonMark core extension.
- *             enable_em?: bool, // Default: true
- *             enable_strong?: bool, // Default: true
- *             use_asterisk?: bool, // Default: true
- *             use_underscore?: bool, // Default: true
- *             unordered_list_markers?: list<scalar|null>,
- *         },
- *         ...<mixed>
  *     },
  * }
  * @psalm-type SecurityConfig = array{
@@ -1103,9 +1032,6 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *             uid_key?: scalar|null, // Default: "sAMAccountName"
  *             filter?: scalar|null, // Default: "({uid_key}={user_identifier})"
  *             password_attribute?: scalar|null, // Default: null
- *         },
- *         lexik_jwt?: array{
- *             class?: scalar|null, // Default: "Lexik\\Bundle\\JWTAuthenticationBundle\\Security\\User\\JWTUser"
  *         },
  *     }>,
  *     firewalls: array<string, array{ // Default: []
@@ -1164,10 +1090,6 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         remote_user?: array{
  *             provider?: scalar|null,
  *             user?: scalar|null, // Default: "REMOTE_USER"
- *         },
- *         jwt?: array{
- *             provider?: scalar|null, // Default: null
- *             authenticator?: scalar|null, // Default: "lexik_jwt_authentication.security.jwt_authenticator"
  *         },
  *         login_link?: array{
  *             check_route: scalar|null, // Route that will validate the login link - e.g. "app_login_link_verify".
@@ -1368,239 +1290,6 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     }>,
  *     role_hierarchy?: array<string, string|list<scalar|null>>,
  * }
- * @psalm-type MonologConfig = array{
- *     use_microseconds?: scalar|null, // Default: true
- *     channels?: list<scalar|null>,
- *     handlers?: array<string, array{ // Default: []
- *         type: scalar|null,
- *         id?: scalar|null,
- *         enabled?: bool, // Default: true
- *         priority?: scalar|null, // Default: 0
- *         level?: scalar|null, // Default: "DEBUG"
- *         bubble?: bool, // Default: true
- *         interactive_only?: bool, // Default: false
- *         app_name?: scalar|null, // Default: null
- *         include_stacktraces?: bool, // Default: false
- *         process_psr_3_messages?: array{
- *             enabled?: bool|null, // Default: null
- *             date_format?: scalar|null,
- *             remove_used_context_fields?: bool,
- *         },
- *         path?: scalar|null, // Default: "%kernel.logs_dir%/%kernel.environment%.log"
- *         file_permission?: scalar|null, // Default: null
- *         use_locking?: bool, // Default: false
- *         filename_format?: scalar|null, // Default: "{filename}-{date}"
- *         date_format?: scalar|null, // Default: "Y-m-d"
- *         ident?: scalar|null, // Default: false
- *         logopts?: scalar|null, // Default: 1
- *         facility?: scalar|null, // Default: "user"
- *         max_files?: scalar|null, // Default: 0
- *         action_level?: scalar|null, // Default: "WARNING"
- *         activation_strategy?: scalar|null, // Default: null
- *         stop_buffering?: bool, // Default: true
- *         passthru_level?: scalar|null, // Default: null
- *         excluded_http_codes?: list<array{ // Default: []
- *             code?: scalar|null,
- *             urls?: list<scalar|null>,
- *         }>,
- *         accepted_levels?: list<scalar|null>,
- *         min_level?: scalar|null, // Default: "DEBUG"
- *         max_level?: scalar|null, // Default: "EMERGENCY"
- *         buffer_size?: scalar|null, // Default: 0
- *         flush_on_overflow?: bool, // Default: false
- *         handler?: scalar|null,
- *         url?: scalar|null,
- *         exchange?: scalar|null,
- *         exchange_name?: scalar|null, // Default: "log"
- *         channel?: scalar|null, // Default: null
- *         bot_name?: scalar|null, // Default: "Monolog"
- *         use_attachment?: scalar|null, // Default: true
- *         use_short_attachment?: scalar|null, // Default: false
- *         include_extra?: scalar|null, // Default: false
- *         icon_emoji?: scalar|null, // Default: null
- *         webhook_url?: scalar|null,
- *         exclude_fields?: list<scalar|null>,
- *         token?: scalar|null,
- *         region?: scalar|null,
- *         source?: scalar|null,
- *         use_ssl?: bool, // Default: true
- *         user?: mixed,
- *         title?: scalar|null, // Default: null
- *         host?: scalar|null, // Default: null
- *         port?: scalar|null, // Default: 514
- *         config?: list<scalar|null>,
- *         members?: list<scalar|null>,
- *         connection_string?: scalar|null,
- *         timeout?: scalar|null,
- *         time?: scalar|null, // Default: 60
- *         deduplication_level?: scalar|null, // Default: 400
- *         store?: scalar|null, // Default: null
- *         connection_timeout?: scalar|null,
- *         persistent?: bool,
- *         message_type?: scalar|null, // Default: 0
- *         parse_mode?: scalar|null, // Default: null
- *         disable_webpage_preview?: bool|null, // Default: null
- *         disable_notification?: bool|null, // Default: null
- *         split_long_messages?: bool, // Default: false
- *         delay_between_messages?: bool, // Default: false
- *         topic?: int, // Default: null
- *         factor?: int, // Default: 1
- *         tags?: list<scalar|null>,
- *         console_formatter_options?: mixed, // Default: []
- *         formatter?: scalar|null,
- *         nested?: bool, // Default: false
- *         publisher?: string|array{
- *             id?: scalar|null,
- *             hostname?: scalar|null,
- *             port?: scalar|null, // Default: 12201
- *             chunk_size?: scalar|null, // Default: 1420
- *             encoder?: "json"|"compressed_json",
- *         },
- *         mongodb?: string|array{
- *             id?: scalar|null, // ID of a MongoDB\Client service
- *             uri?: scalar|null,
- *             username?: scalar|null,
- *             password?: scalar|null,
- *             database?: scalar|null, // Default: "monolog"
- *             collection?: scalar|null, // Default: "logs"
- *         },
- *         elasticsearch?: string|array{
- *             id?: scalar|null,
- *             hosts?: list<scalar|null>,
- *             host?: scalar|null,
- *             port?: scalar|null, // Default: 9200
- *             transport?: scalar|null, // Default: "Http"
- *             user?: scalar|null, // Default: null
- *             password?: scalar|null, // Default: null
- *         },
- *         index?: scalar|null, // Default: "monolog"
- *         document_type?: scalar|null, // Default: "logs"
- *         ignore_error?: scalar|null, // Default: false
- *         redis?: string|array{
- *             id?: scalar|null,
- *             host?: scalar|null,
- *             password?: scalar|null, // Default: null
- *             port?: scalar|null, // Default: 6379
- *             database?: scalar|null, // Default: 0
- *             key_name?: scalar|null, // Default: "monolog_redis"
- *         },
- *         predis?: string|array{
- *             id?: scalar|null,
- *             host?: scalar|null,
- *         },
- *         from_email?: scalar|null,
- *         to_email?: list<scalar|null>,
- *         subject?: scalar|null,
- *         content_type?: scalar|null, // Default: null
- *         headers?: list<scalar|null>,
- *         mailer?: scalar|null, // Default: null
- *         email_prototype?: string|array{
- *             id: scalar|null,
- *             method?: scalar|null, // Default: null
- *         },
- *         verbosity_levels?: array{
- *             VERBOSITY_QUIET?: scalar|null, // Default: "ERROR"
- *             VERBOSITY_NORMAL?: scalar|null, // Default: "WARNING"
- *             VERBOSITY_VERBOSE?: scalar|null, // Default: "NOTICE"
- *             VERBOSITY_VERY_VERBOSE?: scalar|null, // Default: "INFO"
- *             VERBOSITY_DEBUG?: scalar|null, // Default: "DEBUG"
- *         },
- *         channels?: string|array{
- *             type?: scalar|null,
- *             elements?: list<scalar|null>,
- *         },
- *     }>,
- * }
- * @psalm-type MakerConfig = array{
- *     root_namespace?: scalar|null, // Default: "App"
- *     generate_final_classes?: bool, // Default: true
- *     generate_final_entities?: bool, // Default: false
- * }
- * @psalm-type LexikJwtAuthenticationConfig = array{
- *     public_key?: scalar|null, // The key used to sign tokens (useless for HMAC). If not set, the key will be automatically computed from the secret key. // Default: null
- *     additional_public_keys?: list<scalar|null>,
- *     secret_key?: scalar|null, // The key used to sign tokens. It can be a raw secret (for HMAC), a raw RSA/ECDSA key or the path to a file itself being plaintext or PEM. // Default: null
- *     pass_phrase?: scalar|null, // The key passphrase (useless for HMAC) // Default: ""
- *     token_ttl?: scalar|null, // Default: 3600
- *     allow_no_expiration?: bool, // Allow tokens without "exp" claim (i.e. indefinitely valid, no lifetime) to be considered valid. Caution: usage of this should be rare. // Default: false
- *     clock_skew?: scalar|null, // Default: 0
- *     encoder?: array{
- *         service?: scalar|null, // Default: "lexik_jwt_authentication.encoder.lcobucci"
- *         signature_algorithm?: scalar|null, // Default: "RS256"
- *     },
- *     user_id_claim?: scalar|null, // Default: "username"
- *     token_extractors?: array{
- *         authorization_header?: bool|array{
- *             enabled?: bool, // Default: true
- *             prefix?: scalar|null, // Default: "Bearer"
- *             name?: scalar|null, // Default: "Authorization"
- *         },
- *         cookie?: bool|array{
- *             enabled?: bool, // Default: false
- *             name?: scalar|null, // Default: "BEARER"
- *         },
- *         query_parameter?: bool|array{
- *             enabled?: bool, // Default: false
- *             name?: scalar|null, // Default: "bearer"
- *         },
- *         split_cookie?: bool|array{
- *             enabled?: bool, // Default: false
- *             cookies?: list<scalar|null>,
- *         },
- *     },
- *     remove_token_from_body_when_cookies_used?: scalar|null, // Default: true
- *     set_cookies?: array<string, array{ // Default: []
- *         lifetime?: scalar|null, // The cookie lifetime. If null, the "token_ttl" option value will be used // Default: null
- *         samesite?: "none"|"lax"|"strict", // Default: "lax"
- *         path?: scalar|null, // Default: "/"
- *         domain?: scalar|null, // Default: null
- *         secure?: scalar|null, // Default: true
- *         httpOnly?: scalar|null, // Default: true
- *         partitioned?: scalar|null, // Default: false
- *         split?: list<scalar|null>,
- *     }>,
- *     api_platform?: bool|array{ // API Platform compatibility: add check_path in OpenAPI documentation.
- *         enabled?: bool, // Default: false
- *         check_path?: scalar|null, // The login check path to add in OpenAPI. // Default: null
- *         username_path?: scalar|null, // The path to the username in the JSON body. // Default: null
- *         password_path?: scalar|null, // The path to the password in the JSON body. // Default: null
- *     },
- *     access_token_issuance?: bool|array{
- *         enabled?: bool, // Default: false
- *         signature?: array{
- *             algorithm: scalar|null, // The algorithm use to sign the access tokens.
- *             key: scalar|null, // The signature key. It shall be JWK encoded.
- *         },
- *         encryption?: bool|array{
- *             enabled?: bool, // Default: false
- *             key_encryption_algorithm: scalar|null, // The key encryption algorithm is used to encrypt the token.
- *             content_encryption_algorithm: scalar|null, // The key encryption algorithm is used to encrypt the token.
- *             key: scalar|null, // The encryption key. It shall be JWK encoded.
- *         },
- *     },
- *     access_token_verification?: bool|array{
- *         enabled?: bool, // Default: false
- *         signature?: array{
- *             header_checkers?: list<scalar|null>,
- *             claim_checkers?: list<scalar|null>,
- *             mandatory_claims?: list<scalar|null>,
- *             allowed_algorithms?: list<scalar|null>,
- *             keyset: scalar|null, // The signature keyset. It shall be JWKSet encoded.
- *         },
- *         encryption?: bool|array{
- *             enabled?: bool, // Default: false
- *             continue_on_decryption_failure?: bool, // If enable, non-encrypted tokens or tokens that failed during decryption or verification processes are accepted. // Default: false
- *             header_checkers?: list<scalar|null>,
- *             allowed_key_encryption_algorithms?: list<scalar|null>,
- *             allowed_content_encryption_algorithms?: list<scalar|null>,
- *             keyset: scalar|null, // The encryption keyset. It shall be JWKSet encoded.
- *         },
- *     },
- *     blocklist_token?: bool|array{
- *         enabled?: bool, // Default: false
- *         cache?: scalar|null, // Storage to track blocked tokens // Default: "cache.app"
- *     },
- * }
  * @psalm-type NelmioCorsConfig = array{
  *     defaults?: array{
  *         allow_credentials?: bool, // Default: false
@@ -1751,7 +1440,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         include_type?: bool, // Always include @type in updates (including delete ones). // Default: false
  *     },
  *     messenger?: bool|array{
- *         enabled?: bool, // Default: true
+ *         enabled?: bool, // Default: false
  *     },
  *     elasticsearch?: bool|array{
  *         enabled?: bool, // Default: false
@@ -1892,12 +1581,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     doctrine?: DoctrineConfig,
  *     doctrine_migrations?: DoctrineMigrationsConfig,
  *     twig?: TwigConfig,
- *     stimulus?: StimulusConfig,
- *     turbo?: TurboConfig,
- *     twig_extra?: TwigExtraConfig,
  *     security?: SecurityConfig,
- *     monolog?: MonologConfig,
- *     lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
  *     nelmio_cors?: NelmioCorsConfig,
  *     api_platform?: ApiPlatformConfig,
  *     "when@dev"?: array{
@@ -1907,16 +1591,9 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         framework?: FrameworkConfig,
  *         doctrine?: DoctrineConfig,
  *         doctrine_migrations?: DoctrineMigrationsConfig,
- *         debug?: DebugConfig,
- *         twig?: TwigConfig,
- *         web_profiler?: WebProfilerConfig,
- *         stimulus?: StimulusConfig,
- *         turbo?: TurboConfig,
- *         twig_extra?: TwigExtraConfig,
- *         security?: SecurityConfig,
- *         monolog?: MonologConfig,
  *         maker?: MakerConfig,
- *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
+ *         twig?: TwigConfig,
+ *         security?: SecurityConfig,
  *         nelmio_cors?: NelmioCorsConfig,
  *         api_platform?: ApiPlatformConfig,
  *     },
@@ -1928,12 +1605,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         doctrine?: DoctrineConfig,
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         twig?: TwigConfig,
- *         stimulus?: StimulusConfig,
- *         turbo?: TurboConfig,
- *         twig_extra?: TwigExtraConfig,
  *         security?: SecurityConfig,
- *         monolog?: MonologConfig,
- *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
  *         nelmio_cors?: NelmioCorsConfig,
  *         api_platform?: ApiPlatformConfig,
  *     },
@@ -1945,13 +1617,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         doctrine?: DoctrineConfig,
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         twig?: TwigConfig,
- *         web_profiler?: WebProfilerConfig,
- *         stimulus?: StimulusConfig,
- *         turbo?: TurboConfig,
- *         twig_extra?: TwigExtraConfig,
  *         security?: SecurityConfig,
- *         monolog?: MonologConfig,
- *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
  *         nelmio_cors?: NelmioCorsConfig,
  *         api_platform?: ApiPlatformConfig,
  *     },

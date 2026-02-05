@@ -1,35 +1,189 @@
+version: "3.9"
 
 services:
-  nginx:
-    image: openresty/openresty:alpine
-    container_name: nginx-gateway
+  ##################################
+  # DATABASES
+  ##################################
+  auth-db:
+    image: mysql:8.3
+    container_name: auth-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: authdb
+      MYSQL_USER: authuser
+      MYSQL_PASSWORD: authpass
+    volumes:
+      - auth_mysql_data:/var/lib/mysql
+    networks:
+      - shifatech-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rdv-db:
+    image: mysql:8.3
+    container_name: rdv-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rdvdb
+      MYSQL_USER: rdvuser
+      MYSQL_PASSWORD: rdvpass
+    volumes:
+      - rdv_mysql_data:/var/lib/mysql
+    networks:
+      - shifatech-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  patient-db:
+    image: mysql:8.3
+    container_name: patient-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: patientdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user123
+    volumes:
+      - patient_mysql_data:/var/lib/mysql
+    networks:
+      - shifatech-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  infirmier-db:
+    image: mysql:8.3
+    container_name: infirmier-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: infirmierdb
+      MYSQL_USER: infirmieruser
+      MYSQL_PASSWORD: infirmierpass
+    volumes:
+      - infirmier_mysql_data:/var/lib/mysql
+    networks:
+      - shifatech-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  doctor-db:
+    image: mysql:8.3
+    container_name: doctor-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: doctordb
+      MYSQL_USER: doctoruser
+      MYSQL_PASSWORD: doctorpass
+    volumes:
+      - doctor_mysql_data:/var/lib/mysql
+    networks:
+      - shifatech-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ##################################
+  # BACKEND SERVICES
+  ##################################
+  auth-service:
+    build: ./Backend/auth-service
+    container_name: auth-service
     restart: always
     depends_on:
-      - web-service
-      - auth-service
-      - patient-service
-      - doctor-service
-      # - infirmier-service
-      - rdv-service
-    ports:
-      - "8082:80"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      auth-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://auth-db:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: authuser
+      SPRING_DATASOURCE_PASSWORD: authpass
+      SERVER_PORT: 8080
+    expose:
+      - "8080"
     networks:
       - shifatech-net
 
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    restart: always
+  rdv-service:
+    build: ./Backend/rdv-service
+    container_name: rdv-service
+    restart: unless-stopped
+    depends_on:
+      rdv-db:
+        condition: service_healthy
     environment:
-      PMA_HOSTS: auth-db,rdv-db,patient-db,infirmier-db,doctor-db
-      PMA_USER: root
-      PMA_PASSWORD: root
-    ports:
-      - "8083:80"
+      DATABASE_URL: mysql://rdvuser:rdvpass@rdv-db:3306/rdvdb
+    expose:
+      - "9000"
     networks:
       - shifatech-net
+
+  patient-service:
+    build: ./Backend/patient-service
+    container_name: patient-service
+    restart: always
+    depends_on:
+      patient-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://patient-db:3306/patientdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: user123
+      AUTH_SERVICE_URL: http://auth-service:8080
+    expose:
+      - "8080"
+    networks:
+      - shifatech-net
+
+  infirmier-service:
+    build: ./Backend/infirmier-service
+    container_name: infirmier-service
+    restart: unless-stopped
+    depends_on:
+      infirmier-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql://infirmieruser:infirmierpass@infirmier-db:3306/infirmierdb
+    expose:
+      - "9000"
+    networks:
+      - shifatech-net
+
+  doctor-service:
+    build: ./Backend/doctor-service
+    container_name: doctor-service
+    restart: always
+    depends_on:
+      doctor-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://doctor-db:3306/doctordb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: doctoruser
+      SPRING_DATASOURCE_PASSWORD: doctorpass
+      SERVER_PORT: 8080
+    expose:
+      - "8080"
+    networks:
+      - shifatech-net
+
+  ##################################
+  # FRONTEND
+  ##################################
   web-service:
     build:
       context: ./Frontend/Web
@@ -45,150 +199,47 @@ services:
     command: npm start
     networks:
       - shifatech-net
-  auth-db:
-    image: mysql:8.3
-    container_name: auth-db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: authdb
-      MYSQL_USER: authuser
-      MYSQL_PASSWORD: authpass
-    volumes:
-      - auth_mysql_data:/var/lib/mysql
-    networks:
-      - shifatech-net
 
-  auth-service:
-    build: ./Backend/auth-service
-    container_name: auth-service
+  ##################################
+  # NGINX GATEWAY
+  ##################################
+  nginx:
+    image: openresty/openresty:alpine
+    container_name: nginx-gateway
     restart: always
     depends_on:
-      - auth-db
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://auth-db:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: authuser
-      SPRING_DATASOURCE_PASSWORD: authpass
-      SERVER_PORT: 8080
-    expose:
-      - "8080"
-    networks:
-      - shifatech-net
-
-  rdv-db:
-    image: mysql:8.3
-    container_name: rdv-db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: rdvdb
-      MYSQL_USER: rdvuser
-      MYSQL_PASSWORD: rdvpass
-    volumes:
-      - rdv_mysql_data:/var/lib/mysql
-    networks:
-      - shifatech-net
-
-  rdv-service:
-    build: ./Backend/rdv-service
-    container_name: rdv-service
-    restart: unless-stopped
-    depends_on:
-      - rdv-db
-    environment:
-      DATABASE_URL: mysql://rdvuser:rdvpass@rdv-db:3306/rdvdb
-    expose:
-      - "9000"
-    networks:
-      - shifatech-net
-
-  patient-db:
-    image: mysql:8.0
-    container_name: patient-db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: patientdb
-      MYSQL_USER: user
-      MYSQL_PASSWORD: user123
-    volumes:
-      - patient_mysql_data:/var/lib/mysql
-    networks:
-      - shifatech-net
-
-  patient-service:
-    build: ./Backend/patient-service
-    container_name: patient-service
-    restart: always
-    depends_on:
-      - patient-db
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://patient-db:3306/patientdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: user123
-      AUTH_SERVICE_URL: http://auth-service:8080
+      - web-service
+      - auth-service
+      - patient-service
+      - doctor-service
+      - infirmier-service
+      - rdv-service
     ports:
-      - "8080:8080"
-    networks:
-      - shifatech-net
-
-  infirmier-db:
-    image: mysql:8.3
-    container_name: infirmier-db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: infirmierdb
-      MYSQL_USER: infirmieruser
-      MYSQL_PASSWORD: infirmierpass
+      - "8082:80"
     volumes:
-      - infirmier_mysql_data:/var/lib/mysql
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - shifatech-net
 
-  # infirmier-service:
-  #   build: ./Backend/infirmier-service
-  #   container_name: infirmier-service
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - infirmier-db
-  #   environment:
-  #     DATABASE_URL: mysql://infirmieruser:infirmierpass@infirmier-db:3306/infirmierdb
-  #   expose:
-  #     - "9000"
-  #   networks:
-  #     - shifatech-net
-
-  doctor-db:
-    image: mysql:8.3
-    container_name: doctor-db
+  ##################################
+  # PHPMyAdmin
+  ##################################
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: doctordb
-      MYSQL_USER: doctoruser
-      MYSQL_PASSWORD: doctorpass
-    volumes:
-      - doctor_mysql_data:/var/lib/mysql
+      PMA_HOSTS: auth-db,rdv-db,patient-db,infirmier-db,doctor-db
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8083:80"
     networks:
       - shifatech-net
 
-  doctor-service:
-    build: ./Backend/doctor-service
-    container_name: doctor-service
-    restart: always
-    depends_on:
-      - doctor-db
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://doctor-db:3306/doctordb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: doctoruser
-      SPRING_DATASOURCE_PASSWORD: doctorpass
-      SERVER_PORT: 8080
-    expose:
-      - "8080"
-    networks:
-      - shifatech-net
-
+##################################
+# NETWORKS & VOLUMES
+##################################
 networks:
   shifatech-net:
 

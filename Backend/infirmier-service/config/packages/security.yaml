@@ -5,11 +5,7 @@ security:
 
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        # used to reload user from session & other features (e.g. switch_user)
-        app_user_provider:
-            entity:
-                class: App\Entity\Utilisateur
-                property: id_utilisateur
+        users_in_memory: { memory: null }
 
     firewalls:
         dev:
@@ -18,7 +14,7 @@ security:
             security: false
         main:
             lazy: true
-            provider: app_user_provider
+            provider: users_in_memory
 
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -41,8 +37,3 @@ when@test:
                 cost: 4 # Lowest possible value for bcrypt
                 time_cost: 3 # Lowest possible value for argon
                 memory_cost: 10 # Lowest possible value for argon
-        role_hierarchy:
-            ROLE_SECRETAIRE: ROLE_USER
-            ROLE_INFIRMIER: ROLE_USER
-
-
