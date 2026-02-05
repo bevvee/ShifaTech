@@ -1,11 +1,21 @@
-import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, Input } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-checkbox',
-  imports: [],
+  selector: 'st-checkbox',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './checkbox.html',
-  styleUrl: './checkbox.css',
+  styleUrls: ['./checkbox.css'],
 })
-export class Checkbox {
+export class CheckboxComponent {
+  @Input({ required: true }) control!: FormControl;
+  @Input() id = 'checkbox';
+  @Input() label = '';
+  @Input() required = false;
 
+  get invalid(): boolean {
+    return this.control.invalid && this.control.touched;
+  }
 }

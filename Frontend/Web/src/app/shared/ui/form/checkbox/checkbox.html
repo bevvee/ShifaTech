@@ -1,1 +1,20 @@
-<p>checkbox works!</p>
+<div class="w-full">
+	<div class="flex items-center">
+		<input
+			type="checkbox"
+			[id]="id"
+			[formControl]="control"
+			class="shrink-0 size-4 bg-transparent border rounded-sm shadow-sm
+						 border-slate-300 accent-indigo-600
+						 focus:ring-0 focus:ring-offset-0
+						 disabled:opacity-50 disabled:pointer-events-none"
+			[class.border-red-400]="invalid"
+		/>
+
+		<label [attr.for]="id" class="text-sm ms-3 text-slate-600">
+			{{ label }} <span *ngIf="required" class="text-red-500">*</span>
+		</label>
+	</div>
+
+	<p *ngIf="invalid" class="mt-1 text-xs text-red-500">Champ invalide.</p>
+</div>

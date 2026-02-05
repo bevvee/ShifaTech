@@ -18,28 +18,29 @@ export class AppLayoutComponent {
 
   activeRoute = this.router.url;
 
+  sidebarOpen = false;
+
   items: NavItem[] = [
     { label: 'Dashboard', icon: 'dashboard', route: '/app/dashboard' },
-    { label: 'Applications', icon: 'apps', route: '/app/apps' },
-    { label: 'Layouts', icon: 'view_quilt', route: '/app/layouts' },
 
-    {
-      label: 'Clinic',
-      icon: 'local_hospital',
-      children: [
-        { label: 'Doctors', route: '/app/doctors' },
-        { label: 'Patients', route: '/app/patients' },
-        { label: 'Appointments', route: '/app/appointments' },
-        { label: 'Locations', route: '/app/locations' },
-        { label: 'Services', route: '/app/services' },
-        { label: 'Specializations', route: '/app/specializations' },
-      ],
-    },
+    { label: 'Doctors', icon: 'medical_services', route: '/app/doctors' },
+    { label: 'Patients', icon: 'groups', route: '/app/patients' },
+    { label: 'Appointments', icon: 'event', route: '/app/appointments' },
+    { label: 'Locations', icon: 'location_on', route: '/app/locations' },
+    { label: 'Services', icon: 'miscellaneous_services', route: '/app/services' },
+    { label: 'Specializations', icon: 'category', route: '/app/specializations' },
   ];
 
   constructor() {
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe((e) => (this.activeRoute = e.urlAfterRedirects));
+      .subscribe((e) => {
+        this.activeRoute = e.urlAfterRedirects;
+        this.sidebarOpen = false;
+      });
+  }
+
+  toggleSidebar() {
+    this.sidebarOpen = !this.sidebarOpen;
   }
 }

@@ -1,0 +1,60 @@
+<div
+  class="w-full rounded-2xl px-5 py-4 flex gap-4 items-start"
+  [class]="boxClasses + ' ' + ringClasses"
+>
+  <!-- Icon -->
+  <div class="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0"
+       [class]="iconWrapClasses">
+    <!-- INFO -->
+    <svg *ngIf="variant === 'info'" class="h-6 w-6" viewBox="0 0 24 24" fill="none">
+      <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 10v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M12 7h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+
+    <!-- SUCCESS -->
+    <svg *ngIf="variant === 'success'" class="h-6 w-6" viewBox="0 0 24 24" fill="none">
+      <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" stroke="currentColor" stroke-width="2"/>
+      <path d="m7.5 12.2 2.7 2.7L16.8 8.7" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+
+    <!-- WARNING -->
+    <svg *ngIf="variant === 'warning'" class="h-6 w-6" viewBox="0 0 24 24" fill="none">
+      <path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M12 17h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <path d="M10.3 3.2 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.2a2 2 0 0 0-3.4 0Z"
+            stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    </svg>
+
+    <!-- ERROR -->
+    <svg *ngIf="variant === 'error'" class="h-6 w-6" viewBox="0 0 24 24" fill="none">
+      <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 8v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M12 16h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 min-w-0">
+    <div class="text-base font-semibold text-slate-900 leading-6">
+      {{ title }}
+    </div>
+    <div class="mt-1 text-sm text-slate-600 leading-6">
+      {{ message }}
+    </div>
+  </div>
+
+  <!-- Close -->
+  <button
+    *ngIf="closable"
+    type="button"
+    (click)="close()"
+    class="h-9 w-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-white/60 transition"
+    aria-label="Close"
+  >
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none">
+      <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </button>
+</div>

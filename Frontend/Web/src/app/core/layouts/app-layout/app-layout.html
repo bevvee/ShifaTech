@@ -1,7 +1,16 @@
 <div class="min-h-screen bg-slate-50">
+  <!-- Mobile backdrop -->
+  <div
+    class="fixed inset-0 z-30 bg-black/30 sm:hidden"
+    [class.hidden]="!sidebarOpen"
+    (click)="sidebarOpen = false"
+  ></div>
+
   <div class="flex">
     <st-sidebar
-      class="shrink-0"
+      class="shrink-0 fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 ease-out
+             sm:static sm:translate-x-0 sm:z-auto"
+      [class.-translate-x-full]="!sidebarOpen"
       [clinicName]="clinicName"
       [clinicCity]="clinicCity"
       [items]="items"
@@ -9,7 +18,7 @@
     />
 
     <main class="flex-1 min-w-0">
-      <st-topbar />
+      <st-topbar (toggleSidebar)="toggleSidebar()" />
 
       <div class="px-6 py-6">
         <router-outlet />

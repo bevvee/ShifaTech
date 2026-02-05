@@ -1,1 +1,21 @@
-<p>textarea works!</p>
+<div class="max-w-sm w-full">
+	<label *ngIf="label" [attr.for]="id" class="block mb-3 text-sm font-medium text-slate-900">
+		{{ label }} <span *ngIf="required" class="text-red-500">*</span>
+	</label>
+
+	<textarea
+		[id]="id"
+		[rows]="rows"
+		[placeholder]="placeholder"
+		[formControl]="control"
+		class="py-2 px-3 sm:py-3 sm:px-4 block w-full bg-white border rounded-lg sm:text-sm text-slate-900
+					 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100
+					 disabled:opacity-50 disabled:pointer-events-none
+					 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-none
+					 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300"
+		[class.border-red-400]="invalid"
+		[class.border-slate-200]="!invalid"
+	></textarea>
+
+	<p *ngIf="invalid" class="mt-1 text-xs text-red-500">Champ invalide.</p>
+</div>

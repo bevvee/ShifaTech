@@ -18,6 +18,9 @@ export class InputComponent {
   @Input() icon: string | null = null;
   @Input() required = false;
 
+  @Input() id?: string;
+  @Input() hideLabel = false;
+
   showPassword = false;
 
   get inputType(): string {
