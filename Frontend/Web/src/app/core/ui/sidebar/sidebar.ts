@@ -1,38 +1,35 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
-export type NavChild = { label: string; route: string };
-export type NavItem =
-  | { label: string; icon?: string; route: string }
-  | { label: string; icon?: string; children: NavChild[] };
+import { SidebarChild, SidebarItem } from './sidebar.config';
+import { Icon } from '../../../shared/ui/icons/Icon';
 
 @Component({
   selector: 'st-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, Icon],
   templateUrl: './sidebar.html',
 })
 export class SidebarComponent {
-  @Input({ required: false }) clinicName = '';
-  @Input({ required: false }) clinicCity = '';
-  @Input({ required: true }) items: NavItem[] = [];
+  @Input() clinicName = 'ShifaTech';
   @Input() activeRoute = '';
+  @Input({ required: true }) items: SidebarItem[] = [];
 
-  openKey: string | null = null;
+  @Output() requestClose = new EventEmitter<void>();
 
-  isGroup(item: NavItem): item is Extract<NavItem, { children: NavChild[] }> {
-    return 'children' in item;
+  openGroup: string | null = null;
+
+  isImageIcon(icon: string | null | undefined): boolean {
+    if (!icon) return false;
+    return icon.includes('/') || icon.includes('\\') || icon.endsWith('.svg') || icon.startsWith('assets/');
+  }
+
+  isGroup(item: SidebarItem): item is SidebarItem & { children: SidebarChild[] } {
+    return Array.isArray(item.children) && item.children.length > 0;
   }
 
   toggleGroup(label: string) {
-    this.openKey = this.openKey === label ? null : label;
-  }
-
-  isChildActive(item: NavItem): boolean {
-    if (!this.isGroup(item)) return false;
-    return item.children.some(
-      (c) => this.activeRoute === c.route || this.activeRoute.startsWith(c.route + '/')
-    );
+    this.openGroup = this.openGroup === label ? null : label;
   }
 }

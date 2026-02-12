@@ -11,11 +11,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { Icon } from '../../../shared/ui/icons/Icon';
+
 
 @Component({
   selector: 'st-topbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, Icon],
   templateUrl: './topbar.html',
 })
 export class TopbarComponent {
@@ -23,8 +25,6 @@ export class TopbarComponent {
 
   @ViewChild('root', { static: true }) rootRef!: ElementRef<HTMLElement>;
 
-  @Input() title = '';
-  @Input() subtitle = '';
   @Input() showSearch = true;
   @Input() searchPlaceholder = 'Search...';
   @Input() showNotifications = true;
@@ -49,34 +49,9 @@ export class TopbarComponent {
       .subscribe((e) => (this.currentUrl = e.urlAfterRedirects));
   }
 
-  get computedTitle(): string {
-    if (this.title?.trim()) return this.title;
-    const cleaned = (this.currentUrl || '').split('?')[0].split('#')[0];
-    const parts = cleaned.split('/').filter(Boolean);
-    const last = parts[parts.length - 1] || 'Dashboard';
 
-    const map: Record<string, string> = {
-      app: 'Dashboard',
-      dashboard: 'Dashboard',
-      doctors: 'Doctors',
-      patients: 'Patients',
-      appointments: 'Appointments',
-      locations: 'Locations',
-      services: 'Services',
-      specializations: 'Specializations',
-    };
 
-    const key = last.toLowerCase();
-    if (map[key]) return map[key];
-    return key
-      .replace(/[-_]+/g, ' ')
-      .replace(/\b\w/g, (m) => m.toUpperCase());
-  }
 
-  get computedSubtitle(): string {
-    if (this.subtitle?.trim()) return this.subtitle;
-    return '';
-  }
 
   get initials(): string {
     const parts = (this.userName || '').trim().split(/\s+/).filter(Boolean);

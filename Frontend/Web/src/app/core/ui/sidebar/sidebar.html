@@ -1,69 +1,82 @@
-<aside class="h-screen w-64 bg-white border-r border-gray-200 flex flex-col">
-  <!-- Brand -->
-  <div class="h-16 px-6 flex items-center gap-3 border-b border-gray-200">
-    <div class="flex items-center justify-center">
-      <img src="assets/images/ST.png" alt="ShifaTech" class="h-12 w-auto"/>
+<!-- Sidebar -->
+<aside class="h-full w-full bg-white flex flex-col">
+  <!-- Header -->
+  <div class="py-1 px-4 flex items-center justify-between border-b border-slate-200">
+    <div class="flex items-center gap-2">
+      <img src="assets/images/ST.png" class="h-12" />
+      <div class="min-w-0">
+        <div class="text-lg font-bold tracking-tight select-none">
+          <span class="text-[#105082]">Shifa</span>
+          <span class="text-[#3CA169] bg-clip-text"> Tech </span>
+        </div>
+      </div>
     </div>
-    <div class="text-lg font-semibold tracking-wide">
-      <span class="font-poetsen">Shifa</span>
-      <span class="font-poppins">Tech</span>
-    </div>
+
+    <button
+      class="lg:hidden h-9 w-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50"
+      (click)="requestClose.emit()"
+      aria-label="Close sidebar"
+    >
+      ✕
+    </button>
   </div>
 
-  <!-- MENU -->
-  <div class="px-6 py-4 text-xs uppercase text-gray-400 tracking-wider">
-    Menu principal
+  <!-- Menu -->
+  <nav class="flex-1 overflow-y-auto px-4 py-8 space-y-1">
+    <div class="px-3 mb-2 text-xs font-medium tracking-wider text-slate-400">
+    Main
   </div>
-
-  <nav class="px-3 space-y-2 overflow-y-auto pb-6">
     <ng-container *ngFor="let item of items">
-
       <!-- GROUP -->
-      <div *ngIf="isGroup(item)" class="rounded-xl">
+      <!-- <div *ngIf="isGroup(item)">
         <button
-          type="button"
           (click)="toggleGroup(item.label)"
-          class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition
-                 hover:bg-gray-100"
-          [class.bg-gray-50]="openKey === item.label || isChildActive(item)"
+          class="group w-full h-10 flex items-center gap-3 px-3 rounded-xl text-[#0A1A38] hover:bg-slate-50"
+          [attr.aria-expanded]="openGroup === item.label"
         >
-          <div class="flex items-center gap-3">
-            <span class="material-icons text-xl text-gray-600">{{ item.icon }}</span>
-            <span class="text-sm font-semibold text-gray-800">{{ item.label }}</span>
-          </div>
-
+          <ng-container *ngIf="isImageIcon(item.icon); else groupMaterialIcon">
+            <img [src]="item.icon" class="w-5 h-5" alt="" />
+          </ng-container>
+          <ng-template #groupMaterialIcon>
+            <span class="material-icons text-slate-500 hover:text-[#3CA169] ">{{
+              item.icon
+            }}</span>
+          </ng-template>
+          <span class="flex-1 text-sm font-medium">
+            {{ item.label }}
+          </span>
           <span
-            class="material-icons text-xl text-gray-500 transition-transform"
-            [class.rotate-180]="openKey === item.label"
+            class="material-icons text-sm text-slate-400 transition-transform"
+            [class.rotate-180]="openGroup === item.label"
           >
             expand_more
           </span>
         </button>
 
-        <!-- SUBMENU -->
-        <div *ngIf="openKey === item.label" class="mt-2 ml-10 space-y-1">
+        <div *ngIf="openGroup === item.label" class="ms-8 mt-1 space-y-1">
           <a
             *ngFor="let child of item.children"
             [routerLink]="child.route"
-            routerLinkActive="text-blue-700 font-semibold"
-            class="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
+            routerLinkActive="bg-indigo-50 text-indigo-700 font-semibold"
+            class="h-9 px-3 flex items-center text-sm rounded-xl text-slate-700 hover:bg-slate-50"
           >
             {{ child.label }}
           </a>
         </div>
-      </div>
+      </div> -->
 
       <!-- SIMPLE LINK -->
       <a
-        *ngIf="!isGroup(item)"
+        *ngIf="!isGroup(item) && item.route"
         [routerLink]="item.route"
-        routerLinkActive="bg-blue-50 text-blue-700"
-        class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-800 font-semibold hover:bg-gray-100 transition"
+        routerLinkActive="bg-green-50 text-green-500"
+        class="group h-10 flex items-center gap-3 px-3 rounded-xl text-green-500 hover:bg-green-50"
       >
-        <span class="material-icons text-xl">{{ item.icon }}</span>
-        <span class="text-sm font-medium">{{ item.label }}</span>
+        <app-icon [name]="item.icon"></app-icon>
+        <span class="text-sm font-medium">
+          {{ item.label }}
+        </span>
       </a>
-
     </ng-container>
   </nav>
 </aside>
