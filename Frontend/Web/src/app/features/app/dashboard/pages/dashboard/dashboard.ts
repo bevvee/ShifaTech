@@ -29,7 +29,7 @@ export type AppointmentItem = {
     KpiCardsComponent,
     AppointmentStatsComponent,
     AppointmentsWidgetComponent,
-  ],
+      CommonModule  ],
   templateUrl: './dashboard.html',
 })
 export class DashboardComponent {

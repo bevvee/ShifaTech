@@ -61,7 +61,7 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
   {
     label: 'Ordonnances',
     icon: 'ordonnances',
-    roles: ['DOCTOR'],
+    roles: ['DOCTOR','NURSE'],
     route: '/app/ordonnances',
   },
 ];

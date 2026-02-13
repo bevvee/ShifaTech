@@ -8,7 +8,12 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: RendezVousRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    security: "is_granted('ROLE_PATIENT')",
+    processor: AppointmentProcessor::class,
+    securityPostDenormalize: "object.getPatientId() == user.getUserIdentifier()"
+)]
+
 class RendezVous
 {
     #[ORM\Id]
@@ -16,9 +21,7 @@ class RendezVous
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
-    private ?int $id_rdv = null;
-
+    #[ApiProperty(readable: true, writable: false)]
     #[ORM\Column]
     private ?int $id_patient = null;
 
@@ -54,17 +57,6 @@ class RendezVous
         return $this->id;
     }
 
-    public function getIdRdv(): ?int
-    {
-        return $this->id_rdv;
-    }
-
-    public function setIdRdv(int $id_rdv): static
-    {
-        $this->id_rdv = $id_rdv;
-
-        return $this;
-    }
 
     public function getIdPatient(): ?int
     {
