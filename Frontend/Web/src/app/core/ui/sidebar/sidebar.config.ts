@@ -25,7 +25,7 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
   {
     label: 'Docteurs',
     icon: 'doctors',
-    route: '/app/docteurs',
+    route: '/app/doctors',
     roles: ['ADMIN'],
   },
   {
