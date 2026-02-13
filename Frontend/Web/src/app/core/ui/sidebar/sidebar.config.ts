@@ -29,16 +29,22 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     roles: ['ADMIN'],
   },
   {
+    label: 'Infirmier',
+    icon: 'infirmier',
+    route: '/app/infirmier',
+    roles: ['ADMIN'],
+  },
+  {
     label: 'Patients',
     icon: 'patients',
     route: '/app/patients',
     roles: ['DOCTOR', 'NURSE'],
   },
   {
-    label: 'Appointments',
-    icon: 'appointments',
+    label: 'Rendez Vous',
+    icon: 'rendezvous',
     roles: ['NURSE', 'DOCTOR'],
-    route: '/app/appointments',
+    route: '/app/RendezVous',
   },
   {
     label: 'Services',
