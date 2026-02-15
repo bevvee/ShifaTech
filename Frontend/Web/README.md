@@ -22,6 +22,7 @@ Web/
 ├─ .postcssrc.json
 ├─ angular.json
 ├─ Dockerfile
+├─ package-lock.json
 ├─ package.json
 ├─ README.md
 ├─ tsconfig.json
@@ -34,6 +35,7 @@ Web/
 │  ├─ launch.json
 │  └─ tasks.json
 ├─ public/
+│  └─ favicon.ico
 └─ src/
 	├─ index.html
 	├─ main.ts
@@ -58,64 +60,99 @@ Web/
 		│  │  └─ auth.interceptor.ts
 		│  ├─ layouts/
 		│  │  ├─ app-layout/
-		│  │  │  ├─ app-layout.ts
+		│  │  │  ├─ app-layout.css
 		│  │  │  ├─ app-layout.html
-		│  │  │  └─ app-layout.css
+		│  │  │  └─ app-layout.ts
 		│  │  └─ public-layout/
-		│  │     ├─ public-layout.ts
+		│  │     ├─ public-layout.css
 		│  │     ├─ public-layout.html
-		│  │     └─ public-layout.css
+		│  │     └─ public-layout.ts
 		│  ├─ services/
 		│  │  ├─ api.service.ts
 		│  │  └─ loader.service.ts
 		│  └─ ui/
 		│     ├─ sidebar/
-		│     │  ├─ sidebar.ts
+		│     │  ├─ sidebar.css
 		│     │  ├─ sidebar.html
-		│     │  └─ sidebar.css
+		│     │  └─ sidebar.ts
 		│     └─ topbar/
-		│        ├─ topbar.ts
+		│        ├─ topbar.css
 		│        ├─ topbar.html
-		│        └─ topbar.css
+		│        └─ topbar.ts
 		├─ shared/
 		│  ├─ models/
 		│  └─ ui/
-		│     ├─ navbar/
-		│     │  ├─ navbar.ts
-		│     │  ├─ navbar.html
-		│     │  └─ navbar.css
-		│     ├─ panel/
-		│     │  ├─ panel.ts
-		│     │  ├─ panel.html
-		│     │  └─ panel.css
-		│     ├─ page-header/
-		│     │  ├─ page-header.ts
-		│     │  ├─ page-header.html
-		│     │  └─ page-header.css
-		│     ├─ sidebar/
-		│     │  ├─ sidebar.ts
-		│     │  ├─ sidebar.html
-		│     │  └─ sidebar.css
-		│     ├─ data-table/
-		│     │  ├─ data-table.ts
-		│     │  ├─ data-table.html
-		│     │  └─ data-table.css
+		│     ├─ alert/
+		│     │  ├─ alert.css
+		│     │  ├─ alert.html
+		│     │  └─ alert.ts
 		│     ├─ confirm-dialog/
-		│     │  ├─ confirm-dialog.ts
+		│     │  ├─ confirm-dialog.css
 		│     │  ├─ confirm-dialog.html
-		│     │  └─ confirm-dialog.css
+		│     │  └─ confirm-dialog.ts
+		│     ├─ data-table/
+		│     │  ├─ data-table.css
+		│     │  ├─ data-table.html
+		│     │  └─ data-table.ts
+		│     ├─ form/
+		│     │  ├─ checkbox/
+		│     │  │  ├─ checkbox.css
+		│     │  │  ├─ checkbox.html
+		│     │  │  └─ checkbox.ts
+		│     │  ├─ date-input/
+		│     │  │  ├─ date-input.css
+		│     │  │  ├─ date-input.html
+		│     │  │  └─ date-input.ts
+		│     │  ├─ file-upload-drop/
+		│     │  │  ├─ file-upload-drop.css
+		│     │  │  ├─ file-upload-drop.html
+		│     │  │  └─ file-upload-drop.ts
+		│     │  ├─ form-error/
+		│     │  │  ├─ form-error.css
+		│     │  │  ├─ form-error.html
+		│     │  │  └─ form-error.ts
+		│     │  ├─ input/
+		│     │  │  ├─ input.css
+		│     │  │  ├─ input.html
+		│     │  │  └─ input.ts
+		│     │  ├─ profile-image/
+		│     │  │  ├─ profile-image.css
+		│     │  │  ├─ profile-image.html
+		│     │  │  └─ profile-image.ts
+		│     │  ├─ radio-group/
+		│     │  │  ├─ radio-group.css
+		│     │  │  ├─ radio-group.html
+		│     │  │  └─ radio-group.ts
+		│     │  ├─ search/
+		│     │  │  ├─ search.css
+		│     │  │  ├─ search.html
+		│     │  │  └─ search.ts
+		│     │  ├─ select-search/
+		│     │  │  ├─ select-search.css
+		│     │  │  ├─ select-search.html
+		│     │  │  └─ select-search.ts
+		│     │  └─ textarea/
+		│     │     ├─ textarea.css
+		│     │     ├─ textarea.html
+		│     │     └─ textarea.ts
+		│     ├─ icons/
+		│     │  └─ Icon.ts
 		│     ├─ loading-overlay/
-		│     │  ├─ loading-overlay.ts
+		│     │  ├─ loading-overlay.css
 		│     │  ├─ loading-overlay.html
-		│     │  └─ loading-overlay.css
-		│     └─ form/
-		│        ├─ input/
-		│        ├─ select/
-		│        ├─ textarea/
-		│        ├─ checkbox/
-		│        ├─ radio-group/
-		│        ├─ file/
-		│        └─ search/
+		│     │  └─ loading-overlay.ts
+		│     ├─ page-header/
+		│     │  ├─ page-header.css
+		│     │  ├─ page-header.html
+		│     │  └─ page-header.ts
+		│     ├─ panel/
+		│     │  ├─ panel.css
+		│     │  ├─ panel.html
+		│     │  └─ panel.ts
+		│     └─ stat-card/
+		│        ├─ stat-card.css
+		│        ├─ stat-card.html
+		│        └─ stat-card.ts
 		└─ features/
 			├─ app/
 			│  ├─ app.routes.ts
@@ -124,24 +161,75 @@ Web/
 			│  ├─ dashboard/
 			│  │  ├─ dashboard.routes.ts
 			│  │  ├─ pages/
+			│  │  │  └─ dashboard/
+			│  │  │     ├─ dashboard.css
+			│  │  │     ├─ dashboard.html
+			│  │  │     └─ dashboard.ts
 			│  │  └─ ui/
-			│  │     └─ appointments-widget/ (generated)
+			│  │     ├─ appointment-stats/
+			│  │     │  ├─ appointment-stats.css
+			│  │     │  ├─ appointment-stats.html
+			│  │     │  └─ appointment-stats.ts
+			│  │     ├─ appointments-widget/
+			│  │     │  ├─ appointments-widget.css
+			│  │     │  ├─ appointments-widget.html
+			│  │     │  └─ appointments-widget.ts
+			│  │     ├─ charts/
+			│  │     │  └─ appointments-chart/
+			│  │     │     ├─ appointments-chart.css
+			│  │     │     ├─ appointments-chart.html
+			│  │     │     ├─ appointments-chart.spec.ts
+			│  │     │     └─ appointments-chart.ts
+			│  │     └─ kpi-cards/
+			│  │        ├─ kpi-cards.css
+			│  │        ├─ kpi-cards.html
+			│  │        └─ kpi-cards.ts
 			│  ├─ doctors/
 			│  │  ├─ doctors.routes.ts
 			│  │  └─ pages/
+			│  │     ├─ add-doctor/
+			│  │     │  ├─ add-doctor.css
+			│  │     │  ├─ add-doctor.html
+			│  │     │  └─ add-doctor.ts
+			│  │     ├─ doctors-list/
+			│  │     │  ├─ doctors-list.css
+			│  │     │  ├─ doctors-list.html
+			│  │     │  └─ doctors-list.ts
+			│  │     └─ specializations/
+			│  │        ├─ specializations.css
+			│  │        ├─ specializations.html
+			│  │        └─ specializations.ts
 			│  └─ patients/
 			├─ auth/
 			│  ├─ auth.routes.ts
 			│  └─ pages/
 			│     └─ login/
+			│        ├─ login.css
+			│        ├─ login.html
+			│        └─ login.ts
 			└─ public/
 				├─ public.routes.ts
 				└─ pages/
-					├─ home/
 					├─ about/
-					├─ services/
+					│  ├─ about.css
+					│  ├─ about.html
+					│  └─ about.ts
 					├─ book/
-					└─ contact/
+					│  ├─ book.css
+					│  ├─ book.html
+					│  └─ book.ts
+					├─ contact/
+					│  ├─ contact.css
+					│  ├─ contact.html
+					│  └─ contact.ts
+					├─ home/
+					│  ├─ home.css
+					│  ├─ home.html
+					│  └─ home.ts
+					└─ services/
+					   ├─ services.css
+					   ├─ services.html
+					   └─ services.ts
 ```
 
 Key files:

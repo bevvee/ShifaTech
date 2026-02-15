@@ -12,7 +12,7 @@ import { RouterOutlet } from '@angular/router';
       [rightItems]="rightItems">
     </st-navbar> -->
 
-    <main class="p-6">
+    <main>
       <router-outlet></router-outlet>
     </main>
   `,

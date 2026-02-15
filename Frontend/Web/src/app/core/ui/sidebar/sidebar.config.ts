@@ -1,73 +1,77 @@
-export type SidebarRole = 'ADMIN' | 'DOCTOR' | 'NURSE';
+import { UserRole } from '../../../shared/models/role.model';
 
-export type SidebarChild = {
+
+export interface SidebarChild {
   label: string;
   route: string;
-  roles?: SidebarRole[];
+  roles?: UserRole[];
   icon?: string;
-};
+}
 
-export type SidebarItem = {
+export interface SidebarItem {
   label: string;
   icon: string;
   route?: string;
-  roles?: SidebarRole[];
+  roles?: UserRole[];
   children?: SidebarChild[];
-};
+}
 
 export const SIDEBAR_ITEMS: SidebarItem[] = [
   {
     label: 'Dashboard',
     icon: 'dashboard',
     route: '/app/dashboard',
-    roles: ['ADMIN', 'DOCTOR', 'NURSE'],
+    roles: [UserRole.ADMIN, UserRole.DOCTOR, UserRole.NURSE],
   },
   {
     label: 'Docteurs',
     icon: 'doctors',
     route: '/app/doctors',
-    roles: ['ADMIN'],
+    roles: [UserRole.ADMIN],
   },
   {
-    label: 'Infirmier',
+    label: 'Infirmiers',
     icon: 'infirmier',
-    route: '/app/infirmier',
-    roles: ['ADMIN'],
+    route: '/app/infirmiers',
+    roles: [UserRole.ADMIN],
   },
   {
     label: 'Patients',
     icon: 'patients',
     route: '/app/patients',
-    roles: ['DOCTOR', 'NURSE'],
+    roles: [UserRole.DOCTOR, UserRole.NURSE],
   },
   {
-    label: 'Rendez Vous',
+    label: 'Rendez-Vous',
     icon: 'rendezvous',
-    roles: ['NURSE', 'DOCTOR'],
-    route: '/app/RendezVous',
+    roles: [UserRole.DOCTOR, UserRole.NURSE],
+    children: [
+    { label: 'Agenda', route: '/app/agenda' },
+    { label: 'Rendez Vous', route: '/app/rendezvous' },
+  ]
   },
   {
     label: 'Services',
     icon: 'services',
-    roles: ['ADMIN'],
     route: '/app/services',
+    roles: [UserRole.ADMIN],
   },
   {
-    label: 'Specialization',
+    label: 'Specializations',
     icon: 'specialization',
-    roles: ['ADMIN'],
     route: '/app/specialization',
+    roles: [UserRole.ADMIN],
   },
-  {
+/*   {
     label: 'Agenda',
-    icon: 'Agenda',
-    roles: ['DOCTOR','NURSE'],
+    icon: 'agenda',
     route: '/app/agenda',
-  },
+    roles: [UserRole.DOCTOR, UserRole.NURSE],
+  }, */
   {
     label: 'Ordonnances',
     icon: 'ordonnances',
-    roles: ['DOCTOR','NURSE'],
     route: '/app/ordonnances',
+    roles: [UserRole.DOCTOR, UserRole.NURSE],
   },
 ];
