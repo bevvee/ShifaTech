@@ -4,13 +4,14 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "patients")
+@Table(name = "patient")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,25 +22,62 @@ public class Patient {
     @Column(name = "id_patient")
     private Long idPatient;
 
-    @Column(name = "id_user", unique = true)
+    @Column(name = "id_user", nullable = false, unique = true)
     private Long idUser; // Référence vers le service Auth
 
-    @Column(name = "num_dossier", unique = true)
+    @Column(name = "num_dossier", unique = true, length = 50)
     private String numDossier;
 
-    private Double poids;
-    private Double taille;
+    @Column(name = "poids", precision = 5, scale = 2)
+    private BigDecimal poids;
 
-    // Relations
-    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    private DossierMedical dossierMedical;
+    @Column(name = "taille", precision = 5, scale = 2)
+    private BigDecimal taille;
 
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    private List<Ordonnance> ordonnances = new ArrayList<>();
+    @Column(name = "groupe_sanguin", length = 5)
+    private String groupeSanguin; // Ex: A+, O-, AB+
 
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    private List<Affiche> affiches = new ArrayList<>();
+    @Column(name = "antecedents_medicaux", columnDefinition = "TEXT")
+    private String antecedentsMedicaux;
+
+    @Column(name = "allergies", columnDefinition = "TEXT")
+    private String allergies;
+
+    @Column(name = "pathologies_chroniques", columnDefinition = "TEXT")
+    private String pathologiesChroniques;
+
+    @Column(name = "assurance", length = 100)
+    private String assurance;
+
+    @Column(name = "numero_assurance", length = 50)
+    private String numeroAssurance;
+
+    @Column(name = "contact_urgence_nom", length = 100)
+    private String contactUrgenceNom;
+
+    @Column(name = "contact_urgence_tel", length = 20)
+    private String contactUrgenceTel;
+
+    @Column(name = "statut")
+    private Boolean statut = true; // Actif/Inactif
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
 }
