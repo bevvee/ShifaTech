@@ -1,0 +1,31 @@
+<div class="w-full space-y-3">
+	<label *ngIf="label" class="block text-sm font-medium text-slate-900">
+		{{ label }} <span *ngIf="required" class="text-red-500">*</span>
+	</label>
+
+	<div class="space-y-3">
+		<div *ngFor="let opt of options; let i = index" class="flex items-center">
+			<input
+				type="radio"
+				[id]="optionId(opt, i)"
+				[name]="name"
+				[value]="opt.value"
+				[formControl]="control"
+				[disabled]="!!opt.disabled"
+				class="shrink-0 size-4 bg-transparent border rounded-full shadow-sm
+							 border-slate-300 accent-indigo-600
+							 focus:ring-0 focus:ring-offset-0
+							 disabled:opacity-50 disabled:pointer-events-none"
+				[class.border-red-400]="invalid"
+			/>
+			<label
+				[attr.for]="optionId(opt, i)"
+				class="text-sm ms-3 text-slate-600"
+			>
+				{{ opt.label }}
+			</label>
+		</div>
+	</div>
+
+	<p *ngIf="invalid" class="text-xs text-red-500">Champ invalide.</p>
+</div>

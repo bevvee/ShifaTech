@@ -1,0 +1,54 @@
+
+<div class="w-full space-y-2">
+	<label
+		*ngIf="label"
+		[attr.for]="id || null"
+		class="block text-sm font-medium text-slate-900"
+		[class.sr-only]="hideLabel"
+	>
+		{{ label }} <span *ngIf="required" class="text-red-500">*</span>
+	</label>
+
+	<div class="relative">
+		<span
+			*ngIf="icon"
+			class="absolute left-3 top-1/2 -translate-y-1/4 text-slate-400 pointer-events-none"
+		>
+			<span class="material-icons text-lg">{{ icon }}</span>
+		</span>
+
+		<input
+			[attr.id]="id || null"
+			[type]="inputType"
+			[formControl]="control"
+			[placeholder]="placeholder"
+			class="py-2.5 sm:py-3 px-4 rounded-lg block w-full bg-white border border-slate-200 sm:text-sm text-slate-900
+						 placeholder:text-slate-400 focus:outline-none
+						 focus:border-green-600 focus:ring-4 focus:ring-green-100
+						 disabled:opacity-50 disabled:pointer-events-none"
+			[class.pl-11]="!!icon"
+			[class.pr-12]="type === 'password'"
+			[class.border-red-400]="invalid"
+		/>
+
+		<button
+			*ngIf="type === 'password'"
+			type="button"
+			(click)="togglePassword()"
+			class="absolute right-2 top-1/2 -translate-y-1/4 h-9 w-9 rounded-lg
+						 text-slate-500 hover:bg-slate-100 flex items-center justify-center"
+			[attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+		>
+			<svg *ngIf="!showPassword" class="h-5 w-5" viewBox="0 0 24 24" fill="none">
+				<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" stroke="currentColor" stroke-width="2" />
+				<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2" />
+			</svg>
+			<svg *ngIf="showPassword" class="h-5 w-5" viewBox="0 0 24 24" fill="none">
+				<path d="M3 3l18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+				<path d="M10.58 10.58A2 2 0 0 0 12 14a2 2 0 0 0 1.42-.58" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+				<path d="M9.88 5.09A10.4 10.4 0 0 1 12 5c6 0 10 7 10 7a18.3 18.3 0 0 1-5.17 5.73" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+				<path d="M6.24 6.24C3.83 8.05 2 12 2 12s4 7 10 7c1.04 0 2.03-.16 2.96-.45" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+			</svg>
+		</button>
+	</div>
+</div>

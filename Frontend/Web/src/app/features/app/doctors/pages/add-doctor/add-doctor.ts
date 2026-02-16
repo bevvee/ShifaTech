@@ -1,49 +1,89 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
-import { LoaderService } from '../../../../../core/services/loader.service';
+import { ProfileImageComponent } from '../../../../../shared/ui/form/profile-image/profile-image';
+import { FileUploadDropComponent } from '../../../../../shared/ui/form/file-upload-drop/file-upload-drop';
+import { SelectSearchComponent, StSelectOption } from '../../../../../shared/ui/form/select-search/select-search';
+import { DateComponent } from '../../../../../shared/ui/form/date-input/date-input';
+import { RadioGroupComponent } from '../../../../../shared/ui/form/radio-group/radio-group';
+import { CheckboxComponent } from '../../../../../shared/ui/form/checkbox/checkbox';
+import { AlertComponent } from '../../../../../shared/ui/alert/alert';
+
+
+
 
 @Component({
   selector: 'st-add-doctor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    AlertComponent,
+    CommonModule,
+    ReactiveFormsModule,
+    RadioGroupComponent,
+    CheckboxComponent,
+    ProfileImageComponent,
+    FileUploadDropComponent,
+    SelectSearchComponent,
+    DateComponent,
+  ],
   templateUrl: './add-doctor.html',
 })
 export class AddDoctorComponent {
+  // later you’ll fetch these from API
+showInfo = true;
+  specialiteOptions: StSelectOption<number>[] = [
+  { value: 1, label: 'Cardiologie' },
+  { value: 2, label: 'Dermatologie' },
+  { value: 3, label: 'Pédiatrie' },
+];
+
   specialites = [
     { id: 1, name: 'Cardiologie' },
     { id: 2, name: 'Dermatologie' },
     { id: 3, name: 'Pédiatrie' },
   ];
 
-  form;
+  sexeOptions = [
+    { value: 'F', label: 'Femme' },
+    { value: 'M', label: 'Homme' },
+  ];
+  private fb = inject(FormBuilder);
 
-  constructor(
-    private fb: FormBuilder,
-    private loader: LoaderService
-  ) {
-    this.form = this.fb.group({
-      nom: ['', [Validators.required, Validators.minLength(2)]],
-      prenom: ['', [Validators.required, Validators.minLength(2)]],
-      cin: ['', [Validators.required, Validators.minLength(4)]],
-      email: ['', [Validators.required, Validators.email]],
-      mot_de_passe: ['', [Validators.required, Validators.minLength(8)]],
-      sexe: ['F', [Validators.required]],
-      statut: ['ACTIF', [Validators.required]],
-      date_naissance: ['', [Validators.required]],
-      telephone: ['', [Validators.required, Validators.minLength(8)]],
-      adresse: ['', [Validators.required, Validators.minLength(5)]],
-      numero_ordre: ['', [Validators.required, Validators.minLength(3)]],
-      id_specialite: [null as number | null, [Validators.required]],
-    });
-  }
+  selectedPhoto: File | null = null;
+photo: File | null = null;
 
-  async submit() {
+  form = this.fb.group({
+    searchQuery: [''],
+
+    // USER
+    nom: ['', [Validators.required, Validators.minLength(2)]],
+    prenom: ['', [Validators.required, Validators.minLength(2)]],
+    cin: ['', [Validators.required, Validators.minLength(4)]],
+    email: ['', [Validators.required, Validators.email]],
+    mot_de_passe: ['', [Validators.required, Validators.minLength(8)]],
+    sexe: ['F', [Validators.required]], // 'M' | 'F'
+    statut: ['ACTIF', [Validators.required]], // 'ACTIF' | 'INACTIF'
+    date_naissance: ['', [Validators.required]],
+    telephone: ['', [Validators.required, Validators.minLength(8)]],
+    adresse: ['', [Validators.required, Validators.minLength(5)]],
+
+    // UI (not sent to backend yet)
+    acceptTerms: [false],
+
+    // DOCTOR
+    numero_ordre: ['', [Validators.required, Validators.minLength(3)]],
+    id_specialite: [null as number | null, [Validators.required]],
+  });
+
+  constructor() {}
+
+  submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
+    // payload to send to backend
     const payload = {
       user: {
         nom: this.form.value.nom,
@@ -64,26 +104,15 @@ export class AddDoctorComponent {
       },
     };
 
-    this.loader.show(); // ✅ show overlay
+    console.log('ADD DOCTOR payload:', payload, { selectedPhoto: this.selectedPhoto });
 
-    try {
-      // TEMP: simulate API call (remove later)
-      await new Promise((res) => setTimeout(res, 1200));
-
-      console.log('ADD DOCTOR payload:', payload);
-
-      // later:
-      // await firstValueFrom(this.doctorService.createDoctor(payload));
-    } finally {
-      this.loader.hide(); // ✅ always hide
-    }
+    // later: call API
+    // this.doctorService.createDoctor(payload).subscribe(...)
   }
 
-  isInvalid(name: any) {
-    const c = this.form.get(name);
-    return !!(c && c.touched && c.invalid);
+  // helper
+  isInvalid(name: keyof typeof this.form.controls) {
+    const c = this.form.controls[name];
+    return c.touched && c.invalid;
   }
-
-
 }
-

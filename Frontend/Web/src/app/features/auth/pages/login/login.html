@@ -1,89 +1,100 @@
-<div class="min-h-screen grid lg:grid-cols-2 bg-gray-50">
-  <!-- Left image -->
-  <div class="hidden lg:block relative">
-    <img
-      class="absolute inset-0 h-full w-full object-cover"
-      src="assets/images/doct.png"
-      alt="Professionnels de santé dans un couloir"
-    />
-    <div class="absolute inset-0 bg-black/20"></div>
-  </div>
+<div class="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-slate-50">
 
-  <!-- Right form -->
-  <div class="flex flex-col justify-center px-6 py-10 lg:px-14">
-    <div class="max-w-md w-full mx-auto">
-      <!-- Brand -->
-      <div class="flex justify-center mb-6">
-        <img src="assets/images/ST.png" alt="ShifaTech" class="h-14 w-auto" />
-      </div>
+  <!-- ===== MEDICAL ANIMATED BACKGROUND ===== -->
+  <div class="absolute inset-0 medical-bg"></div>
 
-      <!-- Card -->
-      <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
-        <h1 class="text-2xl font-semibold text-gray-900">Bon retour</h1>
-        <p class="text-sm text-gray-500 mt-1">
-          Entrez vos identifiants pour accéder à votre compte
-        </p>
+  <!-- ===== CONTENT WRAPPER ===== -->
+  <div class="relative z-10 w-full flex flex-col items-center">
 
-        <form class="mt-6 space-y-4" (submit)="$event.preventDefault()">
-          <div>
-            <label class="block text-sm font-medium text-gray-700" for="username">
-              Nom d'utilisateur
-            </label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              autocomplete="username"
-              placeholder="Entrez votre identité"
-              class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400
-                     focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-            />
-          </div>
+    <!-- Brand -->
+    <div class="flex items-center gap-2 mb-2 select-none">
+      <img src="assets/images/ST.png" class="h-16 w-auto" />
+      <span class="text-2xl font-semibold text-gray-800">
+        <span class="text-[#105082]">Shifa</span>
+        <span class="text-[#3CA169]">Tech</span>
+      </span>
+    </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700" for="password">
-              Mot de passe
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autocomplete="current-password"
-              placeholder="Entrez votre mot de passe"
-              class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400
-                     focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-            />
-          </div>
+    <!-- Card -->
+    <div
+      class="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-gray-200
+             px-6 py-7 sm:px-8 sm:py-8 transition-all duration-300"
+    >
 
-          <div class="flex items-center justify-between">
-            <label class="flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" />
-              <span>Se souvenir de moi</span>
-            </label>
+      <h2 class="text-base sm:text-2xl font-medium text-center text-gray-900">
+        Bon retour
+      </h2>
 
-            <a class="text-sm text-blue-700 hover:underline" href="#">
-              mot de passe oublié ?
-            </a>
-          </div>
+      <p class="text-sm text-gray-500 mt-1 text-center">
+        Entrez vos identifiants pour accéder à votre compte
+      </p>
+
+      <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="onSubmit()">
+
+        <st-input
+          id="email"
+          label="Adresse mail"
+          placeholder="Entrer l'adresse mail"
+          type="email"
+          icon="mail"
+          [control]="email"
+        />
+
+        <st-input
+          id="password"
+          label="Mot de passe"
+          placeholder="**************"
+          type="password"
+          icon="lock"
+          [control]="password"
+          class="mt-2"
+        />
+
+        <div class="flex items-center justify-between">
+          <st-checkbox id="rememberMe" label="Sw souvenir de moi" [control]="rememberMe"></st-checkbox>
+
+          <a class="text-sm text-red-500 hover:underline cursor-pointer">
+            Mot de passe oublié ?
+          </a>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full h-11 rounded-lg bg-[#3CA169] text-white font-medium
+                 hover:bg-[#63cf94] active:scale-[0.98] transition"
+        >
+          Se connecter
+        </button>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3 py-1">
+          <div class="flex-1 h-px bg-gray-200"></div>
+          <span class="text-xs text-gray-500">OU</span>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+
 
           <button
-            type="submit"
-            class="w-full rounded-xl bg-blue-700 px-4 py-3 text-white font-medium hover:bg-blue-800
-                   focus:outline-none focus:ring-2 focus:ring-blue-600"
-          >
-            Se connecter
-          </button>
+          type="button"
+          (click)="onGoogleLogin()"
+          class="w-full hover:bg-gray-50 hover:shadow-lg h-11 flex justify-center font-medium items-center rounded-lg border border-black bg-white"
+        >
+            <app-icon name="google" class="pr-2"></app-icon> Connecter avec Google
+        </button>
 
-          <div class="text-sm text-gray-600 pt-2">
-            <span>Vous n'avez pas de compte ? </span>
-            <a class="text-blue-700 hover:underline" href="#">Contacter l'administrateur</a>
-          </div>
-        </form>
-      </div>
+        <div class="text-sm text-gray-600 text-center">
+          Vous n'avez pas de compte ?
+          <span class="text-[#3CA169] hover:underline cursor-pointer">
+            Contacter l'administration
+          </span>
+        </div>
 
-      <p class="text-xs text-gray-400 text-center mt-6">
-        © 2025 ShifaTech. All rights reserved.
-      </p>
+      </form>
     </div>
+
+    <p class="text-sm text-gray-700 mt-6 text-center">
+      Copyright © 2025 - ShifaTech
+    </p>
+
   </div>
 </div>

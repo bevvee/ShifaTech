@@ -45,7 +45,7 @@ public class AuthService {
             user.setStatut(false);
 
             userRepository.save(user);
-            return new ApiResponse(false, "User registered successfully");
+            return new ApiResponse(false, "User registered successfully", new UserDto().toUserDto(user));
 
         } catch (DataIntegrityViolationException ex) {
             Throwable cause = ex.getCause();
@@ -83,7 +83,7 @@ public class AuthService {
     }
 
     // Get user profile
-    public Object getProfile() {
+    public ApiResponse getProfile() {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth == null || !auth.isAuthenticated()) {
@@ -97,13 +97,7 @@ public class AuthService {
                 return new ApiResponse(true, "User not found");
             }
 
-            return new UserProfileResponse(
-                    user.getIdUser(),
-                    user.getNom(),
-                    user.getPrenom(),
-                    user.getEmail(),
-                    user.getRole().name()
-            );
+            return new ApiResponse(false, "User found successfuly",new UserDto().toUserDto(user));
 
         } catch (Exception ex) {
             return new ApiResponse(true, "Something went wrong");
@@ -126,23 +120,4 @@ public class AuthService {
         }
     }
 
-    // Validate token
-    public ApiResponse isTokenValid(String token) {
-        try {
-            boolean valid = !revokedTokenRepository.existsByToken(token);
-            return valid ? new ApiResponse(false, "Token is valid") :
-                    new ApiResponse(true, "Token is revoked or invalid");
-        } catch (Exception ex) {
-            return new ApiResponse(true, "Could not validate token");
-        }
-    }
-
-    private UserDto mapToDto(User user) {
-        UserDto dto = new UserDto();
-        dto.setIdUser(user.getIdUser());
-        dto.setFullName(user.getPrenom() + " " + user.getNom());
-        dto.setEmail(user.getEmail());
-        dto.setRole(user.getRole().name());
-        return dto;
-    }
 }

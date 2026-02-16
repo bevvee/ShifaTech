@@ -2,68 +2,71 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\InfirmierRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: InfirmierRepository::class)]
+#[ApiResource]
 class Infirmier
 {
+    #[ApiProperty(identifier: true)]
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'id_infirmier')]
-    private ?int $id = null;
+    #[ORM\Column(name: 'id_infirmier', type:'integer')]
+    private ?int $id_infirmier = null;
 
-    #[ORM\OneToOne(targetEntity: Utilisateur::class, inversedBy: 'infirmier')]
-    #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id_utilisateur', nullable: false, unique: true)]
-    private ?Utilisateur $utilisateur = null;
+    #[ORM\Column]
+    private ?int $id_utilisateur = null;
 
-    #[ORM\ManyToOne(targetEntity: Service::class, inversedBy: 'infirmiers')]
-    #[ORM\JoinColumn(name: 'id_service', referencedColumnName: 'id_service', nullable: true)]
-    private ?Service $service = null;
+    #[ORM\Column]
+    private ?int $id_service = null;
 
-    #[ORM\ManyToOne(targetEntity: InfirmierSpecialite::class, inversedBy: 'infirmiers')]
-    #[ORM\JoinColumn(name: 'id_infirmierSp', referencedColumnName: 'id_infirmierSp', nullable: true)]
-    private ?InfirmierSpecialite $specialite = null;
+    #[ORM\ManyToOne(targetEntity: InfirmierSpecialite::class,cascade: ['persist'])]
+    #[ORM\JoinColumn(name: 'id_specialite', referencedColumnName: 'id_specialite', nullable: false)]
+    #[ApiProperty(
+        readableLink: false,
+        writableLink: true 
+    )]
+    private ?InfirmierSpecialite $id_specialite = null;
 
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->id_infirmier;
     }
 
-    public function getUtilisateur(): ?Utilisateur
+    public function getIdUtilisateur(): ?int
     {
-        return $this->utilisateur;
+        return $this->id_utilisateur;
     }
 
-    public function setUtilisateur(?Utilisateur $utilisateur): static
+    public function setIdUtilisateur(?int $id_utilisateur): static
     {
-        // Mettre à jour la relation inverse
-        if ($utilisateur !== null && $utilisateur->getInfirmier() !== $this) {
-            $utilisateur->setInfirmier($this);
-        }
-        $this->utilisateur = $utilisateur;
+        $this->id_utilisateur = $id_utilisateur;
+
         return $this;
     }
 
-    public function getService(): ?Service
+    public function getIdService(): ?int
     {
-        return $this->service;
+        return $this->id_service;
     }
 
-    public function setService(?Service $service): static
+    public function setIdService(?int $id_service): static
     {
-        $this->service = $service;
+        $this->id_service = $id_service;
+
         return $this;
     }
 
-    public function getSpecialite(): ?InfirmierSpecialite
+    public function getIdSpecialite(): ?InfirmierSpecialite
     {
-        return $this->specialite;
+        return $this->id_specialite;
     }
 
-    public function setSpecialite(?InfirmierSpecialite $specialite): static
+    public function setIdSpecialite(?InfirmierSpecialite $id_specialite): static
     {
-        $this->specialite = $specialite;
+        $this->id_specialite = $id_specialite;
+
         return $this;
     }
 }

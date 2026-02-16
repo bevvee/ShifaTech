@@ -2,23 +2,31 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\DossierMedicalRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DossierMedicalRepository::class)]
+#[ApiResource]
 class DossierMedical
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'id_rdv')]
-    private ?int $id_rdv = null;
+    #[ORM\Column]
+    #[ApiProperty(identifier: true)]
+    private ?int $id_dossier = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    private ?\DateTimeImmutable $dateCreation = null;
+    #[ORM\Column(nullable: true)]
+    private ?int $id_patient = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $dateFermeture = null;
+    #[ORM\Column(nullable: true)]
+    private ?int $id_docteur = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTime $date_creation = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTime $date_fermeture = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $notes = null;
@@ -26,42 +34,59 @@ class DossierMedical
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $diagnostic = null;
 
-    #[ORM\ManyToOne(targetEntity: Patient::class, inversedBy: 'dossiersMedicaux')]
-    #[ORM\JoinColumn(name: 'id_patient', referencedColumnName: 'id_patient', nullable: false)]
-    private ?Patient $patient = null;
-
-    #[ORM\ManyToOne(targetEntity: Docteur::class, inversedBy: 'dossiersMedicaux')]
-    #[ORM\JoinColumn(name: 'id_docteur', referencedColumnName: 'id_docteur')]
-    private ?Docteur $docteur;
-    public function __construct()
-    {
-        $this->dateCreation = new \DateTimeImmutable();
-    }
+    #[ORM\Column(nullable: true)]
+    private ?int $id_ordonance = null;
 
     public function getId(): ?int
     {
-        return $this->id_rdv;
+        return $this->id_dossier;
     }
 
-    public function getDateCreation(): ?\DateTimeImmutable
+    public function getIdPatient(): ?int
     {
-        return $this->dateCreation;
+        return $this->id_patient;
     }
 
-    public function setDateCreation(\DateTimeImmutable $dateCreation): static
+    public function setIdPatient(?int $id_patient): static
     {
-        $this->dateCreation = $dateCreation;
+        $this->id_patient = $id_patient;
+
         return $this;
     }
 
-    public function getDateFermeture(): ?\DateTimeImmutable
+    public function getIdDocteur(): ?int
     {
-        return $this->dateFermeture;
+        return $this->id_docteur;
     }
 
-    public function setDateFermeture(?\DateTimeImmutable $dateFermeture): static
+    public function setIdDocteur(?int $id_docteur): static
     {
-        $this->dateFermeture = $dateFermeture;
+        $this->id_docteur = $id_docteur;
+
+        return $this;
+    }
+
+    public function getDateCreation(): ?\DateTime
+    {
+        return $this->date_creation;
+    }
+
+    public function setDateCreation(?\DateTime $date_creation): static
+    {
+        $this->date_creation = $date_creation;
+
+        return $this;
+    }
+
+    public function getDateFermeture(): ?\DateTime
+    {
+        return $this->date_fermeture;
+    }
+
+    public function setDateFermeture(?\DateTime $date_fermeture): static
+    {
+        $this->date_fermeture = $date_fermeture;
+
         return $this;
     }
 
@@ -73,6 +98,31 @@ class DossierMedical
     public function setNotes(?string $notes): static
     {
         $this->notes = $notes;
+
+        return $this;
+    }
+
+    public function getDiagnostic(): ?string
+    {
+        return $this->diagnostic;
+    }
+
+    public function setDiagnostic(?string $diagnostic): static
+    {
+        $this->diagnostic = $diagnostic;
+
+        return $this;
+    }
+
+    public function getIdOrdonance(): ?int
+    {
+        return $this->id_ordonance;
+    }
+
+    public function setIdOrdonance(?int $id_ordonance): static
+    {
+        $this->id_ordonance = $id_ordonance;
+
         return $this;
     }
 }

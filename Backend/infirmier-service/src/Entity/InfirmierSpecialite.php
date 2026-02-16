@@ -2,34 +2,36 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\InfirmierSpecialiteRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: InfirmierSpecialiteRepository::class)]
+#[ApiResource]
 class InfirmierSpecialite
 {
+    #[ApiProperty(identifier: true)]
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'id_infirmierSp')]
-    private ?int $id = null;
+    #[ORM\Column(name: 'id_specialite', type: 'integer')]
+    private ?int $id_specialite = null;
 
+    #[ORM\OneToMany(targetEntity: Infirmier::class, mappedBy: 'id_specialite')]
+    private Collection $infirmiers;
+
+    #[ORM\OneToMany(targetEntity: Service::class, mappedBy: 'id_service')]
+    private Collection $service_infirmiers;
     #[ORM\Column(length: 50)]
     private ?string $label = null;
 
-    // RELATIONS
-    #[ORM\OneToMany(targetEntity: Infirmier::class, mappedBy: 'specialite')]
-    private Collection $infirmiers;
-
     public function __construct()
     {
-        $this->infirmiers = new ArrayCollection();
+        $this->service_infirmiers = new ArrayCollection();
     }
-
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->id_specialite;
     }
 
     public function getLabel(): ?string
@@ -40,6 +42,7 @@ class InfirmierSpecialite
     public function setLabel(string $label): static
     {
         $this->label = $label;
+
         return $this;
     }
 }

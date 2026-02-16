@@ -1,6 +1,5 @@
 package com.shifatech.authservice.service;
 
-import com.shifatech.authservice.Enum.RoleEnum;
 import com.shifatech.authservice.repository.RevokedTokenRepository;
 import com.shifatech.authservice.util.JwtUtil;
 import io.jsonwebtoken.Claims;
@@ -11,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -81,6 +79,8 @@ public class JwtFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         return path.equals("/api/auth/login") ||
                 path.equals("/api/auth/register") ||
+                path.equals("/api/auth/forgot-password") ||
+                path.equals("/api/auth/reset-password") ||
                 path.equals("/api/auth/health");
     }
 }

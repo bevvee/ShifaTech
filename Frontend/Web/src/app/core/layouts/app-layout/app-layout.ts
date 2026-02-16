@@ -1,76 +1,34 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { SidebarComponent } from '../../../shared/ui/sidebar/sidebar';
-
-// ✅ change this path to your real navbar path
-import { NavbarComponent } from '../../../shared/ui/navbar/navbar';
+import { Component, inject } from '@angular/core';
+import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { SidebarComponent } from '../../ui/sidebar/sidebar';
+import { SIDEBAR_ITEMS, SidebarItem } from '../../ui/sidebar/sidebar.config';
+import { TopbarComponent } from '../../ui/topbar/topbar';
 
 @Component({
   selector: 'st-app-layout',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, NavbarComponent],
+  imports: [RouterOutlet, SidebarComponent, TopbarComponent],
   templateUrl: './app-layout.html',
 })
-
 export class AppLayoutComponent {
-  sidebarOpen = true;
-  menu = [
-  { label: 'Dashboard', route: '/app/dashboard', icon: 'dashboard' },
+  private router = inject(Router);
 
-  {
-    type: 'group',
-    label: 'Doctors',
-    icon: 'medical_services',
-    children: [
-      { label: 'Doctors List', route: '/app/doctors' },
-      { label: 'Add Doctor', route: '/app/doctors/add' },
-      { label: 'Specializations', route: '/app/doctors/specializations' },
-    ],
-  },
 
-  {
-    type: 'group',
-    label: 'Patients',
-    icon: 'person',
-    children: [
-      { label: 'Patients List', route: '/app/patients' },
-      { label: 'Add Patient', route: '/app/patients/add' },
-    ],
-  },
+  activeRoute = this.router.url;
 
-  {
-    type: 'group',
-    label: 'Appointments',
-    icon: 'event',
-    children: [
-      { label: 'Appointments List', route: '/app/appointments' },
-      { label: 'Create Appointment', route: '/app/appointments/add' },
-      { label: 'Calendar', route: '/app/appointments/calendar' },
-    ],
-  },
+  sidebarOpen = false;
 
-  {
-    type: 'group',
-    label: 'Spécialisation',
-    icon: 'category',
-    children: [
-      { label: 'All Specializations', route: '/app/specializations' },
-      { label: 'Add Specialization', route: '/app/specializations/add' },
-    ],
-  },
+  items: SidebarItem[] = SIDEBAR_ITEMS;
 
-  {
-    type: 'group',
-    label: 'Services',
-    icon: 'build',
-    children: [
-      { label: 'Services List', route: '/app/services' },
-      { label: 'Add Service', route: '/app/services/add' },
-    ],
-  },
-
-  { label: 'Staffs', route: '/app/staffs', icon: 'groups' },
-] as any;
+  constructor() {
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((e) => {
+        this.activeRoute = e.urlAfterRedirects;
+        this.sidebarOpen = false;
+      });
+  }
 
   toggleSidebar() {
     this.sidebarOpen = !this.sidebarOpen;

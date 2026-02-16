@@ -1,155 +1,456 @@
-# Web
+# ShifaTech Frontend (Angular)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.3.
+Frontend Angular for ShifaTech:
+- **Public website** (landing pages)
+- **Management app** (dashboard + CRUD screens)
 
-## Development server
+Tech:
+- Angular (Standalone Components + Standalone Routing)
+- TailwindCSS (utility-first styling)
+- Material Icons (Google Icons font)
 
-To start a local development server, run:
+---
 
+## 1) Project Structure
+
+Architecture tree:
+
+```text
+Web/
+├─ .editorconfig
+├─ .gitignore
+├─ .postcssrc.json
+├─ angular.json
+├─ Dockerfile
+├─ package-lock.json
+├─ package.json
+├─ README.md
+├─ tsconfig.json
+├─ tsconfig.app.json
+├─ tsconfig.spec.json
+├─ .angular/
+│  └─ cache/21.0.4/Web/
+├─ .vscode/
+│  ├─ extensions.json
+│  ├─ launch.json
+│  └─ tasks.json
+├─ public/
+│  └─ favicon.ico
+└─ src/
+	├─ index.html
+	├─ main.ts
+	├─ material-theme.scss
+	├─ styles.css
+	├─ assets/
+	│  └─ images/
+	├─ environments/
+	│  └─ environment.ts
+	└─ app/
+		├─ app.ts
+		├─ app.html
+		├─ app.css
+		├─ app.config.ts
+		├─ app.routes.ts
+		├─ app.spec.ts
+		├─ core/
+		│  ├─ auth/
+		│  │  ├─ guards/
+		│  │  └─ services/
+		│  ├─ interceptors/
+		│  │  └─ auth.interceptor.ts
+		│  ├─ layouts/
+		│  │  ├─ app-layout/
+		│  │  │  ├─ app-layout.css
+		│  │  │  ├─ app-layout.html
+		│  │  │  └─ app-layout.ts
+		│  │  └─ public-layout/
+		│  │     ├─ public-layout.css
+		│  │     ├─ public-layout.html
+		│  │     └─ public-layout.ts
+		│  ├─ services/
+		│  │  ├─ api.service.ts
+		│  │  └─ loader.service.ts
+		│  └─ ui/
+		│     ├─ sidebar/
+		│     │  ├─ sidebar.css
+		│     │  ├─ sidebar.html
+		│     │  └─ sidebar.ts
+		│     └─ topbar/
+		│        ├─ topbar.css
+		│        ├─ topbar.html
+		│        └─ topbar.ts
+		├─ shared/
+		│  ├─ models/
+		│  └─ ui/
+		│     ├─ alert/
+		│     │  ├─ alert.css
+		│     │  ├─ alert.html
+		│     │  └─ alert.ts
+		│     ├─ confirm-dialog/
+		│     │  ├─ confirm-dialog.css
+		│     │  ├─ confirm-dialog.html
+		│     │  └─ confirm-dialog.ts
+		│     ├─ data-table/
+		│     │  ├─ data-table.css
+		│     │  ├─ data-table.html
+		│     │  └─ data-table.ts
+		│     ├─ form/
+		│     │  ├─ checkbox/
+		│     │  │  ├─ checkbox.css
+		│     │  │  ├─ checkbox.html
+		│     │  │  └─ checkbox.ts
+		│     │  ├─ date-input/
+		│     │  │  ├─ date-input.css
+		│     │  │  ├─ date-input.html
+		│     │  │  └─ date-input.ts
+		│     │  ├─ file-upload-drop/
+		│     │  │  ├─ file-upload-drop.css
+		│     │  │  ├─ file-upload-drop.html
+		│     │  │  └─ file-upload-drop.ts
+		│     │  ├─ form-error/
+		│     │  │  ├─ form-error.css
+		│     │  │  ├─ form-error.html
+		│     │  │  └─ form-error.ts
+		│     │  ├─ input/
+		│     │  │  ├─ input.css
+		│     │  │  ├─ input.html
+		│     │  │  └─ input.ts
+		│     │  ├─ profile-image/
+		│     │  │  ├─ profile-image.css
+		│     │  │  ├─ profile-image.html
+		│     │  │  └─ profile-image.ts
+		│     │  ├─ radio-group/
+		│     │  │  ├─ radio-group.css
+		│     │  │  ├─ radio-group.html
+		│     │  │  └─ radio-group.ts
+		│     │  ├─ search/
+		│     │  │  ├─ search.css
+		│     │  │  ├─ search.html
+		│     │  │  └─ search.ts
+		│     │  ├─ select-search/
+		│     │  │  ├─ select-search.css
+		│     │  │  ├─ select-search.html
+		│     │  │  └─ select-search.ts
+		│     │  └─ textarea/
+		│     │     ├─ textarea.css
+		│     │     ├─ textarea.html
+		│     │     └─ textarea.ts
+		│     ├─ icons/
+		│     │  └─ Icon.ts
+		│     ├─ loading-overlay/
+		│     │  ├─ loading-overlay.css
+		│     │  ├─ loading-overlay.html
+		│     │  └─ loading-overlay.ts
+		│     ├─ page-header/
+		│     │  ├─ page-header.css
+		│     │  ├─ page-header.html
+		│     │  └─ page-header.ts
+		│     ├─ panel/
+		│     │  ├─ panel.css
+		│     │  ├─ panel.html
+		│     │  └─ panel.ts
+		│     └─ stat-card/
+		│        ├─ stat-card.css
+		│        ├─ stat-card.html
+		│        └─ stat-card.ts
+		└─ features/
+			├─ app/
+			│  ├─ app.routes.ts
+			│  ├─ admin/
+			│  ├─ appointments/
+			│  ├─ dashboard/
+			│  │  ├─ dashboard.routes.ts
+			│  │  ├─ pages/
+			│  │  │  └─ dashboard/
+			│  │  │     ├─ dashboard.css
+			│  │  │     ├─ dashboard.html
+			│  │  │     └─ dashboard.ts
+			│  │  └─ ui/
+			│  │     ├─ appointment-stats/
+			│  │     │  ├─ appointment-stats.css
+			│  │     │  ├─ appointment-stats.html
+			│  │     │  └─ appointment-stats.ts
+			│  │     ├─ appointments-widget/
+			│  │     │  ├─ appointments-widget.css
+			│  │     │  ├─ appointments-widget.html
+			│  │     │  └─ appointments-widget.ts
+			│  │     ├─ charts/
+			│  │     │  └─ appointments-chart/
+			│  │     │     ├─ appointments-chart.css
+			│  │     │     ├─ appointments-chart.html
+			│  │     │     ├─ appointments-chart.spec.ts
+			│  │     │     └─ appointments-chart.ts
+			│  │     └─ kpi-cards/
+			│  │        ├─ kpi-cards.css
+			│  │        ├─ kpi-cards.html
+			│  │        └─ kpi-cards.ts
+			│  ├─ doctors/
+			│  │  ├─ doctors.routes.ts
+			│  │  └─ pages/
+			│  │     ├─ add-doctor/
+			│  │     │  ├─ add-doctor.css
+			│  │     │  ├─ add-doctor.html
+			│  │     │  └─ add-doctor.ts
+			│  │     ├─ doctors-list/
+			│  │     │  ├─ doctors-list.css
+			│  │     │  ├─ doctors-list.html
+			│  │     │  └─ doctors-list.ts
+			│  │     └─ specializations/
+			│  │        ├─ specializations.css
+			│  │        ├─ specializations.html
+			│  │        └─ specializations.ts
+			│  └─ patients/
+			├─ auth/
+			│  ├─ auth.routes.ts
+			│  └─ pages/
+			│     └─ login/
+			│        ├─ login.css
+			│        ├─ login.html
+			│        └─ login.ts
+			└─ public/
+				├─ public.routes.ts
+				└─ pages/
+					├─ about/
+					│  ├─ about.css
+					│  ├─ about.html
+					│  └─ about.ts
+					├─ book/
+					│  ├─ book.css
+					│  ├─ book.html
+					│  └─ book.ts
+					├─ contact/
+					│  ├─ contact.css
+					│  ├─ contact.html
+					│  └─ contact.ts
+					├─ home/
+					│  ├─ home.css
+					│  ├─ home.html
+					│  └─ home.ts
+					└─ services/
+					   ├─ services.css
+					   ├─ services.html
+					   └─ services.ts
+```
+
+Key files:
+- `src/app/app.routes.ts`: root routes and lazy-loading.
+- `src/app/app.config.ts`: bootstrap providers.
+- `src/app/core/interceptors/auth.interceptor.ts`: attach/handle auth headers.
+- `src/app/core/services/api.service.ts`: HTTP client to backend.
+- `src/app/shared/ui/*`: reusable UI components.
+
+
+### Core idea
+- **core/**: app skeleton (layouts, guards, interceptors, global services).
+- **shared/ui/**: reusable UI components used by everyone.
+- **features/**: real pages/screens grouped by domain (doctors, patients, etc).
+
+---
+
+## 2) Routing Rules
+
+We separate routes into 3 zones:
+
+### Public website
+`/` → PublicLayout + public pages  
+Routes live in:
+- `src/app/features/public/public.routes.ts`
+
+### Auth
+`/auth/*` → login, forgot password, etc  
+Routes live in:
+- `src/app/features/auth/auth.routes.ts`
+
+### Management app
+`/app/*` → dashboard & modules  
+Routes live in:
+- `src/app/features/app/app.routes.ts`
+
+Root router config is in:
+- `src/app/app.routes.ts`
+
+✅ When you create a new feature module (ex: doctors), you add routes inside its feature routes file, not in the root.
+
+---
+
+## 3) How We Build Pages
+
+### A “page” goes in `features/`
+Example:
+- `features/app/doctors/pages/list/`
+- `features/app/doctors/pages/add/`
+
+Each page is a standalone component and should be routing entry.
+
+✅ Page components can use shared components from `shared/ui/`.
+
+---
+
+## 4) How to Create a New Component
+
+### A) Create a shared reusable UI component
+Use when it will be reused by multiple screens (table, card, modal, input, etc)
+
+Location:
+- `src/app/shared/ui/<component-name>/`
+
+Create:
+- `<component-name>.ts`
+- `<component-name>.html`
+(optional) `<component-name>.css`
+
+Example command:
 ```bash
-ng serve
-```
+ng g c shared/ui/badge --standalone --skip-tests
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+✅ Rule: shared UI components must NOT call APIs.
+They take inputs and emit outputs only.
 
-## Code scaffolding
+B) Create a feature page component (screen)
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Use when it is a real page linked to a route.
 
-```bash
-ng generate component component-name
-```
+Example:
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+ng g c features/app/doctors/pages/doctors-list --standalone --skip-tests
 
-```bash
-ng generate --help
-```
 
-## Building
+Then add it to routing:
 
-To build the project run:
+In features/app/app.routes.ts or features/app/doctors/doctors.routes.ts (if you use a nested routes file)
 
-```bash
-ng build
-```
+5) How to Use Existing Shared Components
+A) Example: Sidebar
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Sidebar exists at:
 
-## Running unit tests
+src/app/shared/ui/sidebar/
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Use it in a layout:
 
-```bash
-ng test
-```
+import { SidebarComponent } from '../../../shared/ui/sidebar/sidebar';
 
-## Running end-to-end tests
 
-For end-to-end (e2e) testing, run:
+In template:
 
-```bash
-ng e2e
-```
+<st-sidebar [items]="menu"></st-sidebar>
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+B) Example: Data Table
 
-## Additional Resources
+Data table exists at:
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+src/app/shared/ui/data-table/
 
------------------------------------------------------------------------------------
+You pass:
 
-Here’s a clean README section you can paste. It explains exactly what you chose and why.
+columns config
 
-````md
-## Frontend Setup (Angular + Material)
+data array
 
-This project uses **Angular (Standalone + Routing)** as the frontend for ShifaTech.  
-We selected a **SPA (Single Page Application)** setup (no SSR) because:
+actions events
 
-- The **management app** is behind authentication (SSR provides little value there).
-- It keeps the build/deployment **simple** inside Docker + NGINX gateway.
-- Better developer experience for a team (fewer moving parts, fewer runtime issues).
+6) Styling Rules (Tailwind)
 
-### UI Stack
-We use **Angular Material** to speed up development and keep the UI consistent across the team.
+We style using Tailwind utility classes directly in templates:
 
-**Why Angular Material:**
-- Ready-to-use components (toolbar, sidenav, table, dialog, form-field, inputs, datepicker…)
-- Consistent design system and accessibility by default
-- Reduces custom CSS and merge conflicts in a multi-developer project
+Spacing: p-4, px-6, mt-4
 
-### Material Theme
-During installation we chose the **Azure/Blue** prebuilt theme:
-- Professional look (fits medical/clinic UI)
-- Works well for dashboards and public pages
-- Can be replaced later with a custom theme
+Layout: flex, grid, gap-4
 
-### Installation Steps
-1. Create Angular project as SPA (Standalone components + Routing, no SSR)
-2. Add Angular Material:
-   ```bash
-   ng add @angular/material
-````
+Colors: text-gray-900, bg-white, border-gray-200
 
-3. Choose:
+Responsive: sm:*, md:*, lg:*
 
-   * Theme: `Azure/Blue`
-   * Global Typography: `Yes`
-   * Browser Animations: `Yes`
+✅ No random CSS files unless needed.
+If you add CSS, keep it scoped and minimal.
 
-### Notes
+7) Material Icons
 
-* The prompt asking for “AI tools configuration” was skipped (`None`) because it only adds optional editor/config files and does not affect the Angular application build/runtime.
-* The Angular app will be built as static files and served via NGINX inside Docker. Routing is handled by SPA fallback (`try_files ... /index.html`) to support refresh on routes like `/app/dashboard`.
+We use Google Material Icons font.
+Usage:
 
-```
-## Frontend Architecture (Public Site + Management App)
+<span class="material-icons">dashboard</span>
 
-We use a single Angular project with two clearly separated route trees:
+8) Team Workflow Rules (Important)
+Branching
 
-- **Public website** (clinic introduction pages): `/`
-- **Management application** (dashboard + modules): `/app/*`
-- **Authentication pages**: `/auth/*`
+main is stable
 
-This keeps the codebase clean for a 5-person team and avoids mixing marketing pages with business features.
+each person creates a branch:
 
-### Project Structure
+feature/doctors-list
 
-```txt
-src/app/
-  core/
-    layouts/
-      public-layout/
-      app-layout/
-    auth/
-      guards/
-      services/
-    interceptors/
-  shared/
-    ui/
-    models/
-  features/
-    public/
-      pages/
-        home/
-        about/
-        services/
-        contact/
-        book/
-      public.routes.ts
-    app/
-      dashboard/
-      appointments/
-      patients/
-      doctors/
-      admin/
-      app.routes.ts
-    auth/
-      pages/login/
-      auth.routes.ts
+feature/patients-crud
 
-  app.routes.ts
-  app.config.ts
-  app.component.ts
+Component ownership
+
+Shared components must be reviewed before merging.
+
+Feature pages can be merged faster.
+
+No hardcoding API URLs
+
+Use environment config or proxy/gateway base URL.
+
+9) Run Locally (Dev)
+
+Install:
+
+npm install
+
+
+Run dev server:
+
+npm start
+# or: ng serve
+
+
+Open:
+
+http://localhost:4200
+
+10) Docker (Prod)
+
+Build and run:
+
+docker compose build
+docker compose up -d
+
+
+Gateway:
+
+http://localhost:8082
+
+11) Common Do / Don’t
+
+✅ DO:
+
+Put reusable UI in shared/ui
+
+Put pages in features
+
+Use Tailwind classes for styling
+
+Use standalone components (no NgModules)
+
+❌ DON’T:
+
+Mix feature page code inside shared/ui
+
+Add routes in random files
+
+Hardcode URLs
+
+Duplicate UI components instead of reusing
+
+Need Help?
+
+If you add a new feature, follow this checklist:
+
+Create page component in features/...
+
+Add route in correct *.routes.ts
+
+Use shared components from shared/ui
+
+Keep styling in Tailwind
