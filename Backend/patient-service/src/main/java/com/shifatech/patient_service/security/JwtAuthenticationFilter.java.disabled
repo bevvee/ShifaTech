@@ -1,0 +1,60 @@
+package com.shifatech.patient_service.security;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
+@Slf4j
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    // URLs à ignorer (pas besoin de JWT)
+    private static final List<String> EXCLUDED_PATHS = Arrays.asList(
+            "/swagger-ui",
+            "/v3/api-docs",
+            "/swagger-resources",
+            "/webjars",
+            "/api/patients" // Pour la demo
+    );
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+
+        String path = request.getRequestURI();
+
+        // Ignorer les chemins publics
+        if (isPublicPath(path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Vérifier le JWT seulement pour les autres chemins
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.warn("JWT token manquant ou invalide dans l'en-tête Authorization");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        // Ici tu peux ajouter la validation du token JWT
+        // String token = authHeader.substring(7);
+        // ... validation ...
+
+        filterChain.doFilter(request, response);
+    }
+
+    private boolean isPublicPath(String path) {
+        return EXCLUDED_PATHS.stream().anyMatch(path::startsWith);
+    }
+}

@@ -99,6 +99,25 @@ services:
       timeout: 5s
       retries: 5
 
+  body-db:
+    image: mysql:8.3
+    container_name: body-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bodydb
+      MYSQL_USER: bodyuser
+      MYSQL_PASSWORD: bodypass
+    volumes:
+      - body_mysql_data:/var/lib/mysql
+    networks:
+      - shifatech-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   ##################################
   # BACKEND SERVICES
   ##################################
@@ -185,6 +204,19 @@ services:
     networks:
       - shifatech-net
 
+  body-service:
+    build: ./Backend/body-service
+    container_name: body-service
+    restart: unless-stopped
+    depends_on:
+      body-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql://bodyuser:bodypass@body-db:3306/bodydb
+    expose:
+      - "9000"
+    networks:
+      - shifatech-net
   ##################################
   # FRONTEND
   ##################################
@@ -218,6 +250,7 @@ services:
       - doctor-service
       - infirmier-service
       - rdv-service
+      - body-service
     ports:
       - "8082:80"
     volumes:
@@ -233,7 +266,7 @@ services:
     container_name: phpmyadmin
     restart: always
     environment:
-      PMA_HOSTS: auth-db,rdv-db,patient-db,infirmier-db,doctor-db
+      PMA_HOSTS: auth-db,rdv-db,patient-db,infirmier-db,doctor-db,body-db
       PMA_USER: root
       PMA_PASSWORD: root
     ports:
@@ -255,3 +288,4 @@ volumes:
   doctor_mysql_data:
   rdv-service-logs:
   rdv-service-cache:
+  body_mysql_data:

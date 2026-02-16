@@ -1,23 +1,29 @@
 package com.shifatech.patient_service.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class RendezVousDTO {
-
-    private Long idRendezVous;
+    private Long idRdv;
     private Long idPatient;
-    private Long idDocteur;
-    private LocalDateTime dateRendezVous;
+    private Long idDoctor;
+    private LocalDate dateRdv;
+    private LocalTime heureRdv;
     private String statut; // EN_ATTENTE, CONFIRME, ANNULE, TERMINE
-    // Infos du docteur
-    private String nomDocteur;
-    private String prenomDocteur;
-    private String specialiteDocteur;
+    private LocalDateTime createdAt;
+
+    // Informations supplémentaires (optionnelles)
+    private String nomPatient;
+    private String nomDoctor;
+    private String motif;
 }
