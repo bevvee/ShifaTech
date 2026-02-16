@@ -29,3 +29,16 @@ CREATE TABLE users (
                        INDEX idx_users_email (email),
                        INDEX idx_users_cin (cin)
 ) ENGINE=InnoDB;
+CREATE TABLE password_reset_tokens (
+                                       id INT AUTO_INCREMENT PRIMARY KEY,
+                                       token VARCHAR(255) NOT NULL,
+                                       user_id INT NOT NULL,
+                                       expiry_date DATETIME NOT NULL,
+                                       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    -- Foreign key
+                                       CONSTRAINT fk_password_reset_user
+                                           FOREIGN KEY (user_id)
+                                               REFERENCES users(id_user)
+                                               ON DELETE CASCADE
+) ENGINE=InnoDB;
