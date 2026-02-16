@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ordonnances")
+@Table(name = "ordonnance")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,20 +20,43 @@ public class Ordonnance {
     @Column(name = "id_ordonnance")
     private Long idOrdonnance;
 
-    @Column(name = "id_patient")
+    @Column(name = "id_patient", nullable = false)
     private Long idPatient;
 
-    @Column(name = "id_docteur")
-    private Long idDocteur;
+    @Column(name = "id_doctor", nullable = false)
+    private Long idDoctor; // Référence vers le service Doctor
 
-    @Column(name = "date_creation")
+    @Column(name = "id_visite")
+    private Long idVisite; // Lien optionnel vers une visite
+
+    @CreationTimestamp
+    @Column(name = "date_creation", updatable = false)
     private LocalDateTime dateCreation;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "id_patient", insertable = false, updatable = false)
-    @JsonBackReference
-    private Patient patient;
+    @Column(name = "medicaments", columnDefinition = "TEXT", nullable = false)
+    private String medicaments; // JSON ou texte formaté
+
+    @Column(name = "posologie", columnDefinition = "TEXT")
+    private String posologie;
+
+    @Column(name = "duree_traitement", length = 50)
+    private String dureeTraitement; // Ex: "7 jours", "2 semaines"
+
+    @Column(name = "instructions", columnDefinition = "TEXT")
+    private String instructions;
+
+    @Column(name = "date_validite")
+    private LocalDateTime dateValidite;
+
+    @Column(name = "statut")
+    private Boolean statut = true; // Valide/Expiré
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
 }

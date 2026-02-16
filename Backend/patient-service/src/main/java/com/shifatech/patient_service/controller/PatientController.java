@@ -1,253 +1,176 @@
 package com.shifatech.patient_service.controller;
 
-import com.shifatech.patient_service.client.RendezVousClientService;
-import com.shifatech.patient_service.dto.*;
-import com.shifatech.patient_service.service.*;
+import com.shifatech.patient_service.dto.ApiResponse;
+import com.shifatech.patient_service.dto.CreatePatientRequest;
+import com.shifatech.patient_service.dto.PatientDTO;
+import com.shifatech.patient_service.dto.UpdatePatientRequest;
+import com.shifatech.patient_service.service.PatientService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/patient")
+@RequestMapping("/api/patients")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Patient Management", description = "API de gestion des patients")
 @CrossOrigin(origins = "*")
 public class PatientController {
 
-    private final PatientProfileService profileService;
     private final PatientService patientService;
-    private final DossierMedicalService dossierMedicalService;
-    private final OrdonnanceService ordonnanceService;
-    private final AfficheService afficheService;
-    private final RendezVousClientService rendezVousClient;
 
-    // ==================== CRUD PATIENTS ====================
-
-    /**
-     * Créer un nouveau patient
-     * POST /api/patient/patients
-     */
-    @PostMapping("/patients")
-    public ResponseEntity<PatientDTO> createPatient(@RequestBody CreatePatientRequest request) {
-        log.info("Création d'un nouveau patient pour l'utilisateur: {}", request.getIdUser());
-        PatientDTO patientDTO = new PatientDTO();
-        patientDTO.setIdUser(request.getIdUser());
-        patientDTO.setNumDossier(request.getNumDossier());
-        patientDTO.setPoids(request.getPoids());
-        patientDTO.setTaille(request.getTaille());
-        PatientDTO createdPatient = patientService.createPatient(patientDTO);
-        return ResponseEntity.ok(createdPatient);
+    @PostMapping
+    @Operation(
+            summary = "Créer un nouveau patient",
+            description = "Créer un nouveau dossier patient à partir d'un compte utilisateur existant"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "201",
+                    description = "Patient créé avec succès",
+                    content = @Content(schema = @Schema(implementation = PatientDTO.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Données invalides"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "409",
+                    description = "Un patient existe déjà pour cet utilisateur"
+            )
+    })
+    public ResponseEntity<ApiResponse<PatientDTO>> createPatient(
+            @Valid @RequestBody CreatePatientRequest request,
+            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long userId
+    ) {
+        log.info("Requête de création de patient reçue pour userId: {}", request.getIdUser());
+        PatientDTO patient = patientService.createPatient(request, userId);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success(patient, "Patient créé avec succès"));
     }
 
-    /**
-     * Lister tous les patients
-     * GET /api/patient/patients
-     */
-    @GetMapping("/patients")
-    public ResponseEntity<List<PatientDTO>> getAllPatients() {
-        log.info("Récupération de tous les patients");
-        return ResponseEntity.ok(patientService.getAllPatients());
+    @GetMapping("/{id}")
+    @Operation(
+            summary = "Récupérer un patient par ID",
+            description = "Récupère les informations détaillées d'un patient par son identifiant"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Patient trouvé",
+                    content = @Content(schema = @Schema(implementation = PatientDTO.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Patient non trouvé"
+            )
+    })
+    public ResponseEntity<ApiResponse<PatientDTO>> getPatientById(
+            @Parameter(description = "ID du patient", required = true)
+            @PathVariable Long id
+    ) {
+        log.info("Requête de récupération du patient ID: {}", id);
+        PatientDTO patient = patientService.getPatientById(id);
+        return ResponseEntity.ok(ApiResponse.success(patient, "Patient récupéré avec succès"));
     }
 
-    /**
-     * Obtenir un patient par son ID
-     * GET /api/patient/patients/{id}
-     */
-    @GetMapping("/patients/{id}")
-    public ResponseEntity<PatientDTO> getPatientById(@PathVariable Long id) {
-        log.info("Récupération du patient avec l'ID: {}", id);
-        return ResponseEntity.ok(patientService.getPatientById(id));
+    @GetMapping("/user/{userId}")
+    @Operation(
+            summary = "Récupérer un patient par ID utilisateur",
+            description = "Récupère les informations d'un patient à partir de son ID utilisateur"
+    )
+    public ResponseEntity<ApiResponse<PatientDTO>> getPatientByUserId(
+            @Parameter(description = "ID de l'utilisateur", required = true)
+            @PathVariable Long userId
+    ) {
+        log.info("Requête de récupération du patient par userId: {}", userId);
+        PatientDTO patient = patientService.getPatientByUserId(userId);
+        return ResponseEntity.ok(ApiResponse.success(patient, "Patient récupéré avec succès"));
     }
 
-    /**
-     * Mettre à jour un patient
-     * PUT /api/patient/patients/{id}
-     */
-    @PutMapping("/patients/{id}")
-    public ResponseEntity<PatientDTO> updatePatient(
+    @GetMapping
+    @Operation(
+            summary = "Lister tous les patients",
+            description = "Récupère la liste de tous les patients actifs"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Liste des patients récupérée avec succès"
+            )
+    })
+    public ResponseEntity<ApiResponse<List<PatientDTO>>> getAllPatients() {
+        log.info("Requête de récupération de tous les patients");
+        List<PatientDTO> patients = patientService.getAllPatients();
+        return ResponseEntity.ok(ApiResponse.success(patients,
+                String.format("%d patient(s) trouvé(s)", patients.size())));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(
+            summary = "Mettre à jour un patient",
+            description = "Met à jour les informations d'un patient existant"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Patient mis à jour avec succès",
+                    content = @Content(schema = @Schema(implementation = PatientDTO.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Patient non trouvé"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Données invalides"
+            )
+    })
+    public ResponseEntity<ApiResponse<PatientDTO>> updatePatient(
+            @Parameter(description = "ID du patient", required = true)
             @PathVariable Long id,
-            @RequestBody UpdatePatientRequest request) {
-        log.info("Mise à jour du patient avec l'ID: {}", id);
-        PatientDTO patientDTO = new PatientDTO();
-        patientDTO.setNumDossier(request.getNumDossier());
-        patientDTO.setPoids(request.getPoids());
-        patientDTO.setTaille(request.getTaille());
-        PatientDTO updatedPatient = patientService.updatePatient(id, patientDTO);
-        return ResponseEntity.ok(updatedPatient);
+            @Valid @RequestBody UpdatePatientRequest request,
+            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long userId
+    ) {
+        log.info("Requête de mise à jour du patient ID: {}", id);
+        PatientDTO patient = patientService.updatePatient(id, request, userId);
+        return ResponseEntity.ok(ApiResponse.success(patient, "Patient mis à jour avec succès"));
     }
 
-    /**
-     * Supprimer un patient
-     * DELETE /api/patient/patients/{id}
-     */
-    @DeleteMapping("/patients/{id}")
-    public ResponseEntity<Void> deletePatient(@PathVariable Long id) {
-        log.info("Suppression du patient avec l'ID: {}", id);
-        patientService.deletePatient(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ==================== PROFIL ====================
-
-    /**
-     * Consulter son profil complet
-     * GET /api/patient/profile/{idUser}
-     */
-    @GetMapping("/profile/{idUser}")
-    public ResponseEntity<PatientProfileDTO> getProfile(@PathVariable Long idUser) {
-        log.info("Consultation du profil pour l'utilisateur: {}", idUser);
-        return ResponseEntity.ok(profileService.getCompleteProfile(idUser));
-    }
-
-    /**
-     * Mettre à jour son profil (poids, taille, téléphone, adresse)
-     * PUT /api/patient/profile/{idUser}
-     */
-    @PutMapping("/profile/{idUser}")
-    public ResponseEntity<PatientProfileDTO> updateProfile(
-            @PathVariable Long idUser,
-            @RequestBody UpdateProfileRequest request) {
-        log.info("Mise à jour du profil pour l'utilisateur: {}", idUser);
-        return ResponseEntity.ok(profileService.updateProfile(idUser, request));
-    }
-
-    // ==================== DOSSIER MÉDICAL ====================
-
-    /**
-     * Consulter son dossier médical
-     * GET /api/patient/{idPatient}/dossier-medical
-     */
-    @GetMapping("/{idPatient}/dossier-medical")
-    public ResponseEntity<DossierMedicalDTO> getDossierMedical(@PathVariable Long idPatient) {
-        log.info("Consultation du dossier médical du patient: {}", idPatient);
-        return ResponseEntity.ok(dossierMedicalService.getDossierMedicalByPatient(idPatient));
-    }
-
-    /**
-     * Vérifier si le patient a un dossier médical
-     * GET /api/patient/{idPatient}/dossier-medical/exists
-     */
-    @GetMapping("/{idPatient}/dossier-medical/exists")
-    public ResponseEntity<Boolean> hasDossierMedical(@PathVariable Long idPatient) {
-        log.info("Vérification de l'existence du dossier médical pour le patient: {}", idPatient);
-        return ResponseEntity.ok(dossierMedicalService.hasDossierMedical(idPatient));
-    }
-
-    // ==================== ORDONNANCES ====================
-
-    /**
-     * Consulter toutes ses ordonnances
-     * GET /api/patient/{idPatient}/ordonnances
-     */
-    @GetMapping("/{idPatient}/ordonnances")
-    public ResponseEntity<List<OrdonnanceDTO>> getOrdonnances(@PathVariable Long idPatient) {
-        log.info("Consultation des ordonnances du patient: {}", idPatient);
-        return ResponseEntity.ok(ordonnanceService.getOrdonnancesByPatient(idPatient));
-    }
-
-    /**
-     * Consulter une ordonnance spécifique
-     * GET /api/patient/ordonnances/{idOrdonnance}
-     */
-    @GetMapping("/ordonnances/{idOrdonnance}")
-    public ResponseEntity<OrdonnanceDTO> getOrdonnance(@PathVariable Long idOrdonnance) {
-        log.info("Consultation de l'ordonnance: {}", idOrdonnance);
-        return ResponseEntity.ok(ordonnanceService.getOrdonnanceById(idOrdonnance));
-    }
-
-    // ==================== AFFICHES ====================
-
-    /**
-     * Consulter ses affiches
-     * GET /api/patient/{idPatient}/affiches
-     */
-    @GetMapping("/{idPatient}/affiches")
-    public ResponseEntity<List<AfficheDTO>> getMyAffiches(@PathVariable Long idPatient) {
-        log.info("Consultation des affiches du patient: {}", idPatient);
-        return ResponseEntity.ok(afficheService.getAffichesByPatient(idPatient));
-    }
-
-    /**
-     * Consulter toutes les affiches publiques
-     * GET /api/patient/affiches/all
-     */
-    @GetMapping("/affiches/all")
-    public ResponseEntity<List<AfficheDTO>> getAllAffiches() {
-        log.info("Consultation de toutes les affiches");
-        return ResponseEntity.ok(afficheService.getAllAffiches());
-    }
-
-    /**
-     * Consulter une affiche spécifique
-     * GET /api/patient/affiches/{idAffiche}
-     */
-    @GetMapping("/affiches/{idAffiche}")
-    public ResponseEntity<AfficheDTO> getAffiche(@PathVariable Long idAffiche) {
-        log.info("Consultation de l'affiche: {}", idAffiche);
-        return ResponseEntity.ok(afficheService.getAfficheById(idAffiche));
-    }
-
-    // ==================== RENDEZ-VOUS ====================
-
-    /**
-     * Prendre un rendez-vous
-     * POST /api/patient/rendez-vous
-     */
-    @PostMapping("/rendez-vous")
-    public ResponseEntity<RendezVousDTO> createRendezVous(@RequestBody CreateRendezVousRequest request) {
-        log.info("Création d'un rendez-vous pour le patient: {}", request.getIdPatient());
-
-        RendezVousDTO rdvRequest = new RendezVousDTO();
-        rdvRequest.setIdPatient(request.getIdPatient());
-        rdvRequest.setIdDocteur(request.getIdDocteur());
-        rdvRequest.setDateRendezVous(request.getDateRdv());
-
-        RendezVousDTO rdv = rendezVousClient.createRendezVous(rdvRequest);
-        return ResponseEntity.ok(rdv);
-    }
-
-    /**
-     * Consulter l'historique de ses rendez-vous
-     * GET /api/patient/{idUser}/rendez-vous/historique
-     */
-    @GetMapping("/{idUser}/rendez-vous/historique")
-    public ResponseEntity<List<RendezVousDTO>> getHistoriqueRendezVous(@PathVariable Long idUser) {
-        log.info("Consultation de l'historique des rendez-vous pour l'utilisateur: {}", idUser);
-        return ResponseEntity.ok(rendezVousClient.getHistoriqueRendezVous(idUser));
-    }
-
-    /**
-     * Consulter ses rendez-vous en cours
-     * GET /api/patient/{idUser}/rendez-vous
-     */
-    @GetMapping("/{idUser}/rendez-vous")
-    public ResponseEntity<List<RendezVousDTO>> getRendezVous(@PathVariable Long idUser) {
-        log.info("Consultation des rendez-vous pour l'utilisateur: {}", idUser);
-        return ResponseEntity.ok(rendezVousClient.getRendezVousByUser(idUser));
-    }
-
-    /**
-     * Annuler un rendez-vous
-     * DELETE /api/patient/rendez-vous/{idRendezVous}
-     */
-    @DeleteMapping("/rendez-vous/{idRendezVous}")
-    public ResponseEntity<Void> cancelRendezVous(@PathVariable Long idRendezVous) {
-        log.info("Annulation du rendez-vous: {}", idRendezVous);
-        rendezVousClient.cancelRendezVous(idRendezVous);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ==================== HEALTH CHECK ====================
-
-    /**
-     * Health check
-     * GET /api/patient/health
-     */
-    @GetMapping("/health")
-    public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("Patient Service is running!");
+    @DeleteMapping("/{id}")
+    @Operation(
+            summary = "Supprimer un patient",
+            description = "Effectue une suppression logique (soft delete) d'un patient"
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Patient supprimé avec succès"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Patient non trouvé"
+            )
+    })
+    public ResponseEntity<ApiResponse<Void>> deletePatient(
+            @Parameter(description = "ID du patient", required = true)
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long userId
+    ) {
+        log.info("Requête de suppression du patient ID: {}", id);
+        patientService.deletePatient(id, userId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Patient supprimé avec succès"));
     }
 }

@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "dossiers_medicaux")
+@Table(name = "dossier_medical")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,29 +20,38 @@ public class DossierMedical {
     @Column(name = "id_dossier")
     private Long idDossier;
 
-    @Column(name = "id_patient")
+    @Column(name = "id_patient", nullable = false)
     private Long idPatient;
 
-    @Column(name = "id_docteur")
-    private Long idDocteur;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    private StatusDossier status = StatusDossier.ACTIVE;
 
-    @Column(name = "date_creation")
-    private LocalDateTime dateCreation;
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    @Column(name = "diagnostic", columnDefinition = "TEXT")
+    private String diagnostic;
 
     @Column(name = "date_fermeture")
     private LocalDateTime dateFermeture;
 
-    @Column(columnDefinition = "TEXT")
-    private String notes;
+    @CreationTimestamp
+    @Column(name = "date_creation", updatable = false)
+    private LocalDateTime dateCreation;
 
-    @Column(columnDefinition = "TEXT")
-    private String diagnostic;
+    @Column(name = "created_by")
+    private Long createdBy;
 
-    @Column(name = "id_ordonnance")
-    private Long idOrdonnance; // Référence à l'ordonnance associée
+    @Column(name = "updated_by")
+    private Long updatedBy;
 
-    @OneToOne
-    @JoinColumn(name = "id_patient", insertable = false, updatable = false)
-    @JsonBackReference
-    private Patient patient;
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    public enum StatusDossier {
+        ACTIVE,
+        ARCHIVED,
+        DECEASED
+    }
 }
