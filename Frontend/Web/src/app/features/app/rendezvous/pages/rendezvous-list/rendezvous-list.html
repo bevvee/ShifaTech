@@ -1,14 +1,88 @@
-<div class="flex justify-between items-center mb-6">
-  <h1 class="text-xl font-semibold">Rendez-vous</h1>
+<div class="w-full bg-white rounded-xl border border-gray-200 overflow-hidden">
 
-  <button
-    routerLink="add"
-    class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
-  >
-    Nouveau Rendez-vous
-  </button>
-</div>
+  <!-- HEADER -->
+  <div class="flex items-center justify-between px-6 py-4 border-b">
+    <h2 class="text-lg font-semibold text-gray-900">
+      Appointment
+    </h2>
 
-<div class="bg-white rounded-xl shadow p-6">
-  Liste des rendez-vous ici...
+    <button
+      class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+      + New Appointment
+    </button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+
+      <!-- HEAD -->
+      <thead class="bg-gray-50 text-gray-500 text-left">
+        <tr>
+          <th class="px-6 py-3 font-medium">Date & Time</th>
+          <th class="px-6 py-3 font-medium">Patient</th>
+          <th class="px-6 py-3 font-medium">Mode</th>
+          <th class="px-6 py-3 font-medium">Status</th>
+          <th class="px-6 py-3"></th>
+        </tr>
+      </thead>
+
+      <!-- BODY -->
+      <tbody class="divide-y divide-gray-200">
+
+        <tr *ngFor="let rdv of rendezvous"
+            class="hover:bg-gray-50 transition">
+
+          <!-- DATE -->
+          <td class="px-6 py-4 text-gray-600">
+            {{ rdv.date }}
+          </td>
+
+          <!-- PATIENT -->
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+
+              <img
+                [src]="rdv.avatar"
+                class="w-10 h-10 rounded-full object-cover"
+              />
+
+              <div>
+                <p class="font-medium text-gray-900">
+                  {{ rdv.patient }}
+                </p>
+                <p class="text-gray-500 text-xs">
+                  {{ rdv.phone }}
+                </p>
+              </div>
+
+            </div>
+          </td>
+
+          <!-- MODE -->
+          <td class="px-6 py-4 text-gray-600">
+            {{ rdv.mode }}
+          </td>
+
+          <!-- STATUS -->
+          <td class="px-6 py-4">
+            <span
+              class="px-3 py-1 text-xs rounded-md font-medium"
+              [ngClass]="getStatusClass(rdv.status)">
+              {{ rdv.status }}
+            </span>
+          </td>
+
+          <!-- ACTION -->
+          <td class="px-6 py-4 text-right">
+            <button class="p-2 rounded-lg hover:bg-gray-100">
+              ⋮
+            </button>
+          </td>
+
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
 </div>

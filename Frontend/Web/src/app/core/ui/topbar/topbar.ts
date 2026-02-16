@@ -72,12 +72,18 @@ export class TopbarComponent {
 
   toggleProfile() {
     this.profileOpen = !this.profileOpen;
-    if (this.profileOpen) this.notificationsOpen = false;
+    if (this.profileOpen) {
+      this.notificationsOpen = false;
+      this.mobileSearchOpen = false;
+    }
   }
 
   toggleNotifications() {
     this.notificationsOpen = !this.notificationsOpen;
-    if (this.notificationsOpen) this.profileOpen = false;
+    if (this.notificationsOpen) {
+      this.profileOpen = false;
+      this.mobileSearchOpen = false;
+    }
   }
 
   closeAllMenus() {

@@ -132,6 +132,10 @@ services:
       - "9000"
     networks:
       - shifatech-net
+    volumes:
+      - ./Backend/rdv-service:/var/www/html:cached   
+      - rdv-service-logs:/var/www/html/var/log      
+      - rdv-service-cache:/var/www/html/var/cache   
 
   patient-service:
     build: ./Backend/patient-service
@@ -249,3 +253,5 @@ volumes:
   patient_mysql_data:
   infirmier_mysql_data:
   doctor_mysql_data:
+  rdv-service-logs:
+  rdv-service-cache:

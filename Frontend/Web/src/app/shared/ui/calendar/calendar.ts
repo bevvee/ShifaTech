@@ -16,6 +16,8 @@ export class CalendarComponent {
 
   month = 'January 2024';
 
+  mobileMenuOpen = false;
+
   days = [
     27,28,29,30,31,1,2,
     3,4,5,6,7,8,9,
@@ -41,5 +43,9 @@ export class CalendarComponent {
 
   getAppointmentsForDay(day: number) {
     return this.appointments.filter(a => a.day === day);
+  }
+
+  toggleMobileMenu() {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
   }
 }

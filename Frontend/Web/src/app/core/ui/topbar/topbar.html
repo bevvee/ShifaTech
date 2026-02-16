@@ -57,7 +57,7 @@
       <button
         *ngIf="showSearch"
         type="button"
-        (click)="mobileSearchOpen = !mobileSearchOpen"
+        (click)="mobileSearchOpen = !mobileSearchOpen; notificationsOpen = false; profileOpen = false"
         class="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 hover:bg-slate-50 lg:hidden"
         aria-label="Search">
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none">
@@ -79,7 +79,7 @@
 
         <div
           *ngIf="notificationsOpen"
-          class="absolute right-0 mt-2 w-80 rounded-2xl bg-white border border-slate-200 shadow-xl overflow-hidden"
+          class="hidden lg:block absolute right-0 mt-2 w-80 rounded-2xl bg-white border border-slate-200 shadow-xl overflow-hidden"
           role="menu">
           <div class="px-4 py-3 flex items-center justify-between">
             <div class="text-sm font-semibold text-slate-900">Notifications</div>
@@ -177,6 +177,22 @@
           <path d="m6 6 12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         </svg>
       </button>
+    </div>
+  </div>
+
+  <!-- Mobile notifications panel -->
+  <div *ngIf="showNotifications && notificationsOpen" class="px-4 sm:px-6 pb-3 lg:hidden">
+    <div class="rounded-2xl bg-white border border-slate-200 shadow-xl overflow-hidden">
+      <div class="px-4 py-3 flex items-center justify-between">
+        <div class="text-sm font-semibold text-slate-900">Notifications</div>
+        <button
+          type="button"
+          class="text-xs text-slate-500 hover:text-slate-700"
+          (click)="notificationsOpen = false">
+          Close
+        </button>
+      </div>
+      <div class="px-4 pb-4 text-sm text-slate-600">No notifications yet.</div>
     </div>
   </div>
 </header>
