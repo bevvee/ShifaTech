@@ -1,17 +1,25 @@
-FROM php:8.2-cli
+# Use PHP 8.4 CLI base image
+FROM php:8.4-cli
 
+# Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
-    git unzip libzip-dev libicu-dev \
-    && docker-php-ext-install pdo pdo_mysql intl zip
+    git unzip curl libzip-dev libicu-dev libsodium-dev \
+    && docker-php-ext-install pdo pdo_mysql intl zip sodium
 
+# Install Composer globally
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Set working directory inside the container
 WORKDIR /var/www/html
 
-COPY . .
+# Copy the whole project to the working directory
+COPY . ./
 
-COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
-ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer install --no-interaction --no-progress
+# Install PHP dependencies
+RUN composer install --no-interaction --no-progress --optimize-autoloader
 
+# Expose port
 EXPOSE 9000
 
+# Run PHP built-in server
 CMD ["php", "-S", "0.0.0.0:9000", "-t", "public"]
