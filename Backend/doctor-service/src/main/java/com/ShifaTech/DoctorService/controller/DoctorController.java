@@ -1,80 +1,89 @@
 package com.ShifaTech.DoctorService.controller;
 
-import com.ShifaTech.DoctorService.entity.Doctor;
+import com.ShifaTech.DoctorService.client.PatientClient;
+import com.ShifaTech.DoctorService.dto.ConsultationDTO;
+import com.ShifaTech.DoctorService.dto.DoctorDTO;
+import com.ShifaTech.DoctorService.dto.PatientDTO;
+import com.ShifaTech.DoctorService.dto.PrescriptionDTO;
 import com.ShifaTech.DoctorService.service.DoctorService;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/doctors")
+@RequestMapping("/")
+@RequiredArgsConstructor
 public class DoctorController {
 
     private final DoctorService doctorService;
+    private final PatientClient patientClient;
 
-    public DoctorController(DoctorService doctorService) {
-        this.doctorService = doctorService;
+    // --- CRUD Operations ---
+
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
+    public ResponseEntity<List<DoctorDTO>> getAllDoctors() {
+        return ResponseEntity.ok(doctorService.getAllDoctors());
     }
 
-    // GET /api/doctors - Récupérer tous les docteurs
-    @GetMapping
-    public ResponseEntity<List<Doctor>> getAllDoctors() {
-        List<Doctor> doctors = doctorService.getAllDoctors();
-        return ResponseEntity.ok(doctors);
+    @PostMapping("/c")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DoctorDTO> createDoctor(@Valid @RequestBody DoctorDTO doctorDTO) {
+        return ResponseEntity.ok(doctorService.createDoctor(doctorDTO));
     }
 
-    // GET /api/doctors/{id} - Récupérer un docteur par ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Doctor> getDoctorById(@PathVariable Long id) {
-        try {
-            Doctor doctor = doctorService.getDoctorById(id);
-            return ResponseEntity.ok(doctor);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    // POST /api/doctors - Créer un nouveau docteur
-    @PostMapping
-    public ResponseEntity<Doctor> createDoctor(@RequestBody Doctor doctor) {
-        Doctor createdDoctor = doctorService.createDoctor(doctor);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdDoctor);
-    }
-
-    // PUT /api/doctors/{id} - Mettre à jour un docteur
-    @PutMapping("/{id}")
-    public ResponseEntity<Doctor> updateDoctor(@PathVariable Long id, @RequestBody Doctor doctorDetails) {
-        try {
-            Doctor updatedDoctor = doctorService.updateDoctor(id, doctorDetails);
-            return ResponseEntity.ok(updatedDoctor);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    // DELETE /api/doctors/{id} - Supprimer un docteur
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDoctor(@PathVariable Long id) {
-        try {
-            doctorService.deleteDoctor(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        doctorService.deleteDoctor(id);
+        return ResponseEntity.noContent().build();
     }
 
-    // GET /api/doctors/count - Compter le nombre de docteurs
-    @GetMapping("/count")
-    public ResponseEntity<Long> countDoctors() {
-        long count = doctorService.countDoctors();
-        return ResponseEntity.ok(count);
+    // --- Profile Management ---
+
+    @GetMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT')")
+    public ResponseEntity<DoctorDTO> getDoctorProfile(@PathVariable Long id) {
+        return ResponseEntity.ok(doctorService.getDoctorProfile(id));
     }
-    /**
-     * Health check
-     * GET /api/doctors/health
-     */
+
+    @PutMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
+    public ResponseEntity<DoctorDTO> updateDoctorProfile(@PathVariable Long id,
+            @Valid @RequestBody DoctorDTO doctorDTO) {
+        return ResponseEntity.ok(doctorService.updateDoctorProfile(id, doctorDTO));
+    }
+
+    // --- Patient Management Interactions ---
+
+    @GetMapping("/patients")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
+    public ResponseEntity<List<PatientDTO>> getAllPatients() {
+        return ResponseEntity.ok(patientClient.getAllPatients());
+    }
+
+    @GetMapping("/patients/{id}/medical-record")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
+    public ResponseEntity<ConsultationDTO> getMedicalRecord(@PathVariable Long id) {
+        return ResponseEntity.ok(patientClient.getMedicalRecordByPatient(id));
+    }
+
+    @PostMapping("/patients/medical-record")
+    @PreAuthorize("hasRole('DOCTEUR')")
+    public ResponseEntity<ConsultationDTO> addMedicalRecord(@RequestBody ConsultationDTO consultationDTO) {
+        return ResponseEntity.ok(patientClient.addMedicalRecord(consultationDTO));
+    }
+
+    @PostMapping("/prescriptions")
+    @PreAuthorize("hasRole('DOCTEUR')")
+    public ResponseEntity<PrescriptionDTO> createPrescription(@RequestBody PrescriptionDTO prescriptionDTO) {
+        return ResponseEntity.ok(patientClient.createPrescription(prescriptionDTO));
+    }
+
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("Doctor Service is running!");

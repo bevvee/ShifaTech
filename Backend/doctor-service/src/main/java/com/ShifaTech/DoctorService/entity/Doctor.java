@@ -1,49 +1,29 @@
 package com.ShifaTech.DoctorService.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "doctor")
+@Table(name = "DOCTEUR")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Doctor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id_docteur")
+    private Long idDocteur;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(name = "id_user", unique = true)
+    private Long idUser; // FK towards Auth Service
 
-    // Constructeurs
-    public Doctor() {}
+    @Column(name = "numero_ordre", length = 50)
+    private String numeroOrdre;
 
-    public Doctor(Long id, String name) {
-        this.id = id;
-        this.name = name;
-    }
-
-    // Getters et Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    // toString pour le debug
-    @Override
-    public String toString() {
-        return "Doctor{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                '}';
-    }
+    @ManyToOne
+    @JoinColumn(name = "id_specialite")
+    private DoctorSpeciality specialite;
 }

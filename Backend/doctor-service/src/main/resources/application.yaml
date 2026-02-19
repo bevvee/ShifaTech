@@ -2,11 +2,6 @@ spring:
   application:
     name: DoctorService
 
-  security:
-    user:
-      name: admin
-      password: monMotDePasse123
-
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:doctor_db}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: ${MYSQL_USER:root}
@@ -26,14 +21,28 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
     open-in-view: false
-  server:
-    port: 8080
-    error:
-      include-message: always
-      include-binding-errors: always
 
-  logging:
-    level:
-      com.ShifaTech.DoctorService: DEBUG
-      org.hibernate.SQL: DEBUG
-      org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  # Moved server port correctly under spring (or root, server.port is root usually)
+server:
+  port: 8080 
+  servlet:
+    context-path: /api/doctors
+
+jwt:
+  secret: elaazzouzi-mohammed-amine-oussama-bouikourdassen-nissrine-belmir-farah-bentiress-chaimae-lefrouji-pfa-2026
+
+# Custom Application Config
+application:
+  config:
+    # Docker Internal URLs (Service Discovery by Container Name)
+    auth-service-url: http://auth-service:8080
+    patient-service-url: http://patient-service:8080
+    appointment-service-url: http://rdv-service:9000
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  operations-sorter: alpha
+  tags-sorter: alpha

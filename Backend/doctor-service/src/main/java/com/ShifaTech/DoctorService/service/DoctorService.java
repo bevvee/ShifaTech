@@ -1,70 +1,121 @@
 package com.ShifaTech.DoctorService.service;
 
+import com.ShifaTech.DoctorService.dto.DoctorDTO;
 import com.ShifaTech.DoctorService.entity.Doctor;
+import com.ShifaTech.DoctorService.entity.DoctorSpeciality;
 import com.ShifaTech.DoctorService.repository.DoctorRepository;
+import com.ShifaTech.DoctorService.repository.DoctorSpecialityRepository;
+import com.ShifaTech.DoctorService.exception.ResourceNotFoundException;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
+@Slf4j
 public class DoctorService {
 
 	private final DoctorRepository doctorRepository;
+	private final DoctorSpecialityRepository specialityRepository;
 
-	public DoctorService(DoctorRepository doctorRepository) {
-		this.doctorRepository = doctorRepository;
+	/**
+	 * Get aggregated Doctor Profile (Local only, as per independence rule)
+	 */
+	public DoctorDTO getDoctorProfile(Long idDoctor) {
+		Doctor doctor = doctorRepository.findById(idDoctor)
+				.orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + idDoctor));
+
+		return mapToDTO(doctor);
 	}
 
-	// Récupérer tous les docteurs
-	public List<Doctor> getAllDoctors() {
-		return doctorRepository.findAll();
+	@Transactional
+	public DoctorDTO getDoctorProfileByUserId(Long userId) {
+		return doctorRepository.findByIdUser(userId)
+				.map(this::mapToDTO)
+				.orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found for user ID: " + userId));
 	}
 
-	// Récupérer un docteur par ID
-	public Doctor getDoctorById(Long id) {
-		return doctorRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Docteur non trouvé avec l'id: " + id));
-	}
+	/**
+	 * Create or Update Doctor Profile details (Speciality, etc.)
+	 */
+	@Transactional
+	public DoctorDTO updateDoctorProfile(Long idDoctor, DoctorDTO doctorDTO) {
+		Doctor doctor = doctorRepository.findById(idDoctor)
+				.orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
 
-	// Créer un nouveau docteur
-	public Doctor createDoctor(Doctor doctor) {
-		// Vérifier si un docteur avec ce nom existe déjà
-		if (doctorRepository.existsByName(doctor.getName())) {
-			throw new RuntimeException("Un docteur avec ce nom existe déjà: " + doctor.getName());
+		// Update Local Fields
+		if (doctorDTO.getNumeroOrdre() != null)
+			doctor.setNumeroOrdre(doctorDTO.getNumeroOrdre());
+
+		if (doctorDTO.getIdSpecialite() != null) {
+			DoctorSpeciality spec = specialityRepository.findById(doctorDTO.getIdSpecialite())
+					.orElseThrow(() -> new RuntimeException("Speciality not found"));
+			doctor.setSpecialite(spec);
 		}
-		return doctorRepository.save(doctor);
+
+		doctor = doctorRepository.save(doctor);
+
+		return getDoctorProfile(idDoctor);
 	}
 
-	// Mettre à jour un docteur
-	public Doctor updateDoctor(Long id, Doctor doctorDetails) {
-		Doctor doctor = getDoctorById(id);
-		doctor.setName(doctorDetails.getName());
-		return doctorRepository.save(doctor);
+	public List<DoctorDTO> getAllDoctors() {
+		return doctorRepository.findAll().stream()
+				.map(this::mapToDTO)
+				.collect(Collectors.toList());
 	}
 
-	// Supprimer un docteur
-	public void deleteDoctor(Long id) {
-		if (!doctorRepository.existsById(id)) {
-			throw new RuntimeException("Docteur non trouvé avec l'id: " + id);
+	@Transactional
+	public DoctorDTO createDoctor(DoctorDTO doctorDTO) {
+		Long idUserToUse = doctorDTO.getIdUser();
+
+		if (idUserToUse == null) {
+			throw new IllegalArgumentException("idUser is required to create a Doctor profile");
 		}
-		doctorRepository.deleteById(id);
+
+		// Check if profile already exists
+		if (doctorRepository.findByIdUser(idUserToUse).isPresent()) {
+			throw new IllegalStateException("Doctor profile already exists for this User (ID: " + idUserToUse + ")");
+		}
+
+		Doctor doctor = new Doctor();
+		doctor.setIdUser(idUserToUse);
+		doctor.setNumeroOrdre(doctorDTO.getNumeroOrdre());
+
+		if (doctorDTO.getIdSpecialite() != null) {
+			DoctorSpeciality spec = specialityRepository.findById(doctorDTO.getIdSpecialite())
+					.orElseThrow(() -> new RuntimeException("Speciality not found"));
+			doctor.setSpecialite(spec);
+		}
+
+		Doctor saved = doctorRepository.save(doctor);
+		return mapToDTO(saved);
 	}
 
-	// Compter le nombre de docteurs
-	public long countDoctors() {
-		return doctorRepository.count();
+	@Transactional
+	public void deleteDoctor(Long idDoctor) {
+		if (!doctorRepository.existsById(idDoctor)) {
+			throw new ResourceNotFoundException("Doctor not found");
+		}
+		doctorRepository.deleteById(idDoctor);
 	}
 
-	// Rechercher des docteurs par nom
-	public List<Doctor> searchDoctorsByName(String name) {
-		return doctorRepository.findByNameContainingIgnoreCase(name);
-	}
+	// Helper mapper
+	private DoctorDTO mapToDTO(Doctor doctor) {
+		DoctorDTO dto = new DoctorDTO();
+		// Local
+		dto.setIdDocteur(doctor.getIdDocteur());
+		dto.setIdUser(doctor.getIdUser());
+		dto.setNumeroOrdre(doctor.getNumeroOrdre());
 
-	// Trouver un docteur par nom exact
-	public Doctor findByName(String name) {
-		return doctorRepository.findByName(name)
-				.orElseThrow(() -> new RuntimeException("Docteur non trouvé avec le nom: " + name));
+		if (doctor.getSpecialite() != null) {
+			dto.setIdSpecialite(doctor.getSpecialite().getIdSpecialite());
+			dto.setSpecialiteLabel(doctor.getSpecialite().getLabel());
+		}
+
+		return dto;
 	}
 }
