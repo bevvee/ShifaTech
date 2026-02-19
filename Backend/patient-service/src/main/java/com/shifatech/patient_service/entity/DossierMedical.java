@@ -4,7 +4,13 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+<<<<<<< HEAD
 import com.fasterxml.jackson.annotation.JsonBackReference;
+=======
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.math.BigDecimal;
+>>>>>>> ddc2623 (feat: restructure patient medical data and clean up entity fields)
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,8 +31,34 @@ public class DossierMedical {
     @Column(name = "id_docteur")
     private Long idDocteur;
 
+<<<<<<< HEAD
     @Column(name = "date_creation")
     private LocalDateTime dateCreation;
+=======
+    @Column(name = "poids", precision = 5, scale = 2)
+    private BigDecimal poids;
+
+    @Column(name = "taille", precision = 5, scale = 2)
+    private BigDecimal taille;
+
+    @Column(name = "groupe_sanguin", length = 5)
+    private String groupeSanguin;
+
+    @Column(name = "antecedents_medicaux", columnDefinition = "TEXT")
+    private String antecedentsMedicaux;
+
+    @Column(name = "allergies", columnDefinition = "TEXT")
+    private String allergies;
+
+    @Column(name = "pathologies_chroniques", columnDefinition = "TEXT")
+    private String pathologiesChroniques;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    @Column(name = "diagnostic", columnDefinition = "TEXT")
+    private String diagnostic;
+>>>>>>> ddc2623 (feat: restructure patient medical data and clean up entity fields)
 
     @Column(name = "date_fermeture")
     private LocalDateTime dateFermeture;
