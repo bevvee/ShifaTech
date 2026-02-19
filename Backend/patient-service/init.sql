@@ -8,22 +8,29 @@ CREATE DATABASE IF NOT EXISTS patientdb CHARACTER SET utf8mb4 COLLATE utf8mb4_un
 USE patientdb;
 
 -- ============================================
+-- NETTOYAGE : Suppression des anciennes tables (legacy)
+-- Ces tables ont été renommées/restructurées.
+-- Le DROP IF EXISTS garantit aucune erreur si elles n'existent pas.
+-- ============================================
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS `patients`;
+DROP TABLE IF EXISTS `dossier mediceaux`;
+DROP TABLE IF EXISTS `ordonnances`;
+DROP TABLE IF EXISTS `affiches`;
+
+SET FOREIGN_KEY_CHECKS = 1;
+-- ============================================
+
+-- ============================================
 -- Table: PATIENT
 -- ============================================
 CREATE TABLE IF NOT EXISTS patient (
                                        id_patient BIGINT AUTO_INCREMENT PRIMARY KEY,
                                        id_user BIGINT NOT NULL UNIQUE COMMENT 'Référence vers le service Auth',
                                        num_dossier VARCHAR(50) UNIQUE COMMENT 'Numéro de dossier médical',
-    poids DECIMAL(5,2) COMMENT 'Poids en kg',
-    taille DECIMAL(5,2) COMMENT 'Taille en cm',
-    groupe_sanguin VARCHAR(5) COMMENT 'Ex: A+, O-, AB+',
-    antecedents_medicaux TEXT COMMENT 'Antécédents médicaux du patient',
-    allergies TEXT COMMENT 'Liste des allergies',
-    pathologies_chroniques TEXT COMMENT 'Pathologies chroniques (diabète, hypertension, etc.)',
     assurance VARCHAR(100) COMMENT 'Nom de l\'assurance',
     numero_assurance VARCHAR(50) COMMENT 'Numéro d\'assurance',
-    contact_urgence_nom VARCHAR(100) COMMENT 'Nom du contact d\'urgence',
-    contact_urgence_tel VARCHAR(20) COMMENT 'Téléphone du contact d\'urgence',
     statut BOOLEAN DEFAULT TRUE COMMENT 'Actif/Inactif',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_by BIGINT,
@@ -44,6 +51,12 @@ CREATE TABLE IF NOT EXISTS dossier_medical (
                                                id_dossier BIGINT AUTO_INCREMENT PRIMARY KEY,
                                                id_patient BIGINT NOT NULL,
                                                status ENUM('ACTIVE', 'ARCHIVED', 'DECEASED') DEFAULT 'ACTIVE' NOT NULL,
+    poids DECIMAL(5,2) COMMENT 'Poids en kg',
+    taille DECIMAL(5,2) COMMENT 'Taille en cm',
+    groupe_sanguin VARCHAR(5) COMMENT 'Ex: A+, O-, AB+',
+    antecedents_medicaux TEXT COMMENT 'Antécédents médicaux du patient',
+    allergies TEXT COMMENT 'Liste des allergies',
+    pathologies_chroniques TEXT COMMENT 'Pathologies chroniques (diabète, hypertension, etc.)',
     notes TEXT COMMENT 'Observations du médecin',
     diagnostic TEXT COMMENT 'Diagnostic final',
     date_fermeture DATETIME COMMENT 'Date de fermeture du dossier',

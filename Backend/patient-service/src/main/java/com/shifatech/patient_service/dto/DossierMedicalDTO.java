@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -16,6 +17,12 @@ public class DossierMedicalDTO {
     private Long idDossier;
     private Long idPatient;
     private StatusDossier status;
+    private BigDecimal poids;
+    private BigDecimal taille;
+    private String groupeSanguin;
+    private String antecedentsMedicaux;
+    private String allergies;
+    private String pathologiesChroniques;
     private String notes;
     private String diagnostic;
     private LocalDateTime dateFermeture;

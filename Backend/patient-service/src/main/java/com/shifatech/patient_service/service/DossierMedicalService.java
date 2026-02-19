@@ -1,6 +1,8 @@
 package com.shifatech.patient_service.service;
 
+import com.shifatech.patient_service.dto.CreateDossierRequest;
 import com.shifatech.patient_service.dto.DossierMedicalDTO;
+import com.shifatech.patient_service.dto.UpdateDossierRequest;
 import com.shifatech.patient_service.entity.DossierMedical;
 import com.shifatech.patient_service.entity.Patient;
 import com.shifatech.patient_service.exception.ResourceAlreadyExistsException;
@@ -41,17 +43,12 @@ public class DossierMedicalService {
         return mapToDTO(dossier);
     }
 
-    public DossierMedicalDTO createDossier(Long idPatient, String notes, String diagnostic, Long createdBy) {
+    public DossierMedicalDTO createDossier(Long idPatient, CreateDossierRequest request, Long createdBy) {
         log.info("Création du dossier médical pour le patient ID: {}", idPatient);
 
-        // Seuls les admins ou médecins (via internal API) devraient créer des dossiers
-        // ?
-        // Ou création automatique à la création du patient ?
-        // Pour l'instant, disons Admin seulement.
         Patient patient = patientRepository.findById(idPatient)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", idPatient));
 
-        // Permettre la création si Admin OU si c'est le patient lui-même
         if (!isAdmin() && !patient.getIdUser().equals(createdBy)) {
             throw new AccessDeniedException("Seul un administrateur ou le patient lui-même peut créer ce dossier.");
         }
@@ -62,8 +59,14 @@ public class DossierMedicalService {
 
         DossierMedical dossier = new DossierMedical();
         dossier.setIdPatient(idPatient);
-        dossier.setNotes(notes);
-        dossier.setDiagnostic(diagnostic);
+        dossier.setPoids(request.getPoids());
+        dossier.setTaille(request.getTaille());
+        dossier.setGroupeSanguin(request.getGroupeSanguin());
+        dossier.setAntecedentsMedicaux(request.getAntecedentsMedicaux());
+        dossier.setAllergies(request.getAllergies());
+        dossier.setPathologiesChroniques(request.getPathologiesChroniques());
+        dossier.setNotes(request.getNotes());
+        dossier.setDiagnostic(request.getDiagnostic());
         dossier.setCreatedBy(createdBy);
         dossier.setStatus(DossierMedical.StatusDossier.ACTIVE);
 
@@ -71,12 +74,9 @@ public class DossierMedicalService {
         return mapToDTO(savedDossier);
     }
 
-    // Mettre à jour le dossier (Notes, Diagnostic)
-    public DossierMedicalDTO updateDossier(Long idPatient, String notes, String diagnostic, Long updatedBy) {
+    public DossierMedicalDTO updateDossier(Long idPatient, UpdateDossierRequest request, Long updatedBy) {
         log.info("Mise à jour du dossier médical pour le patient ID: {}", idPatient);
 
-        // Seuls les admins peuvent modifier pour l'instant (ou via internal service
-        // API)
         if (!isAdmin()) {
             throw new AccessDeniedException("Accès refusé. Seul un administrateur peut modifier le dossier médical.");
         }
@@ -85,10 +85,22 @@ public class DossierMedicalService {
                 .findByIdPatientAndStatus(idPatient, DossierMedical.StatusDossier.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("DossierMedical", "idPatient", idPatient));
 
-        if (notes != null)
-            dossier.setNotes(notes);
-        if (diagnostic != null)
-            dossier.setDiagnostic(diagnostic);
+        if (request.getPoids() != null)
+            dossier.setPoids(request.getPoids());
+        if (request.getTaille() != null)
+            dossier.setTaille(request.getTaille());
+        if (request.getGroupeSanguin() != null)
+            dossier.setGroupeSanguin(request.getGroupeSanguin());
+        if (request.getAntecedentsMedicaux() != null)
+            dossier.setAntecedentsMedicaux(request.getAntecedentsMedicaux());
+        if (request.getAllergies() != null)
+            dossier.setAllergies(request.getAllergies());
+        if (request.getPathologiesChroniques() != null)
+            dossier.setPathologiesChroniques(request.getPathologiesChroniques());
+        if (request.getNotes() != null)
+            dossier.setNotes(request.getNotes());
+        if (request.getDiagnostic() != null)
+            dossier.setDiagnostic(request.getDiagnostic());
         dossier.setUpdatedBy(updatedBy);
 
         DossierMedical updatedDossier = dossierMedicalRepository.save(dossier);
@@ -116,6 +128,12 @@ public class DossierMedicalService {
                 .idDossier(dossier.getIdDossier())
                 .idPatient(dossier.getIdPatient())
                 .status(dossier.getStatus())
+                .poids(dossier.getPoids())
+                .taille(dossier.getTaille())
+                .groupeSanguin(dossier.getGroupeSanguin())
+                .antecedentsMedicaux(dossier.getAntecedentsMedicaux())
+                .allergies(dossier.getAllergies())
+                .pathologiesChroniques(dossier.getPathologiesChroniques())
                 .notes(dossier.getNotes())
                 .diagnostic(dossier.getDiagnostic())
                 .dateFermeture(dossier.getDateFermeture())
