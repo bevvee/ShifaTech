@@ -1,21 +1,14 @@
 package com.ShifaTech.DoctorService.repository;
 
+import com.ShifaTech.DoctorService.entity.Doctor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import com.ShifaTech.DoctorService.entity.Doctor;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface DoctorRepository extends JpaRepository<Doctor, Long> {
+    Optional<Doctor> findByIdUser(Long idUser);
 
-    // Méthode personnalisée : trouver un docteur par nom
-    Optional<Doctor> findByName(String name);
-
-    // Méthode personnalisée : trouver tous les docteurs dont le nom contient une chaîne
-    List<Doctor> findByNameContainingIgnoreCase(String name);
-
-    // Méthode personnalisée : vérifier si un docteur existe par nom
-    boolean existsByName(String name);
+    Optional<Doctor> findByNumeroOrdre(String numeroOrdre);
 }
