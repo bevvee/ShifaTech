@@ -7,6 +7,7 @@ import com.shifatech.authservice.repository.PasswordResetTokenRepository;
 import com.shifatech.authservice.repository.UserRepository;
 import com.shifatech.authservice.service.AuthService;
 import com.shifatech.authservice.service.EmailService;
+import com.shifatech.authservice.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -25,6 +25,7 @@ import java.util.UUID;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
@@ -46,23 +47,49 @@ public class AuthController {
         return new ResponseEntity<>(response, status);
     }
 
+    // Update user
+    @PutMapping("/update/{userId}")
+    public ResponseEntity<ApiResponse> updateUser(@PathVariable Long userId, @RequestBody UpdateUserRequest request) {
+
+        ApiResponse response = authService.updateUser(userId, request);
+        HttpStatus status = response.isError() ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
+        return new ResponseEntity<>(response, status);
+    }
+
+    // Delete user
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<ApiResponse> deleteUser(@PathVariable Integer userId, HttpServletRequest request) {
+
+        // 1️⃣ Get Authorization header
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse(true, "User not authenticated"));
+        }
+        // 2️⃣ Extract token
+        String token = authHeader.substring(7);
+        // 3️⃣ Extract userId from token
+        Integer deletedByUserId = jwtUtil.extractClaims(token).get("userId", Integer.class);
+        // 4️⃣ Call service
+        ApiResponse response = authService.deleteUser(userId, deletedByUserId);
+        HttpStatus status = response.isError() ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
+        return new ResponseEntity<>(response, status);
+    }
+
     // Profile
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile() {
-        Object result = authService.getProfile();
-        if (result instanceof ApiResponse api) {
-            HttpStatus status = api.getMessage().equals("User not authenticated") ?
-                    HttpStatus.UNAUTHORIZED : HttpStatus.BAD_REQUEST;
-            return new ResponseEntity<>(api, status);
-        }
-        return ResponseEntity.ok(result);
+    public ResponseEntity<ApiResponse> getProfile(HttpServletRequest request) {
+        ApiResponse response = authService.getProfile(request);
+        HttpStatus status = response.isError() ? (response.getMessage().equals("User not authenticated") ? HttpStatus.UNAUTHORIZED : HttpStatus.BAD_REQUEST) : HttpStatus.OK;
+        return new ResponseEntity<>(response, status);
     }
+
     // Logout
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse> logout(HttpServletRequest request) {
         authService.logout(request);
         return ResponseEntity.ok(new ApiResponse(false, "Logged out successfully"));
     }
+
     // forgot-password
     @GetMapping("/forgot-password")
     public ResponseEntity<ApiResponse> forgotPassword(@RequestParam String email) {
@@ -70,8 +97,7 @@ public class AuthController {
         userRepository.findByEmail(email).ifPresent(user -> {
 
             // 🔥 delete old token if exists
-            passwordResetTokenRepository.findByUser(user)
-                    .ifPresent(passwordResetTokenRepository::delete);
+            passwordResetTokenRepository.findByUser(user).ifPresent(passwordResetTokenRepository::delete);
 
             PasswordResetToken resetToken = new PasswordResetToken();
             resetToken.setToken(UUID.randomUUID().toString());
@@ -80,36 +106,24 @@ public class AuthController {
 
             passwordResetTokenRepository.save(resetToken);
 
-            emailService.sendResetPasswordEmail(
-                    user.getEmail(),
-                    resetToken.getToken()
-            );
+            emailService.sendResetPasswordEmail(user.getEmail(), resetToken.getToken());
         });
 
-        return ResponseEntity.ok(
-                new ApiResponse(false, "If your email exists, a password reset link has been sent")
-        );
+        return ResponseEntity.ok(new ApiResponse(false, "If your email exists, a password reset link has been sent"));
     }
 
     // reset-password
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse> resetPassword(
-            @RequestParam String token,
-            @RequestParam String newPassword,
-            @RequestParam String confirmPassword) {
+    public ResponseEntity<ApiResponse> resetPassword(@RequestParam String token, @RequestParam String newPassword, @RequestParam String confirmPassword) {
 
         if (!newPassword.equals(confirmPassword)) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse(true, "Password and confirmation do not match"));
+            return ResponseEntity.badRequest().body(new ApiResponse(true, "Password and confirmation do not match"));
         }
 
-        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
-                .orElseThrow(() ->
-                        new RuntimeException("Invalid or expired token"));
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token).orElseThrow(() -> new RuntimeException("Invalid or expired token"));
 
         if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse(true, "Token has expired"));
+            return ResponseEntity.badRequest().body(new ApiResponse(true, "Token has expired"));
         }
 
         User user = resetToken.getUser();
@@ -120,8 +134,7 @@ public class AuthController {
         // 🔥 VERY IMPORTANT — token must be deleted
         passwordResetTokenRepository.delete(resetToken);
 
-        return ResponseEntity.ok(
-                new ApiResponse(false, "Password reset successfully"));
+        return ResponseEntity.ok(new ApiResponse(false, "Password reset successfully"));
     }
 
     // Health check
