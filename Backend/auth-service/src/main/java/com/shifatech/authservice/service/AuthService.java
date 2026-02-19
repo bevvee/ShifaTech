@@ -1,6 +1,5 @@
 package com.shifatech.authservice.service;
 
-import com.shifatech.authservice.Enum.RoleEnum;
 import com.shifatech.authservice.Enum.SexeEnum;
 import com.shifatech.authservice.dto.*;
 import com.shifatech.authservice.entity.*;
