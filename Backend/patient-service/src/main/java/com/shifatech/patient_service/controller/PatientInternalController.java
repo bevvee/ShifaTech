@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Contrôleur interne pour permettre aux autres services de consommer les APIs patient
- * Ce contrôleur est accessible sans authentification pour faciliter la communication inter-services
+ * Contrôleur interne pour permettre aux autres services de consommer les APIs
+ * patient
+ * Ce contrôleur est accessible sans authentification pour faciliter la
+ * communication inter-services
  */
 @RestController
 @RequestMapping("/api/patient/internal")
@@ -96,4 +98,3 @@ public class PatientInternalController {
         return ResponseEntity.noContent().build();
     }
 }
-

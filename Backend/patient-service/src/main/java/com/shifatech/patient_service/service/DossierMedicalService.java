@@ -1,14 +1,13 @@
 package com.shifatech.patient_service.service;
 
-<<<<<<< HEAD
+<<<<<<<HEAD
+
 import com.shifatech.patient_service.client.AuthServiceClient;
 import com.shifatech.patient_service.dto.DossierMedicalDTO;
-import com.shifatech.patient_service.dto.UserDTO;
-=======
+import com.shifatech.patient_service.dto.UserDTO;=======
 import com.shifatech.patient_service.dto.CreateDossierRequest;
 import com.shifatech.patient_service.dto.DossierMedicalDTO;
-import com.shifatech.patient_service.dto.UpdateDossierRequest;
->>>>>>> ddc2623 (feat: restructure patient medical data and clean up entity fields)
+import com.shifatech.patient_service.dto.UpdateDossierRequest;>>>>>>>ddc2623(feat:restructure patient medical data and clean up entity fields)
 import com.shifatech.patient_service.entity.DossierMedical;
 import com.shifatech.patient_service.repository.DossierMedicalRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +36,8 @@ public class DossierMedicalService {
         return convertToDTO(dossier);
     }
 
-<<<<<<< HEAD
+    <<<<<<<HEAD
+
     /**
      * Vérifier si un patient a un dossier médical
      */
@@ -70,8 +70,9 @@ public class DossierMedicalService {
 
         return dto;
     }
-}
-=======
+
+}=======
+
     public DossierMedicalDTO createDossier(Long idPatient, CreateDossierRequest request, Long createdBy) {
         log.info("Création du dossier médical pour le patient ID: {}", idPatient);
 
@@ -169,5 +170,10 @@ public class DossierMedicalService {
                 .dateCreation(dossier.getDateCreation())
                 .build();
     }
-}
->>>>>>> ddc2623 (feat: restructure patient medical data and clean up entity fields)
+}>>>>>>>ddc2623(feat:
+
+restructure patient
+medical data
+and clean
+up entity fields
+)
