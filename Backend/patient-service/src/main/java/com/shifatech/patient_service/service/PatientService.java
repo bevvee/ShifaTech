@@ -45,16 +45,8 @@ public class PatientService {
         Patient patient = new Patient();
         patient.setIdUser(request.getIdUser());
         patient.setNumDossier(generateNumDossier());
-        patient.setPoids(request.getPoids());
-        patient.setTaille(request.getTaille());
-        patient.setGroupeSanguin(request.getGroupeSanguin());
-        patient.setAntecedentsMedicaux(request.getAntecedentsMedicaux());
-        patient.setAllergies(request.getAllergies());
-        patient.setPathologiesChroniques(request.getPathologiesChroniques());
         patient.setAssurance(request.getAssurance());
         patient.setNumeroAssurance(request.getNumeroAssurance());
-        patient.setContactUrgenceNom(request.getContactUrgenceNom());
-        patient.setContactUrgenceTel(request.getContactUrgenceTel());
         patient.setStatut(true);
         patient.setCreatedBy(createdBy);
 
@@ -119,26 +111,10 @@ public class PatientService {
                     "Vous ne pouvez modifier que votre propre dossier patient.");
         }
 
-        if (request.getPoids() != null)
-            patient.setPoids(request.getPoids());
-        if (request.getTaille() != null)
-            patient.setTaille(request.getTaille());
-        if (request.getGroupeSanguin() != null)
-            patient.setGroupeSanguin(request.getGroupeSanguin());
-        if (request.getAntecedentsMedicaux() != null)
-            patient.setAntecedentsMedicaux(request.getAntecedentsMedicaux());
-        if (request.getAllergies() != null)
-            patient.setAllergies(request.getAllergies());
-        if (request.getPathologiesChroniques() != null)
-            patient.setPathologiesChroniques(request.getPathologiesChroniques());
         if (request.getAssurance() != null)
             patient.setAssurance(request.getAssurance());
         if (request.getNumeroAssurance() != null)
             patient.setNumeroAssurance(request.getNumeroAssurance());
-        if (request.getContactUrgenceNom() != null)
-            patient.setContactUrgenceNom(request.getContactUrgenceNom());
-        if (request.getContactUrgenceTel() != null)
-            patient.setContactUrgenceTel(request.getContactUrgenceTel());
         if (request.getStatut() != null)
             patient.setStatut(request.getStatut());
 
@@ -174,16 +150,8 @@ public class PatientService {
                 .idPatient(patient.getIdPatient())
                 .idUser(patient.getIdUser())
                 .numDossier(patient.getNumDossier())
-                .poids(patient.getPoids())
-                .taille(patient.getTaille())
-                .groupeSanguin(patient.getGroupeSanguin())
-                .antecedentsMedicaux(patient.getAntecedentsMedicaux())
-                .allergies(patient.getAllergies())
-                .pathologiesChroniques(patient.getPathologiesChroniques())
                 .assurance(patient.getAssurance())
                 .numeroAssurance(patient.getNumeroAssurance())
-                .contactUrgenceNom(patient.getContactUrgenceNom())
-                .contactUrgenceTel(patient.getContactUrgenceTel())
                 .statut(patient.getStatut())
                 .createdAt(patient.getCreatedAt())
                 .build();

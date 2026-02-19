@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,41 +21,17 @@ public class Patient {
     @Column(name = "id_patient")
     private Long idPatient;
 
-    @Column(name = "id_user", nullable = false, unique = true)
+    @Column(name = "id_user", unique = true)
     private Long idUser; // Référence vers le service Auth
 
-    @Column(name = "num_dossier", unique = true, length = 50)
+    @Column(name = "num_dossier", unique = true)
     private String numDossier;
-
-    @Column(name = "poids", precision = 5, scale = 2)
-    private BigDecimal poids;
-
-    @Column(name = "taille", precision = 5, scale = 2)
-    private BigDecimal taille;
-
-    @Column(name = "groupe_sanguin", length = 5)
-    private String groupeSanguin; // Ex: A+, O-, AB+
-
-    @Column(name = "antecedents_medicaux", columnDefinition = "TEXT")
-    private String antecedentsMedicaux;
-
-    @Column(name = "allergies", columnDefinition = "TEXT")
-    private String allergies;
-
-    @Column(name = "pathologies_chroniques", columnDefinition = "TEXT")
-    private String pathologiesChroniques;
 
     @Column(name = "assurance", length = 100)
     private String assurance;
 
     @Column(name = "numero_assurance", length = 50)
     private String numeroAssurance;
-
-    @Column(name = "contact_urgence_nom", length = 100)
-    private String contactUrgenceNom;
-
-    @Column(name = "contact_urgence_tel", length = 20)
-    private String contactUrgenceTel;
 
     @Column(name = "statut")
     private Boolean statut = true; // Actif/Inactif

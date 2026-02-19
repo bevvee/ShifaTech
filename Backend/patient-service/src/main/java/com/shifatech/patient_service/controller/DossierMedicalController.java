@@ -36,8 +36,7 @@ public class DossierMedicalController {
         Long createdBy = jwtUtil.getUserIdFromToken();
         DossierMedicalDTO dossier = dossierMedicalService.createDossier(
                 request.getIdPatient(),
-                request.getNotes(),
-                request.getDiagnostic(),
+                request,
                 createdBy);
         return ResponseEntity.ok(ApiResponse.success(dossier, "Dossier médical créé avec succès"));
     }
@@ -50,8 +49,7 @@ public class DossierMedicalController {
         Long updatedBy = jwtUtil.getUserIdFromToken();
         DossierMedicalDTO dossier = dossierMedicalService.updateDossier(
                 idPatient,
-                request.getNotes(),
-                request.getDiagnostic(),
+                request,
                 updatedBy);
         return ResponseEntity.ok(ApiResponse.success(dossier, "Dossier médical mis à jour avec succès"));
     }
