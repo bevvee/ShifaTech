@@ -1,47 +1,77 @@
 package com.shifatech.patient_service.service;
 
+<<<<<<<HEAD
+
+import com.shifatech.patient_service.client.AuthServiceClient;
+import com.shifatech.patient_service.dto.DossierMedicalDTO;
+import com.shifatech.patient_service.dto.UserDTO;=======
 import com.shifatech.patient_service.dto.CreateDossierRequest;
 import com.shifatech.patient_service.dto.DossierMedicalDTO;
-import com.shifatech.patient_service.dto.UpdateDossierRequest;
+import com.shifatech.patient_service.dto.UpdateDossierRequest;>>>>>>>ddc2623(feat:restructure patient medical data and clean up entity fields)
 import com.shifatech.patient_service.entity.DossierMedical;
-import com.shifatech.patient_service.entity.Patient;
-import com.shifatech.patient_service.exception.ResourceAlreadyExistsException;
-import com.shifatech.patient_service.exception.ResourceNotFoundException;
 import com.shifatech.patient_service.repository.DossierMedicalRepository;
-import com.shifatech.patient_service.repository.PatientRepository;
-import com.shifatech.patient_service.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 @Transactional
+@Slf4j
 public class DossierMedicalService {
 
     private final DossierMedicalRepository dossierMedicalRepository;
-    private final PatientRepository patientRepository;
-    private final JwtUtil jwtUtil;
+    private final AuthServiceClient authServiceClient;
 
-    public DossierMedicalDTO getDossierByPatientId(Long idPatient) {
-        log.info("Récupération du dossier médical pour le patient ID: {}", idPatient);
+    /**
+     * Récupérer le dossier médical d'un patient
+     */
+    public DossierMedicalDTO getDossierMedicalByPatient(Long idPatient) {
+        log.info("Récupération du dossier médical pour le patient: {}", idPatient);
 
-        // Vérifier l'existence du patient
-        Patient patient = patientRepository.findById(idPatient)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", idPatient));
+        DossierMedical dossier = dossierMedicalRepository.findByIdPatient(idPatient)
+                .orElseThrow(() -> new RuntimeException("Dossier médical non trouvé pour le patient: " + idPatient));
 
-        // Sécurité : Vérifier l'accès
-        checkAccess(patient);
-
-        DossierMedical dossier = dossierMedicalRepository
-                .findByIdPatientAndStatus(idPatient, DossierMedical.StatusDossier.ACTIVE)
-                .orElseThrow(() -> new ResourceNotFoundException("DossierMedical", "idPatient", idPatient));
-
-        return mapToDTO(dossier);
+        return convertToDTO(dossier);
     }
+
+    <<<<<<<HEAD
+
+    /**
+     * Vérifier si un patient a un dossier médical
+     */
+    public boolean hasDossierMedical(Long idPatient) {
+        return dossierMedicalRepository.existsByIdPatient(idPatient);
+    }
+
+    /**
+     * Conversion DossierMedical -> DTO
+     */
+    private DossierMedicalDTO convertToDTO(DossierMedical dossier) {
+        DossierMedicalDTO dto = new DossierMedicalDTO();
+        dto.setIdDossier(dossier.getIdDossier());
+        dto.setIdPatient(dossier.getIdPatient());
+        dto.setIdDocteur(dossier.getIdDocteur());
+        dto.setDateCreation(dossier.getDateCreation());
+        dto.setDateFermeture(dossier.getDateFermeture());
+        dto.setNotes(dossier.getNotes());
+        dto.setDiagnostic(dossier.getDiagnostic());
+        dto.setIdOrdonnance(dossier.getIdOrdonnance());
+
+        // Récupérer les infos du docteur
+        try {
+            UserDTO docteur = authServiceClient.getUserById(dossier.getIdDocteur());
+            dto.setNomDocteur(docteur.getNom());
+            dto.setPrenomDocteur(docteur.getPrenom());
+        } catch (Exception e) {
+            log.warn("Impossible de récupérer les infos du docteur: {}", e.getMessage());
+        }
+
+        return dto;
+    }
+
+}=======
 
     public DossierMedicalDTO createDossier(Long idPatient, CreateDossierRequest request, Long createdBy) {
         log.info("Création du dossier médical pour le patient ID: {}", idPatient);
@@ -140,4 +170,10 @@ public class DossierMedicalService {
                 .dateCreation(dossier.getDateCreation())
                 .build();
     }
-}
+}>>>>>>>ddc2623(feat:
+
+restructure patient
+medical data
+and clean
+up entity fields
+)

@@ -3,14 +3,15 @@ package com.shifatech.patient_service.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsConstructor;<<<<<<<HEAD
+import com.fasterxml.jackson.annotation.JsonBackReference;=======
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.math.BigDecimal;
+import java.math.BigDecimal;>>>>>>>ddc2623(feat:restructure patient medical data and clean up entity fields)
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "dossier_medical")
+@Table(name = "dossiers_medicaux")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,13 +22,14 @@ public class DossierMedical {
     @Column(name = "id_dossier")
     private Long idDossier;
 
-    @Column(name = "id_patient", nullable = false)
+    @Column(name = "id_patient")
     private Long idPatient;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 20, nullable = false)
-    private StatusDossier status = StatusDossier.ACTIVE;
+    @Column(name = "id_docteur")
+    private Long idDocteur;
 
+    <<<<<<<HEAD @Column(name="date_creation")
+    private LocalDateTime dateCreation;=======
     @Column(name = "poids", precision = 5, scale = 2)
     private BigDecimal poids;
 
@@ -50,27 +52,24 @@ public class DossierMedical {
     private String notes;
 
     @Column(name = "diagnostic", columnDefinition = "TEXT")
-    private String diagnostic;
+    private String diagnostic;>>>>>>>
+
+    ddc2623 (feat: restructure patient medical data and clean up entity fields)
 
     @Column(name = "date_fermeture")
     private LocalDateTime dateFermeture;
 
-    @CreationTimestamp
-    @Column(name = "date_creation", updatable = false)
-    private LocalDateTime dateCreation;
+    @Column(columnDefinition = "TEXT")
+    private String notes;
 
-    @Column(name = "created_by")
-    private Long createdBy;
+    @Column(columnDefinition = "TEXT")
+    private String diagnostic;
 
-    @Column(name = "updated_by")
-    private Long updatedBy;
+    @Column(name = "id_ordonnance")
+    private Long idOrdonnance; // Référence à l'ordonnance associée
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
-    public enum StatusDossier {
-        ACTIVE,
-        ARCHIVED,
-        DECEASED
-    }
+    @OneToOne
+    @JoinColumn(name = "id_patient", insertable = false, updatable = false)
+    @JsonBackReference
+    private Patient patient;
 }
