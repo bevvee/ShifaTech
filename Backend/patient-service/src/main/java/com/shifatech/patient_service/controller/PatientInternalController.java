@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Contrôleur interne pour permettre aux autres services de consommer les APIs patient
- * Ce contrôleur est accessible sans authentification pour faciliter la communication inter-services
+ * Contrôleur interne pour permettre aux autres services de consommer les APIs
+ * patient
+ * Ce contrôleur est accessible sans authentification pour faciliter la
+ * communication inter-services
  */
 @RestController
 @RequestMapping("/api/patient/internal")
@@ -75,8 +77,8 @@ public class PatientInternalController {
         log.info("[INTERNAL] Mise à jour du patient avec l'ID: {}", id);
         // On récupère d'abord le patient pour avoir son ID utilisateur pour le updatedBy
         PatientDTO currentPatient = patientService.getPatientById(id, null);
-       
-    reurn ResponseEntity.ok(updatedPatient);
+        PatientDTO updatedPatient = patientService.updatePatient(id, request, currentPatient.getIdUser(), null);
+        return ResponseEntity.ok(updatedPatient);
     }
 
     /**

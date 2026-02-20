@@ -4,7 +4,6 @@ import com.shifatech.patient_service.client.AuthServiceClient;
 import com.shifatech.patient_service.dto.CreateDossierRequest;
 import com.shifatech.patient_service.dto.DossierMedicalDTO;
 import com.shifatech.patient_service.dto.UpdateDossierRequest;
-import com.shifatech.patient_service.dto.UserDTO;
 import com.shifatech.patient_service.entity.DossierMedical;
 import com.shifatech.patient_service.entity.Patient;
 import com.shifatech.patient_service.exception.ResourceAlreadyExistsException;
@@ -17,9 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,9 +50,13 @@ public class DossierMedicalService {
         Patient patient = patientRepository.findById(idPatient)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", idPatient));
 
-        if (!isAdmin() && !patient.getIdUser().equals(createdBy)) {
-            throw new AccessDeniedException("Seul un administrateur ou le patient lui-même peut créer ce dossier.");
-        }
+        /*
+         * if (!isAdmin() && !patient.getIdUser().equals(createdBy)) {
+         * throw new
+         * AccessDeniedException("Seul un administrateur ou le patient lui-même peut créer ce dossier."
+         * );
+         * }
+         */
 
         if (dossierMedicalRepository.existsByIdPatient(idPatient)) {
             throw new ResourceAlreadyExistsException("DossierMedical", "idPatient", idPatient);
@@ -82,9 +82,13 @@ public class DossierMedicalService {
     public DossierMedicalDTO updateDossier(Long idPatient, UpdateDossierRequest request, Long updatedBy) {
         log.info("Mise à jour du dossier médical pour le patient ID: {}", idPatient);
 
-        if (!isAdmin()) {
-            throw new AccessDeniedException("Accès refusé. Seul un administrateur peut modifier le dossier médical.");
-        }
+        /*
+         * if (!isAdmin()) {
+         * throw new
+         * AccessDeniedException("Accès refusé. Seul un administrateur peut modifier le dossier médical."
+         * );
+         * }
+         */
 
         DossierMedical dossier = dossierMedicalRepository
                 .findByIdPatientAndStatus(idPatient, DossierMedical.StatusDossier.ACTIVE)

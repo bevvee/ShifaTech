@@ -41,9 +41,13 @@ public class OrdonnanceService {
 
         // Seuls les médecins ou admins peuvent créer des ordonnances
         // Exception pour le patient lui-même (Pour Testing)
-        if (!hasWriteAccess() && !patient.getIdUser().equals(createdBy)) {
-            throw new AccessDeniedException("Seul un médecin ou un administrateur peut créer une ordonnance.");
-        }
+        /*
+         * if (!hasWriteAccess() && !patient.getIdUser().equals(createdBy)) {
+         * throw new
+         * AccessDeniedException("Seul un médecin ou un administrateur peut créer une ordonnance."
+         * );
+         * }
+         */
 
         Ordonnance ordonnance = new Ordonnance();
         ordonnance.setIdPatient(request.getIdPatient());

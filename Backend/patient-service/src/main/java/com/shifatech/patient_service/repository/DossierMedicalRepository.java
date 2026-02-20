@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface DossierMedicalRepository extends JpaRepository<DossierMedical, Long> {
 
-    List<DossierMedical> findByIdPatient(Long idPatient);
+    Optional<DossierMedical> findByIdPatient(Long idPatient);
 
     Optional<DossierMedical> findByIdPatientAndStatus(Long idPatient, StatusDossier status);
 

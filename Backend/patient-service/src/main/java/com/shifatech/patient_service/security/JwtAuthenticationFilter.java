@@ -29,19 +29,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/actuator",
-            "/error"
-    );
+            "/error");
 
     private final JwtUtil jwtUtil;
 
+    @org.springframework.beans.factory.annotation.Value("${security.jwt.enabled:true}")
+    private boolean jwtEnabled;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
 
-        if (isPublicPath(path)) {
+        if (isPublicPath(path) || !jwtEnabled) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -67,8 +69,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                     userId,
                     null,
-                    authorities
-            );
+                    authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
         } catch (ExpiredJwtException e) {

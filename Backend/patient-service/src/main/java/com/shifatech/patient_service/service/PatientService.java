@@ -33,10 +33,12 @@ public class PatientService {
     public PatientDTO createPatient(CreatePatientRequest request, Long createdBy, String authHeader) {
         log.info("Création d'un nouveau patient pour l'utilisateur ID: {}", request.getIdUser());
 
-        if (!isAdmin() && !request.getIdUser().equals(createdBy)) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "Vous ne pouvez créer un profil patient que pour vous-même.");
-        }
+        /*
+         * if (!isMedicalStaff() && !request.getIdUser().equals(createdBy)) {
+         * throw new org.springframework.security.access.AccessDeniedException(
+         * "Seul le personnel médical ou l'utilisateur lui-même peut créer ce profil.");
+         * }
+         */
 
         if (patientRepository.existsByIdUser(request.getIdUser())) {
             throw new ResourceAlreadyExistsException("Patient", "idUser", request.getIdUser());
@@ -106,10 +108,13 @@ public class PatientService {
         Patient patient = patientRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
 
-        if (!isAdmin() && !patient.getIdUser().equals(updatedBy)) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "Vous ne pouvez modifier que votre propre dossier patient.");
-        }
+        /*
+         * if (!isMedicalStaff() && !patient.getIdUser().equals(updatedBy)) {
+         * throw new org.springframework.security.access.AccessDeniedException(
+         * "Vous ne pouvez modifier que votre propre dossier patient (sauf si vous êtes médecin/infirmier)."
+         * );
+         * }
+         */
 
         if (request.getAssurance() != null)
             patient.setAssurance(request.getAssurance());
@@ -184,5 +189,16 @@ public class PatientService {
             return false;
         return authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    private boolean isMedicalStaff() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication();
+        if (authentication == null)
+            return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") ||
+                        a.getAuthority().equals("ROLE_DOCTEUR") ||
+                        a.getAuthority().equals("ROLE_INFIRMIER"));
     }
 }

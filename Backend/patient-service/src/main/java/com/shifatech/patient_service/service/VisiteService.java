@@ -42,9 +42,13 @@ public class VisiteService {
 
         // Seuls les médecins ou admins peuvent créer des visites
         // Exception pour le patient lui-même (Pour Testing)
-        if (!hasWriteAccess() && !patient.getIdUser().equals(createdBy)) {
-            throw new AccessDeniedException("Seul un médecin ou un administrateur peut créer une visite.");
-        }
+        /*
+         * if (!hasWriteAccess() && !patient.getIdUser().equals(createdBy)) {
+         * throw new
+         * AccessDeniedException("Seul un médecin ou un administrateur peut créer une visite."
+         * );
+         * }
+         */
 
         Visite visite = new Visite();
         visite.setIdDoctor(request.getIdDoctor());
