@@ -1,6 +1,7 @@
 
 import { Component, Input, Output, EventEmitter, ElementRef, ViewChild } from '@angular/core';
 import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.css';
 
 @Component({
   selector: 'app-time-picker',
@@ -26,7 +27,8 @@ export class TimePickerComponent {
       enableTime: true,
       noCalendar: true,
       dateFormat: 'H:i',   // time format HH:mm
-      time_24hr: false,    // set true for 24hr clock
+		static: true,
+      time_24hr: true,
       minuteIncrement: 1,
       defaultDate: this.defaultTime,
       onChange: (selectedDates, dateStr) => {

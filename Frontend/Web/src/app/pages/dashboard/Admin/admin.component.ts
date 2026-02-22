@@ -16,6 +16,6 @@ import { RecentOrdersComponent } from '../../../shared/components/ecommerce/rece
     DemographicCardComponent,
     RecentOrdersComponent,
   ],
-  templateUrl: './ecommerce.component.html',
+  templateUrl: './admin.component.html',
 })
-export class EcommerceComponent {}
+export class Admin {}

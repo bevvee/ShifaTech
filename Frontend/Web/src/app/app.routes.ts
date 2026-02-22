@@ -1,5 +1,8 @@
 import { Routes } from '@angular/router';
-import { EcommerceComponent } from './pages/dashboard/ecommerce/ecommerce.component';
+import { Admin } from './pages/dashboard/Admin/admin.component';
+
+import { Infirmier } from './pages/dashboard/Infirmier/infirmier.component';
+import { Docteur } from './pages/dashboard/Docteur/docteur.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { FormElementsComponent } from './pages/forms/form-elements/form-elements.component';
 import { BasicTablesComponent } from './pages/tables/basic-tables/basic-tables.component';
@@ -18,23 +21,68 @@ import { VideosComponent } from './pages/ui-elements/videos/videos.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
-
+import { RendezVousComponent } from './pages/RendezVous/RendezVous.component';
+import { PatientsComponent } from './pages/patients/patients.component';
+import { DocteursComponent } from './pages/docteurs/docteurs.component';
+import { InfirmiersComponent } from './pages/infirmiers/infirmiers.component';
+import { ServicesComponent } from './pages/services/services.component';
+import { SpecialisationsComponent } from './pages/specialisations/specialisations.component';
+/* import { roleGuard } from './core/guards/auth.guard';
+import { Role } from './core/models/role.enum'; */
 export const routes: Routes = [
   {
     path:'',
     component:AppLayoutComponent,
     children:[
       {
-        path: '',
-        component: EcommerceComponent,
-        pathMatch: 'full',
-        title:
-        'Dashboard | ShifaTech',
+        path:'admin',
+        component:Admin,
+        title:'Admin | ShifaTech'
+      },
+      {
+        path:'docteur',
+        component:Docteur,
+        title:'Docteur | ShifaTech'
+      },
+      {
+        path:'infirmier',
+        component:Infirmier,
+        title:'Infirmier | ShifaTech'
       },
       {
         path:'calendar',
         component:CalenderComponent,
         title:'Calender | ShifaTech'
+      },
+      {
+        path:'rendez-vous',
+        component:RendezVousComponent,
+        title:'Liste des Rendez Vous | ShifaTech'
+      },
+      {
+        path:'docteurs',
+        component:DocteursComponent,
+        title:'Liste des Docteurs | ShifaTech'
+      },
+      {
+        path:'patients',
+        component:PatientsComponent,
+        title:'Liste des Patients | ShifaTech'
+      },
+      {
+        path:'infirmiers',
+        component:InfirmiersComponent,
+        title:'Liste des Infirmiers | ShifaTech'
+      },
+      {
+        path:'services',
+        component:ServicesComponent,
+        title:'Liste des Services | ShifaTech'
+      },
+      {
+        path:'specialisations',
+        component:SpecialisationsComponent,
+        title:'Liste des Spécialisations | ShifaTech'
       },
       {
         path:'profile',
@@ -104,7 +152,12 @@ export const routes: Routes = [
       },
     ]
   },
-  // auth pages
+/*   // auth pages
+  {
+    path: 'login',
+    redirectTo: 'signin',
+    pathMatch: 'full',
+  }, */
   {
     path:'signin',
     component:SignInComponent,
@@ -114,6 +167,11 @@ export const routes: Routes = [
     path:'signup',
     component:SignUpComponent,
     title:'Angular Sign Up Dashboard | TailAdmin - Angular Admin Dashboard Template'
+  },
+  {
+    path: 'unauthorized',
+    component: NotFoundComponent,
+    title: 'Unauthorized | ShifaTech',
   },
   // error pages
   {

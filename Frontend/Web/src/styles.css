@@ -319,9 +319,120 @@ layer(base);
   .dark .dark\:hover\:bg-gray-900:hover {
     background-color: var(--color-shifa-dark-bg);
   }
+}
 
-  .dark .dark\:\!bg-gray-900 {
-    background-color: var(--color-shifa-dark-bg) !important;
+@layer utilities {
+  /* Semantic utility classes used by the custom searchable app-select */
+  .bg-layer {
+    background-color: var(--color-white);
+  }
+  .bg-layer-hover {
+    background-color: var(--color-gray-50);
+  }
+  .bg-layer-focus {
+    background-color: var(--color-gray-50);
+  }
+  .bg-select {
+    background-color: var(--color-white);
+  }
+
+  .border-layer-line {
+    border-color: var(--color-gray-200);
+  }
+  .border-select-line {
+    border-color: var(--color-gray-200);
+  }
+
+  .text-foreground {
+    color: var(--color-gray-900);
+  }
+  .text-layer-foreground {
+    color: var(--color-gray-900);
+  }
+  .text-muted-foreground-1 {
+    color: var(--color-gray-500);
+  }
+  .text-select-item-foreground {
+    color: var(--color-gray-800);
+  }
+
+  .bg-select-item-active {
+    background-color: var(--color-gray-100);
+  }
+  .bg-select-item-hover {
+    background-color: var(--color-gray-50);
+  }
+  .bg-select-item-focus {
+    background-color: var(--color-gray-100);
+  }
+
+  .bg-scrollbar-track {
+    background-color: var(--color-gray-100);
+  }
+  .bg-scrollbar-thumb {
+    background-color: var(--color-gray-300);
+  }
+
+  .hs-select-disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  /* Escaped "variant-like" classes from the snippet */
+  .hover\:bg-layer-hover:hover {
+    background-color: var(--color-gray-50);
+  }
+  .focus\:bg-layer-focus:focus {
+    background-color: var(--color-gray-50);
+  }
+  .focus\:border-primary-focus:focus {
+    border-color: var(--color-brand-300);
+  }
+  .focus\:ring-primary-focus:focus {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 20%, transparent);
+  }
+  .focus\:bg-select-item-focus:focus {
+    background-color: var(--color-gray-100);
+  }
+
+  .dark .bg-layer {
+    background-color: var(--color-shifa-dark-surface);
+  }
+  .dark .bg-layer-hover {
+    background-color: color-mix(in srgb, var(--color-shifa-dark-surface) 80%, var(--color-white));
+  }
+  .dark .bg-layer-focus {
+    background-color: color-mix(in srgb, var(--color-shifa-dark-surface) 80%, var(--color-white));
+  }
+  .dark .bg-select {
+    background-color: var(--color-shifa-dark-surface);
+  }
+  .dark .border-layer-line,
+  .dark .border-select-line {
+    border-color: color-mix(in srgb, var(--color-white) 12%, transparent);
+  }
+  .dark .text-foreground,
+  .dark .text-layer-foreground {
+    color: color-mix(in srgb, var(--color-white) 90%, transparent);
+  }
+  .dark .text-muted-foreground-1 {
+    color: color-mix(in srgb, var(--color-white) 60%, transparent);
+  }
+  .dark .text-select-item-foreground {
+    color: color-mix(in srgb, var(--color-white) 80%, transparent);
+  }
+  .dark .bg-select-item-active,
+  .dark .bg-select-item-focus {
+    background-color: color-mix(in srgb, var(--color-white) 8%, transparent);
+  }
+  .dark .bg-select-item-hover {
+    background-color: color-mix(in srgb, var(--color-white) 5%, transparent);
+  }
+  .dark .bg-scrollbar-track {
+    background-color: color-mix(in srgb, var(--color-white) 6%, transparent);
+  }
+  .dark .bg-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--color-white) 18%, transparent);
   }
 }
 
@@ -582,6 +693,23 @@ span.flatpickr-weekday,
 }
 .flatpickr-calendar.hasTime {
   width: 300px !important;
+}
+
+/* Time-only picker (noCalendar) should be more compact */
+.flatpickr-calendar.hasTime.noCalendar {
+  width: 280px !important;
+  max-width: 100% !important;
+  padding: 0.70rem !important;
+}
+
+.flatpickr-calendar.hasTime.noCalendar .flatpickr-time {
+  height: 2rem !important;
+  max-height: 2.5rem !important;
+}
+
+.flatpickr-calendar.hasTime.noCalendar .flatpickr-time .numInputWrapper,
+.flatpickr-calendar.hasTime.noCalendar .flatpickr-time .flatpickr-am-pm {
+  height: 2.5rem !important;
 }
 .flatpickr-calendar.hasTime .flatpickr-time {
   border: transparent !important;

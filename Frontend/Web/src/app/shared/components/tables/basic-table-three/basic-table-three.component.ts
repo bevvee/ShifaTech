@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { ButtonComponent } from '../../../ui/button/button.component';
-import { TableDropdownComponent } from '../../../common/table-dropdown/table-dropdown.component';
-import { BadgeComponent } from '../../../ui/badge/badge.component';
+import { Component, Input } from '@angular/core';
+import { ButtonComponent } from '../../ui/button/button.component';
+import { TableDropdownComponent } from '../../common/table-dropdown/table-dropdown.component';
+import { BadgeComponent } from '../../ui/badge/badge.component';
 
 interface Transaction {
   image: string;
@@ -12,6 +12,15 @@ interface Transaction {
   category: string;
   status: "Success" | "Pending" | "Failed";
 }
+
+export type RendezVousRow = {
+  id: string;
+  patient: string;
+  medecin: string;
+  date: string;
+  heure: string;
+  status: 'Confirmé' | 'En attente' | 'Annulé';
+};
 
 @Component({
   selector: 'app-basic-table-three',
@@ -25,6 +34,9 @@ interface Transaction {
   styles: ``
 })
 export class BasicTableThreeComponent {
+
+  @Input() title: string = 'Latest Transactions';
+  @Input() rendezVousData: RendezVousRow[] | null = null;
 
   // Type definition for the transaction data
 
@@ -155,13 +167,29 @@ export class BasicTableThreeComponent {
   currentPage = 1;
   itemsPerPage = 5;
 
+  private get isRendezVousMode(): boolean {
+    return Array.isArray(this.rendezVousData);
+  }
+
+  private get itemsLength(): number {
+    if (this.isRendezVousMode) {
+      return this.rendezVousData?.length ?? 0;
+    }
+    return this.transactionData.length;
+  }
+
   get totalPages(): number {
-    return Math.ceil(this.transactionData.length / this.itemsPerPage);
+    return Math.max(1, Math.ceil(this.itemsLength / this.itemsPerPage));
   }
 
   get currentItems(): Transaction[] {
     const start = (this.currentPage - 1) * this.itemsPerPage;
     return this.transactionData.slice(start, start + this.itemsPerPage);
+  }
+
+  get currentRendezVousItems(): RendezVousRow[] {
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    return (this.rendezVousData ?? []).slice(start, start + this.itemsPerPage);
   }
 
   goToPage(page: number) {
@@ -181,8 +209,8 @@ export class BasicTableThreeComponent {
   }
 
   getBadgeColor(status: string): 'success' | 'warning' | 'error' {
-    if (status === 'Success') return 'success';
-    if (status === 'Pending') return 'warning';
+    if (status === 'Success' || status === 'Confirmé') return 'success';
+    if (status === 'Pending' || status === 'En attente') return 'warning';
     return 'error';
   }
 }
