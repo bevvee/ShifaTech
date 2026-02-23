@@ -23,6 +23,7 @@ import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { RendezVousComponent } from './pages/RendezVous/RendezVous.component';
 import { PatientsComponent } from './pages/patients/patients.component';
+import { PatientsFormPageComponent } from './pages/patients/patients-form-page.component';
 import { DocteursComponent } from './pages/docteurs/docteurs.component';
 import { InfirmiersComponent } from './pages/infirmiers/infirmiers.component';
 import { ServicesComponent } from './pages/services/services.component';
@@ -65,9 +66,31 @@ export const routes: Routes = [
         title:'Liste des Docteurs | ShifaTech'
       },
       {
+        path:'docteurs/new',
+        component:DocteursComponent,
+        title:'Ajouter un Docteur | ShifaTech'
+      },
+      {
         path:'patients',
         component:PatientsComponent,
         title:'Liste des Patients | ShifaTech'
+      },
+      {
+        path:'patients/new',
+        component:PatientsFormPageComponent,
+        title:'Ajouter un Patient | ShifaTech'
+      },
+      {
+        path:'patients/:id',
+        component:PatientsFormPageComponent,
+        title:'Détails Patient | ShifaTech',
+        data: { mode: 'view' }
+      },
+      {
+        path:'patients/:id/edit',
+        component:PatientsFormPageComponent,
+        title:'Modifier Patient | ShifaTech',
+        data: { mode: 'edit' }
       },
       {
         path:'infirmiers',
@@ -75,14 +98,29 @@ export const routes: Routes = [
         title:'Liste des Infirmiers | ShifaTech'
       },
       {
+        path:'infirmiers/new',
+        component:InfirmiersComponent,
+        title:'Ajouter un Infirmier | ShifaTech'
+      },
+      {
         path:'services',
         component:ServicesComponent,
         title:'Liste des Services | ShifaTech'
       },
       {
+        path:'services/new',
+        component:ServicesComponent,
+        title:'Ajouter un Service | ShifaTech'
+      },
+      {
         path:'specialisations',
         component:SpecialisationsComponent,
         title:'Liste des Spécialisations | ShifaTech'
+      },
+      {
+        path:'specialisations/new',
+        component:SpecialisationsComponent,
+        title:'Ajouter une Spécialisation | ShifaTech'
       },
       {
         path:'profile',

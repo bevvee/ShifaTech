@@ -8,6 +8,8 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   template: `
     <div class="relative">
       <textarea
+        [attr.id]="id"
+        [attr.name]="name"
         [placeholder]="placeholder"
         [rows]="rows"
         [value]="value"
@@ -27,6 +29,8 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   styles: ``
 })
 export class TextAreaComponent {
+  @Input() id?: string;
+  @Input() name?: string;
 
   @Input() placeholder = 'Enter your message';
   @Input() rows = 3;
