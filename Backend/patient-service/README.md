@@ -1,328 +1,75 @@
-# Micro-service Patient - ShifaTech
-
-Micro-service dédié à la gestion des fonctionnalités côté patient pour la plateforme ShifaTech.
-
-## 📌 Description
-
-Le micro-service Patient est un service autonome, dédié exclusivement aux fonctionnalités côté patient, sans gestion de création ou suppression de comptes patients (géré par le service d'authentification). Ce service permet au patient authentifié d'accéder à son espace personnel pour consulter et gérer ses informations médicales et administratives.
-
-### Fonctionnalités
-
-- ✅ CRUD complet pour la gestion des patients (création, lecture, mise à jour, suppression)
-- ✅ Endpoints internes pour permettre aux autres services de consommer les APIs
-- ✅ Gestion du profil patient (consultation et mise à jour des informations personnelles)
-- ✅ Consultation de sa fiche patient (affiche)
-- ✅ Consultation de ses ordonnances
-- ✅ Consultation de son dossier médical (historique des consultations, diagnostics et notes médicales)
-- ✅ Consultation de l'historique des rendez-vous
-- ✅ Prise de rendez-vous en ligne et annulation de rendez-vous
-- ✅ Accès sécurisé aux données, uniquement pour le patient propriétaire
-
-## 🚀 Démarrage rapide
-
-### Option 1 : Avec Docker Compose (Recommandé)
-
-#### Prérequis
-- Docker Desktop installé et démarré
-- Docker Compose installé
-
-#### Commandes
-
-1. **Construire et démarrer tous les services** :
-```bash
-docker-compose up --build
-```
-
-2. **Démarrer en arrière-plan** :
-```bash
-docker-compose up -d --build
-```
-
-3. **Voir les logs** :
-```bash
-docker-compose logs -f spring-app
-```
-
-4. **Arrêter les services** :
-```bash
-docker-compose down
-```
-
-#### Services disponibles
-
-- **Application Spring Boot** : http://localhost:8080
-- **Interface Web de Test** : http://localhost:8080 (interface professionnelle pour tester tous les endpoints)
-- **MySQL** : localhost:3307
-- **phpMyAdmin** : http://localhost:8081
-- **Swagger UI** : http://localhost:8080/swagger-ui.html
-
-### Option 2 : Exécution locale (Sans Docker)
-
-#### Prérequis
-- Java 17 ou supérieur
-- Maven 3.6+
-- MySQL 8.0 installé et démarré
-
-#### Configuration
-
-1. **Créer la base de données** :
-```sql
-CREATE DATABASE shifatech_patient;
-CREATE USER 'user'@'localhost' IDENTIFIED BY 'user123';
-GRANT ALL PRIVILEGES ON shifatech_patient.* TO 'user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-2. **Compiler et exécuter** :
-```bash
-# Windows
-.\mvnw.cmd clean spring-boot:run
-
-# Linux/Mac
-./mvnw clean spring-boot:run
-```
-
-## 🧪 Tests
-
-### Interface Web de Test
-
-Une interface web professionnelle est disponible pour tester tous les endpoints :
-
-1. Démarrez le service
-2. Ouvrez votre navigateur : http://localhost:8080
-3. Testez tous les endpoints directement depuis l'interface
-
-### Test du Health Check
-
-```bash
-curl http://localhost:8080/api/patient/health
-```
-
-Réponse attendue : `Patient Service is running!`
-
-### Mode Développement (Sans Authentification)
-
-Par défaut, l'authentification JWT est **désactivée** pour faciliter les tests. Vous pouvez tester tous les endpoints sans token.
-
-Pour activer l'authentification en production, définissez dans `application.properties` :
-```properties
-security.jwt.enabled=true
-```
-
-Ou via variable d'environnement :
-```bash
-JWT_ENABLED=true
-```
-
-### Test avec JWT Token (Production)
-
-En production, les tokens JWT doivent être générés par le **service d'authentification**. Le service Patient valide uniquement les tokens reçus.
-
-```bash
-curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-     http://localhost:8080/api/patient/profile/1
-```
-
-**Important** : Les deux services (Auth et Patient) doivent partager la même clé secrète JWT (`JWT_SECRET`).
-
-## 📋 Endpoints API
-
-### Health Check
-- `GET /api/patient/health` - Vérifier l'état du service (sans authentification)
-
-### CRUD Patients
-- `POST /api/patient/patients` - Créer un nouveau patient
-- `GET /api/patient/patients` - Lister tous les patients
-- `GET /api/patient/patients/{id}` - Obtenir un patient par son ID
-- `PUT /api/patient/patients/{id}` - Mettre à jour un patient
-- `DELETE /api/patient/patients/{id}` - Supprimer un patient
-
-### Endpoints Internes (pour les autres services)
-Ces endpoints sont accessibles sans authentification pour permettre la communication inter-services :
-- `POST /api/patient/internal/patients` - Créer un patient (appel interne)
-- `GET /api/patient/internal/patients` - Lister tous les patients (appel interne)
-- `GET /api/patient/internal/patients/{id}` - Obtenir un patient par ID (appel interne)
-- `GET /api/patient/internal/patients/user/{idUser}` - Obtenir un patient par ID utilisateur (appel interne)
-- `PUT /api/patient/internal/patients/{id}` - Mettre à jour un patient (appel interne)
-- `DELETE /api/patient/internal/patients/{id}` - Supprimer un patient (appel interne)
-
-### Profil Patient
-- `GET /api/patient/profile/{idUser}` - Consulter son profil
-- `PUT /api/patient/profile/{idUser}` - Mettre à jour son profil (poids, taille, téléphone, adresse)
-
-### Dossier Médical
-- `GET /api/patient/{idPatient}/dossier-medical` - Consulter son dossier médical
-- `GET /api/patient/{idPatient}/dossier-medical/exists` - Vérifier l'existence du dossier
-
-### Ordonnances
-- `GET /api/patient/{idPatient}/ordonnances` - Consulter toutes ses ordonnances
-- `GET /api/patient/ordonnances/{idOrdonnance}` - Consulter une ordonnance spécifique
-
-### Affiches
-- `GET /api/patient/{idPatient}/affiches` - Consulter ses affiches
-- `GET /api/patient/affiches/all` - Consulter toutes les affiches publiques
-- `GET /api/patient/affiches/{idAffiche}` - Consulter une affiche spécifique
-
-### Rendez-vous
-- `POST /api/patient/rendez-vous` - Prendre un rendez-vous
-- `GET /api/patient/{idUser}/rendez-vous` - Consulter ses rendez-vous
-- `GET /api/patient/{idUser}/rendez-vous/historique` - Consulter l'historique
-- `DELETE /api/patient/rendez-vous/{idRendezVous}` - Annuler un rendez-vous
-
-## 🔐 Sécurité
-
-### Architecture JWT
-
-- **Service d'authentification** : Génère les tokens JWT lors de la connexion
-- **Service Patient** : Valide les tokens JWT reçus (ne génère pas de tokens)
-- **Clé secrète partagée** : Les deux services doivent utiliser la même `JWT_SECRET`
-
-### Configuration
-
-Dans `application.properties` :
-```properties
-# JWT Configuration
-jwt.secret=${JWT_SECRET:shifatech-secret-key-for-jwt-token-generation-and-validation-minimum-256-bits}
-
-# Activer/désactiver l'authentification
-security.jwt.enabled=${JWT_ENABLED:false}
-```
-
-### Format de l'en-tête
-
-```
-Authorization: Bearer <votre_token_jwt>
-```
-
-### Endpoints Internes
-
-Les endpoints sous `/api/patient/internal/**` sont accessibles **sans authentification** pour permettre aux autres services de consommer les APIs patient. Ces endpoints sont optimisés pour les communications inter-services :
-
-- **Accès public** : Pas besoin de token JWT
-- **Préfixe** : Tous les endpoints internes commencent par `/api/patient/internal`
-- **Utilisation** : Appels depuis d'autres micro-services (doctor-service, infirmier-service, etc.)
-
-Exemple d'utilisation depuis un autre service :
-```bash
-# Obtenir un patient par ID
-curl http://patient-service:8080/api/patient/internal/patients/1
-
-# Créer un patient
-curl -X POST http://patient-service:8080/api/patient/internal/patients \
-  -H "Content-Type: application/json" \
-  -d '{"idUser": 1, "numDossier": "DOS-001", "poids": 70.5, "taille": 175.0}'
-```
-
-## 🗄️ Base de données
-
-### Entités
-
-- **Patient** : Informations médicales du patient (poids, taille, numéro de dossier)
-- **DossierMedical** : Dossier médical complet (notes, diagnostic, historique)
-- **Ordonnance** : Prescriptions médicales
-- **Affiche** : Fiches et communications du patient
-
-### Configuration
-
-- **Base de données** : `shifatech_patient`
-- **Port MySQL** : `3307` (Docker) ou `3306` (local)
-- **Utilisateur** : `user`
-- **Mot de passe** : `user123`
-
-## 🔗 Dépendances externes
-
-Ce micro-service communique avec :
-- **Service d'authentification** : Pour récupérer les informations utilisateur (URL configurable via `AUTH_SERVICE_URL`)
-- **Service Rendez-vous** : Pour gérer les rendez-vous (URL configurée dans `RendezVousClientService`)
-
-## 🐛 Dépannage
-
-### Le service ne démarre pas
-
-1. **Vérifier que MySQL est démarré** :
-```bash
-docker-compose ps
-```
-
-2. **Vérifier les logs** :
-```bash
-docker-compose logs spring-app
-```
-
-3. **Reconstruire complètement** :
-```bash
-docker-compose down
-docker-compose up --build
-```
-
-### Erreur de connexion à la base de données
-
-- Vérifier que le service MySQL est démarré
-- Vérifier les credentials dans `application.properties` ou `docker-compose.yml`
-- Vérifier que le port 3307 n'est pas déjà utilisé
-
-### Erreur 404 sur les endpoints
-
-- Vérifier que l'URL est correcte (commence par `/api/patient/`)
-- Vérifier que le service est bien démarré
-- Vérifier les logs pour plus de détails
-
-### Erreur JWT (si activé)
-
-- Vérifier que le `JWT_SECRET` est configuré correctement
-- Vérifier que le token JWT est valide et non expiré
-- Vérifier que le token provient du service d'authentification
-- Vérifier que les deux services partagent la même clé secrète
-
-## 📝 Structure du projet
-
-```
-patient-service/
-├── src/
-│   ├── main/
-│   │   ├── java/com/shifatech/patient_service/
-│   │   │   ├── client/          # Clients pour autres micro-services
-│   │   │   ├── config/          # Configurations (Security, CORS, etc.)
-│   │   │   ├── controller/      # Contrôleurs REST
-│   │   │   ├── dto/             # Data Transfer Objects
-│   │   │   ├── entity/          # Entités JPA
-│   │   │   ├── repository/      # Repositories JPA
-│   │   │   ├── security/        # Configuration sécurité JWT
-│   │   │   └── service/         # Services métier
-│   │   └── resources/
-│   │       ├── application.properties
-│   │       └── static/
-│   │           └── index.html   # Interface web de test
-│   └── test/                    # Tests unitaires
-├── docker-compose.yml
-├── Dockerfile
-├── pom.xml
-└── README.md
-```
-
-## 🛠️ Technologies utilisées
-
-- **Spring Boot 3.5.7**
-- **Spring Data JPA**
-- **Spring Security** (JWT)
-- **MySQL 8.0**
-- **Docker & Docker Compose**
-- **Maven**
-
-## 📊 Documentation API
-
-Une fois le service démarré :
-- **Interface Web** : http://localhost:8080
-- **Swagger UI** : http://localhost:8080/swagger-ui.html
-- **OpenAPI JSON** : http://localhost:8080/v3/api-docs
-
-## 🎯 Notes importantes
-
-- ⚠️ **Mode développement** : L'authentification JWT est désactivée par défaut (`security.jwt.enabled=false`)
-- ⚠️ **Production** : Activez l'authentification en définissant `JWT_ENABLED=true`
-- ⚠️ **Service Auth** : Les tokens JWT doivent être générés par le service d'authentification, pas par ce service
-- ⚠️ **Clé secrète** : Les services Auth et Patient doivent partager la même `JWT_SECRET`
-
-## 📞 Support
-
-Pour toute question ou problème, consultez la documentation du projet ShifaTech.
+# ShifaTech - Patient Service
+
+Le `patient-service` est un microservice central du système ShifaTech, responsable de la gestion des patients, des dossiers médicaux, des ordonnances et des visites.
+
+## 🚀 Travaux Récents & Standardisation
+
+Nous avons finalisé une refonte complète de la sécurité et de la structure du service :
+
+1.  **Standardisation RBAC (Français)** : Tous les rôles ont été standardisés en français (`ADMIN`, `DOCTEUR`, `INFIRMIER`, `PATIENT`) pour une cohérence totale avec le reste de l'écosystème.
+2.  **Défense en Profondeur** : La sécurité est appliquée à deux niveaux :
+    *   **Layer API (Contrôleurs)** : Utilisation de `@PreAuthorize` pour le filtrage des accès HTTP.
+    *   **Layer Métier (Services)** : Vérifications de sécurité internes pour empêcher tout accès non autorisé aux données sensibles, même via des appels internes.
+3.  **Nettoyage du Code** : Suppression des composants inutilisés (DTOs, méthodes mortes) et correction des incohérences de rôles.
+
+---
+
+## 🔐 Système de Rôles (RBAC)
+
+| Rôle | Description |
+| :--- | :--- |
+| **`ADMIN`** | Accès complet, seul habilité à supprimer des patients. |
+| **`DOCTEUR`** | Peut consulter tous les dossiers, créer des ordonnances et lister les patients. |
+| **`INFIRMIER`** | Responsable de la création/mise à jour des patients et dossiers, ainsi que du suivi des visites. |
+| **`PATIENT`** | Peut consulter son propre profil et son dossier médical. |
+
+---
+
+## 📂 Documentation des APIs
+
+### 📋 Gestion des Patients (`PatientController`)
+| Méthode | Endpoint | Description | Rôles |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/patient` | Créer un profil patient | `PATIENT`, `INFIRMIER` |
+| `GET` | `/api/patient/{id}` | Détails d'un patient par ID | `PATIENT`, `DOCT`, `ADMIN` |
+| `GET` | `/api/patient/user/{uId}`| Détails par ID utilisateur | `PATIENT`, `DOCT`, `ADMIN` |
+| `GET` | `/api/patient` | Lister tous les patients | `DOCTEUR`, `ADMIN` |
+| `PUT` | `/api/patient/{id}` | Mettre à jour un patient | `PATIENT`, `INFIRMIER` |
+| `DELETE` | `/api/patient/{id}` | Suppression (soft delete) | `ADMIN` |
+
+### 📁 Dossiers Médicaux (`DossierMedicalController`)
+| Méthode | Endpoint | Description | Rôles |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/patient/{idP}/dossier-medical`| Consulter le dossier | `PATIENT`, `DOCT`, `ADMIN` |
+| `GET` | `/api/patient/dossiers` | Lister tous les dossiers | `INFIRMIER`, `DOCT`, `ADMIN`|
+| `POST` | `/api/patient/dossier-medical` | Créer un dossier | `INFIRMIER` |
+| `PUT` | `/api/patient/{idP}/dossier-medical` | Modifier un dossier | `INFIRMIER` |
+| `DELETE` | `/api/patient/{idP}/dossier-medical` | Archiver un dossier | `INFIRMIER`, `ADMIN`|
+
+### 💊 Ordonnances (`OrdonnanceController`)
+| Méthode | Endpoint | Description | Rôles |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/patient/ordonnances` | Créer une ordonnance | `DOCTEUR` |
+| `GET` | `/api/patient/ordonnances/{id}` | Détails d'ordonnance | `DOCTEUR`, `ADMIN` |
+| `DELETE` | `/api/patient/ordonnances/{id}`| Supprimer ordonnance | `DOCTEUR` |
+
+### 🏥 Visites (`VisiteController`)
+| Méthode | Endpoint | Description | Rôles |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/patient/visites` | Créer une visite | `INFIRMIER` |
+| `GET` | `/api/patient/visites` | Lister les visites | `ANY STAFF` |
+| `DELETE` | `/api/patient/visites/{id}` | Supprimer une visite | `ADMIN`, `INFIRMIER` |
+
+---
+
+## 🛠️ Tests & Développement
+
+### JWT.IO
+Pour tester les accès, générez des tokens sur [jwt.io](https://jwt.io) avec le secret défini dans `application.properties`.
+- **Payload requis** : `{"sub": "USER_ID", "role": "NOM_DU_ROLE_EN_FRANCAIS"}`
+
+### Postman
+Un guide détaillé pour les tests Postman est disponible dans l'artefact `testing_guide.md`.
+
+### APIs Internes
+Le service expose également des endpoints sous `/api/patient/internal/**` restreints au rôle `ADMIN` (communication inter-services).

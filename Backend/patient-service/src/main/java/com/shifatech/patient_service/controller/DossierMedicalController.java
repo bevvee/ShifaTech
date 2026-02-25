@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,7 @@ public class DossierMedicalController {
     private final DossierMedicalService dossierMedicalService;
     private final JwtUtil jwtUtil;
 
+    @PreAuthorize("hasAnyRole('PATIENT','DOCTEUR', 'ADMIN')")
     @GetMapping("/{idPatient}/dossier-medical")
     public ResponseEntity<ApiResponse<DossierMedicalDTO>> getDossierMedical(
             @PathVariable Long idPatient) {
@@ -30,6 +32,15 @@ public class DossierMedicalController {
         return ResponseEntity.ok(ApiResponse.success(dossier, "Dossier médical récupéré avec succès"));
     }
 
+    @PreAuthorize("hasAnyRole('INFIRMIER','DOCTEUR', 'ADMIN')")
+    @GetMapping("/dossiers")
+    public ResponseEntity<ApiResponse<java.util.List<DossierMedicalDTO>>> getAllDossiers() {
+        log.info("Requête de récupération de tous les dossiers médicaux");
+        java.util.List<DossierMedicalDTO> dossiers = dossierMedicalService.getAllDossiers();
+        return ResponseEntity.ok(ApiResponse.success(dossiers, "Tous les dossiers médicaux récupérés"));
+    }
+
+    @PreAuthorize("hasRole('INFIRMIER')")
     @PostMapping("/dossier-medical")
     public ResponseEntity<ApiResponse<DossierMedicalDTO>> createDossier(
             @Valid @RequestBody CreateDossierRequest request) {
@@ -42,6 +53,7 @@ public class DossierMedicalController {
         return ResponseEntity.ok(ApiResponse.success(dossier, "Dossier médical créé avec succès"));
     }
 
+    @PreAuthorize("hasRole('INFIRMIER')")
     @PutMapping("/{idPatient}/dossier-medical")
     public ResponseEntity<ApiResponse<DossierMedicalDTO>> updateDossier(
             @PathVariable Long idPatient,
@@ -53,5 +65,14 @@ public class DossierMedicalController {
                 request,
                 updatedBy);
         return ResponseEntity.ok(ApiResponse.success(dossier, "Dossier médical mis à jour avec succès"));
+    }
+
+    @PreAuthorize("hasAnyRole('INFIRMIER', 'ADMIN')")
+    @DeleteMapping("/{idPatient}/dossier-medical")
+    public ResponseEntity<ApiResponse<Void>> deleteDossier(
+            @PathVariable Long idPatient) {
+        log.info("Requête de suppression du dossier médical pour patient ID: {}", idPatient);
+        dossierMedicalService.deleteDossier(idPatient);
+        return ResponseEntity.ok(ApiResponse.success(null, "Dossier médical supprimé avec succès"));
     }
 }
