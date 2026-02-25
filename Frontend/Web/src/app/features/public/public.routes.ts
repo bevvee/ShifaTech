@@ -1,8 +1,0 @@
-import { Routes } from '@angular/router';
-import { Home } from './pages/home/home';
-import { LoginComponent } from '../auth/pages/login/login';
-
-export const PUBLIC_ROUTES: Routes = [
-  { path: '', component: LoginComponent },
-  // { path: 'contact', component: ContactComponent },
-];

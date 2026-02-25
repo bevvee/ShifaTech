@@ -151,6 +151,10 @@ services:
       - "9000"
     networks:
       - shifatech-net
+    volumes:
+      - ./Backend/rdv-service:/var/www/html:cached   
+      - rdv-service-logs:/var/www/html/var/log      
+      - rdv-service-cache:/var/www/html/var/cache   
 
   patient-service:
     build: ./Backend/patient-service
@@ -251,6 +255,10 @@ services:
     ports:
       - "8082:80"
     volumes:
+      - ./Backend/rdv-service/public:/var/www/rdv/public:ro
+      - ./Backend/infirmier-service/public:/var/www/infirmier/public:ro
+      - ./Backend/body-service/public:/var/www/body/public:ro
+      - ./var/log/nginx:/var/log/nginx
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - shifatech-net
@@ -284,4 +292,6 @@ volumes:
   patient_mysql_data:
   infirmier_mysql_data:
   doctor_mysql_data:
+  rdv-service-logs:
+  rdv-service-cache:
   body_mysql_data:

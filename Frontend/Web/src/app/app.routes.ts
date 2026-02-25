@@ -1,30 +1,220 @@
 import { Routes } from '@angular/router';
-import { PublicLayoutComponent } from './core/layouts/public-layout/public-layout';
-import { AppLayoutComponent } from './core/layouts/app-layout/app-layout';
+import { Admin } from './pages/dashboard/Admin/admin.component';
 
+import { Infirmier } from './pages/dashboard/Infirmier/infirmier.component';
+import { Docteur } from './pages/dashboard/Docteur/docteur.component';
+import { ProfileComponent } from './pages/profile/profile.component';
+import { FormElementsComponent } from './pages/forms/form-elements/form-elements.component';
+import { BasicTablesComponent } from './pages/tables/basic-tables/basic-tables.component';
+import { BlankComponent } from './pages/blank/blank.component';
+import { NotFoundComponent } from './pages/other-page/not-found/not-found.component';
+import { AppLayoutComponent } from './shared/layout/app-layout/app-layout.component';
+import { InvoicesComponent } from './pages/invoices/invoices.component';
+import { LineChartComponent } from './pages/charts/line-chart/line-chart.component';
+import { BarChartComponent } from './pages/charts/bar-chart/bar-chart.component';
+import { AlertsComponent } from './pages/ui-elements/alerts/alerts.component';
+import { AvatarElementComponent } from './pages/ui-elements/avatar-element/avatar-element.component';
+import { BadgesComponent } from './pages/ui-elements/badges/badges.component';
+import { ButtonsComponent } from './pages/ui-elements/buttons/buttons.component';
+import { ImagesComponent } from './pages/ui-elements/images/images.component';
+import { VideosComponent } from './pages/ui-elements/videos/videos.component';
+import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
+import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
+import { CalenderComponent } from './pages/calender/calender.component';
+import { RendezVousComponent } from './pages/RendezVous/RendezVous.component';
+import { PatientsComponent } from './pages/patients/patients.component';
+import { PatientsFormPageComponent } from './pages/patients/patients-form-page.component';
+import { DocteursComponent } from './pages/docteurs/docteurs.component';
+import { InfirmiersComponent } from './pages/infirmiers/infirmiers.component';
+import { ServicesComponent } from './pages/services/services.component';
+import { SpecialisationsComponent } from './pages/specialisations/specialisations.component';
+/* import { roleGuard } from './core/guards/auth.guard';
+import { Role } from './core/models/role.enum'; */
 export const routes: Routes = [
-  // Public website
   {
-    path: '',
-    component: PublicLayoutComponent,
-    loadChildren: () =>
-      import('./features/public/public.routes').then(m => m.PUBLIC_ROUTES),
+    path:'',
+    component:AppLayoutComponent,
+    children:[
+      {
+        path:'admin',
+        component:Admin,
+        title:'Admin | ShifaTech'
+      },
+      {
+        path:'docteur',
+        component:Docteur,
+        title:'Docteur | ShifaTech'
+      },
+      {
+        path:'infirmier',
+        component:Infirmier,
+        title:'Infirmier | ShifaTech'
+      },
+      {
+        path:'calendar',
+        component:CalenderComponent,
+        title:'Calender | ShifaTech'
+      },
+      {
+        path:'rendez-vous',
+        component:RendezVousComponent,
+        title:'Liste des Rendez Vous | ShifaTech'
+      },
+      {
+        path:'docteurs',
+        component:DocteursComponent,
+        title:'Liste des Docteurs | ShifaTech'
+      },
+      {
+        path:'docteurs/new',
+        component:DocteursComponent,
+        title:'Ajouter un Docteur | ShifaTech'
+      },
+      {
+        path:'patients',
+        component:PatientsComponent,
+        title:'Liste des Patients | ShifaTech'
+      },
+      {
+        path:'patients/new',
+        component:PatientsFormPageComponent,
+        title:'Ajouter un Patient | ShifaTech'
+      },
+      {
+        path:'patients/:id',
+        component:PatientsFormPageComponent,
+        title:'Détails Patient | ShifaTech',
+        data: { mode: 'view' }
+      },
+      {
+        path:'patients/:id/edit',
+        component:PatientsFormPageComponent,
+        title:'Modifier Patient | ShifaTech',
+        data: { mode: 'edit' }
+      },
+      {
+        path:'infirmiers',
+        component:InfirmiersComponent,
+        title:'Liste des Infirmiers | ShifaTech'
+      },
+      {
+        path:'infirmiers/new',
+        component:InfirmiersComponent,
+        title:'Ajouter un Infirmier | ShifaTech'
+      },
+      {
+        path:'services',
+        component:ServicesComponent,
+        title:'Liste des Services | ShifaTech'
+      },
+      {
+        path:'services/new',
+        component:ServicesComponent,
+        title:'Ajouter un Service | ShifaTech'
+      },
+      {
+        path:'specialisations',
+        component:SpecialisationsComponent,
+        title:'Liste des Spécialisations | ShifaTech'
+      },
+      {
+        path:'specialisations/new',
+        component:SpecialisationsComponent,
+        title:'Ajouter une Spécialisation | ShifaTech'
+      },
+      {
+        path:'profile',
+        component:ProfileComponent,
+        title:'Profile | ShifaTech'
+      },
+      {
+        path:'form-elements',
+        component:FormElementsComponent,
+        title:'Angular Form Elements Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'basic-tables',
+        component:BasicTablesComponent,
+        title:'Angular Basic Tables Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'blank',
+        component:BlankComponent,
+        title:'Angular Blank Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      // support tickets
+      {
+        path:'invoice',
+        component:InvoicesComponent,
+        title:'Angular Invoice Details Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'line-chart',
+        component:LineChartComponent,
+        title:'Angular Line Chart Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'bar-chart',
+        component:BarChartComponent,
+        title:'Angular Bar Chart Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'alerts',
+        component:AlertsComponent,
+        title:'Angular Alerts Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'avatars',
+        component:AvatarElementComponent,
+        title:'Angular Avatars Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'badge',
+        component:BadgesComponent,
+        title:'Angular Badges Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'buttons',
+        component:ButtonsComponent,
+        title:'Angular Buttons Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'images',
+        component:ImagesComponent,
+        title:'Angular Images Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path:'videos',
+        component:VideosComponent,
+        title:'Angular Videos Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+    ]
   },
-
-  // Auth pages
+/*   // auth pages
   {
-    path: '',
-    loadChildren: () =>
-      import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES),
-  },
-
-  // Management app (protected later with guard)
+    path: 'login',
+    redirectTo: 'signin',
+    pathMatch: 'full',
+  }, */
   {
-    path: 'app',
-    component: AppLayoutComponent,
-    loadChildren: () =>
-      import('./features/app/app.routes').then(m => m.APP_ROUTES),
+    path:'signin',
+    component:SignInComponent,
+    title:'Angular Sign In Dashboard | TailAdmin - Angular Admin Dashboard Template'
   },
-
-  { path: '**', redirectTo: '' },
+  {
+    path:'signup',
+    component:SignUpComponent,
+    title:'Angular Sign Up Dashboard | TailAdmin - Angular Admin Dashboard Template'
+  },
+  {
+    path: 'unauthorized',
+    component: NotFoundComponent,
+    title: 'Unauthorized | ShifaTech',
+  },
+  // error pages
+  {
+    path:'**',
+    component:NotFoundComponent,
+    title:'Angular NotFound Dashboard | TailAdmin - Angular Admin Dashboard Template'
+  },
 ];

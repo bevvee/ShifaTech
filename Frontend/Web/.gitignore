@@ -36,21 +36,7 @@ yarn-error.log
 /libpeerconnection.log
 testem.log
 /typings
-__screenshots__/
 
 # System files
 .DS_Store
 Thumbs.db
-Desktop.ini
-
-# Environment files (keep secrets local)
-.env
-.env.*
-.env.local
-.env.*.local
-
-# TypeScript build info
-*.tsbuildinfo
-
-# Additional package manager logs
-pnpm-debug.log
