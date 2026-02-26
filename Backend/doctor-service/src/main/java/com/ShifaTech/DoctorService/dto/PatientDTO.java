@@ -7,9 +7,8 @@ public class PatientDTO {
     private Long idPatient;
     private Long idUser;
     private String numDossier;
-    private Double poids;
-    private Double taille;
-    // User info potentially embedded if Patient Service returns it
-    private String nom;
-    private String prenom;
+    private String assurance;
+    private String numeroAssurance;
+    private Boolean statut;
+    private UserDTO userInfo;
 }

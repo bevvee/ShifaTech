@@ -25,8 +25,8 @@ spring:
   # Moved server port correctly under spring (or root, server.port is root usually)
 server:
   port: 8080 
-  servlet:
-    context-path: /api/doctors
+  # servlet:
+  #   context-path: /api/doctors
 
 jwt:
   secret: elaazzouzi-mohammed-amine-oussama-bouikourdassen-nissrine-belmir-farah-bentiress-chaimae-lefrouji-pfa-2026
