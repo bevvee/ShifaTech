@@ -1,0 +1,128 @@
+<div class="relative w-full {{ className }}">
+  <!-- Hidden native select for basic form compatibility -->
+  <select class="hidden" [value]="value" (change)="onNativeChange($event)" [disabled]="disabled">
+    <option value="">{{ placeholder }}</option>
+    @for (option of options; track $index) {
+      <option [value]="option.value">{{ option.label }}</option>
+    }
+  </select>
+
+  <!-- Toggle -->
+  <button
+    type="button"
+    (click)="toggleOpen()"
+    [attr.aria-expanded]="isOpen"
+    [attr.aria-disabled]="disabled"
+    class="hs-select-disabled:pointer-events-none hs-select-disabled:opacity-50 relative py-3 ps-4 pe-9 flex text-nowrap w-full cursor-pointer bg-layer border border-layer-line text-layer-foreground rounded-lg text-start text-sm hover:bg-layer-hover focus:outline-hidden focus:bg-layer-focus"
+    [class.hs-select-disabled]="disabled"
+  >
+    <span class="me-2" [class.hidden]="!selectedOption?.icon" aria-hidden="true">
+      <span [innerHTML]="selectedOption?.icon || '' | safeHtml"></span>
+    </span>
+    <span class="text-foreground" [class.text-muted-foreground-1]="!value">
+      {{ selectedOption?.label || placeholder }}
+    </span>
+
+    <div class="absolute top-1/2 end-3 -translate-y-1/2" aria-hidden="true">
+      <svg
+        class="shrink-0 size-3.5 text-muted-foreground-1"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="m7 15 5 5 5-5" />
+        <path d="m7 9 5-5 5 5" />
+      </svg>
+    </div>
+  </button>
+
+  <!-- Dropdown -->
+  @if (isOpen) {
+    <div
+      class="absolute top-full start-0 end-0 mt-2 max-h-72 pb-1 px-1 space-y-0.5 z-50 w-full bg-select border border-select-line rounded-lg shadow-md overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-scrollbar-track [&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb"
+      role="listbox"
+    >
+      @if (hasSearch) {
+        <div class="bg-select p-2 -mx-1 sticky top-0">
+          <div class="relative">
+            <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3" aria-hidden="true">
+              <svg
+                class="size-4 text-muted-foreground-1"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+            </div>
+
+            <input
+              #searchInput
+              type="text"
+              [value]="search"
+              (input)="onSearchInput(($any($event.target).value))"
+              [placeholder]="searchPlaceholder"
+              class="block w-full sm:text-sm bg-transparent border-layer-line rounded-lg text-foreground placeholder:text-muted-foreground-1 focus:border-primary-focus focus:ring-primary-focus py-1.5 sm:py-2 ps-10 pe-3"
+            />
+          </div>
+        </div>
+      }
+
+      @for (option of filteredOptions; track $index) {
+        <div
+          role="option"
+          tabindex="0"
+          (click)="select(option)"
+          [attr.aria-selected]="option.value === value"
+          class="hs-selected:bg-select-item-active relative py-2 ps-4 pe-9 w-full text-sm text-select-item-foreground cursor-pointer hover:bg-select-item-hover rounded-lg focus:outline-hidden focus:bg-select-item-focus"
+          [class.bg-select-item-active]="option.value === value"
+          [class.bg-select-item-focus]="$index === highlightedIndex"
+        >
+          <div class="flex items-center">
+            <div class="me-2" [class.hidden]="!option.icon" aria-hidden="true">
+              <span [innerHTML]="option.icon || '' | safeHtml"></span>
+            </div>
+            <div class="text-foreground">
+              {{ option.label }}
+            </div>
+          </div>
+
+          <span
+            data-icon
+            class="absolute top-1/2 end-2 -translate-y-1/2 text-foreground"
+            [class.hidden]="option.value !== value"
+            aria-hidden="true"
+          >
+            <svg
+              class="shrink-0 size-3.5"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+        </div>
+      }
+    </div>
+  }
+</div>

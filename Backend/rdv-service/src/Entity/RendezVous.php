@@ -2,18 +2,14 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Metadata\ApiResource;
+use App\Enum\StatutEnum;
 use App\Repository\RendezVousRepository;
+use ApiPlatform\Metadata\ApiResource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
+#[ApiResource]
 #[ORM\Entity(repositoryClass: RendezVousRepository::class)]
-#[ApiResource(
-    security: "is_granted('ROLE_PATIENT')",
-    processor: AppointmentProcessor::class,
-    securityPostDenormalize: "object.getPatientId() == user.getUserIdentifier()"
-)]
-
 class RendezVous
 {
     #[ORM\Id]
@@ -21,33 +17,35 @@ class RendezVous
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ApiProperty(readable: true, writable: false)]
     #[ORM\Column]
     private ?int $id_patient = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?int $id_docteur = null;
-
     #[ORM\Column]
-    private ?int $id_specialite = null;
+    private ?int $id_docteur = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $date_rdv = null;
 
     #[ORM\Column(type: Types::TIME_MUTABLE)]
-    private ?\DateTime $heur_rdv = null;
+    private ?\DateTime $heure_rdv = null;
+
+    #[ORM\Column(enumType: StatutEnum::class)]
+    private ?StatutEnum $statut = null;
 
     #[ORM\Column]
-    private ?bool $statut = null;
-
-    #[ORM\Column]
-    private ?\DateTime $created_at = null;
+    private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column]
     private ?int $created_by = null;
 
     #[ORM\Column(nullable: true)]
-    private ?\DateTime $deleted_at = null;
+    private ?\DateTimeImmutable $updated_at = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $updated_by = null;
+
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $deleted_at = null;
 
     #[ORM\Column(nullable: true)]
     private ?int $deleted_by = null;
@@ -56,7 +54,6 @@ class RendezVous
     {
         return $this->id;
     }
-
 
     public function getIdPatient(): ?int
     {
@@ -75,21 +72,9 @@ class RendezVous
         return $this->id_docteur;
     }
 
-    public function setIdDocteur(?int $id_docteur): static
+    public function setIdDocteur(int $id_docteur): static
     {
         $this->id_docteur = $id_docteur;
-
-        return $this;
-    }
-
-    public function getIdSpecialite(): ?int
-    {
-        return $this->id_specialite;
-    }
-
-    public function setIdSpecialite(int $id_specialite): static
-    {
-        $this->id_specialite = $id_specialite;
 
         return $this;
     }
@@ -106,36 +91,36 @@ class RendezVous
         return $this;
     }
 
-    public function getHeurRdv(): ?\DateTime
+    public function getHeureRdv(): ?\DateTime
     {
-        return $this->heur_rdv;
+        return $this->heure_rdv;
     }
 
-    public function setHeurRdv(\DateTime $heur_rdv): static
+    public function setHeureRdv(\DateTime $heure_rdv): static
     {
-        $this->heur_rdv = $heur_rdv;
+        $this->heure_rdv = $heure_rdv;
 
         return $this;
     }
 
-    public function isStatut(): ?bool
+    public function getStatut(): ?StatutEnum
     {
         return $this->statut;
     }
 
-    public function setStatut(bool $statut): static
+    public function setStatut(StatutEnum $statut): static
     {
         $this->statut = $statut;
 
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTime
+    public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->created_at;
     }
 
-    public function setCreatedAt(\DateTime $created_at): static
+    public function setCreatedAt(\DateTimeImmutable $created_at): static
     {
         $this->created_at = $created_at;
 
@@ -154,12 +139,36 @@ class RendezVous
         return $this;
     }
 
-    public function getDeletedAt(): ?\DateTime
+    public function getUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->updated_at;
+    }
+
+    public function setUpdatedAt(?\DateTimeImmutable $updated_at): static
+    {
+        $this->updated_at = $updated_at;
+
+        return $this;
+    }
+
+    public function getUpdatedBy(): ?int
+    {
+        return $this->updated_by;
+    }
+
+    public function setUpdatedBy(?int $updated_by): static
+    {
+        $this->updated_by = $updated_by;
+
+        return $this;
+    }
+
+    public function getDeletedAt(): ?\DateTimeImmutable
     {
         return $this->deleted_at;
     }
 
-    public function setDeletedAt(?\DateTime $deleted_at): static
+    public function setDeletedAt(?\DateTimeImmutable $deleted_at): static
     {
         $this->deleted_at = $deleted_at;
 
