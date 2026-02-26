@@ -41,8 +41,9 @@ application:
 
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: /v3/api-docs   # OpenAPI JSON path
   swagger-ui:
     path: /swagger-ui.html
+    url: /doctor/v3/api-docs     # Makes Swagger UI load your API by default
   operations-sorter: alpha
   tags-sorter: alpha
