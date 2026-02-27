@@ -12,8 +12,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Set working directory inside the container
 WORKDIR /var/www/html
 
-# Copy the whole project to the working directory
-COPY . ./
+COPY . /var/www/html
 
 # Install PHP dependencies
 RUN composer install --no-interaction --no-progress --optimize-autoloader

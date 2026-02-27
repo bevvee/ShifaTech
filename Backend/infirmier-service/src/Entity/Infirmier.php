@@ -3,17 +3,57 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+// use App\Processor\RendezVousProcessor;
 use App\Repository\InfirmierRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: InfirmierRepository::class)]
-#[ApiResource]
-class Infirmier
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            uriTemplate: '/infirmier'
+        ),
+        new Post(
+            uriTemplate: '/infirmier'
+        ),
+        new Get(
+            uriTemplate: '/infirmier/{id}'
+        ),
+        new Put(
+            uriTemplate: '/infirmier/{id}'
+        ),
+        new Delete(
+            uriTemplate: '/infirmier/{id}'
+        ),
+        // new Post(
+        //     uriTemplate: '/rendezvous',
+        //     security: "is_granted('ROLE_SECRETAIRE')",
+        //     processor: RendezVousProcessor::class
+        // ),
+        // new Put(
+        //     uriTemplate: '/rendezvous/{id}',
+        //     security: "is_granted('ROLE_SECRETAIRE')",
+        //     processor: RendezVousProcessor::class
+        // ),
+        // new Delete(
+        //     uriTemplate: '/rendezvous/{id}',
+        //     security: "is_granted('ROLE_SECRETAIRE')",
+        //     processor: RendezVousProcessor::class
+        // ),
+    ]
+)]
+class Infirmier implements UserInterface
 {
-    #[ApiProperty(identifier: true)]
     #[ORM\Id]
-    #[ORM\Column(name: 'id_infirmier', type:'integer')]
-    private ?int $id_infirmier = null;
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'id_infirmier')]
+    private ?int $id = null;
 
     #[ORM\Column]
     private ?int $id_utilisateur = null;
@@ -21,17 +61,13 @@ class Infirmier
     #[ORM\Column]
     private ?int $id_service = null;
 
-    #[ORM\ManyToOne(targetEntity: InfirmierSpecialite::class,cascade: ['persist'])]
+    #[ORM\ManyToOne(targetEntity: InfirmierSpecialite::class, inversedBy: 'infirmiers')]
     #[ORM\JoinColumn(name: 'id_specialite', referencedColumnName: 'id_specialite', nullable: false)]
-    #[ApiProperty(
-        readableLink: false,
-        writableLink: true 
-    )]
     private ?InfirmierSpecialite $id_specialite = null;
 
     public function getId(): ?int
     {
-        return $this->id_infirmier;
+        return $this->id;
     }
 
     public function getIdUtilisateur(): ?int
@@ -69,4 +105,15 @@ class Infirmier
 
         return $this;
     }
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->id; // ou email
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_INFERMIER'];
+    }
+
+    public function eraseCredentials(): void {}
 }

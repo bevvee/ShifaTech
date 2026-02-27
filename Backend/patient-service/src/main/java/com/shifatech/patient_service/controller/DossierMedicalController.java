@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/patient")
+// @RequestMapping("/api/patient")
 @RequiredArgsConstructor
 @Slf4j
 @CrossOrigin(origins = "*")

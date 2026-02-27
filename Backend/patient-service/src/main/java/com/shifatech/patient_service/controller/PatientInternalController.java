@@ -16,7 +16,7 @@ import java.util.List;
  * communication inter-services
  */
 @RestController
-@RequestMapping("/api/patient/internal")
+// @RequestMapping("/api/patient/internal")
 @RequiredArgsConstructor
 @Slf4j
 @CrossOrigin(origins = "*")

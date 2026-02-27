@@ -1,0 +1,129 @@
+<div class="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-slate-50">
+  <!-- ===== MEDICAL ANIMATED BACKGROUND ===== -->
+  <div class="absolute inset-0 medical-bg"></div>
+
+  <!-- ===== CONTENT WRAPPER ===== -->
+  <div class="relative z-10 w-full flex flex-col items-center">
+    <!-- Brand -->
+    <div class="flex items-center gap-2 mb-2 select-none">
+      <img src="images/logo/logo-icon.png" class="h-16 w-auto" alt="ShifaTech" />
+      <span class="text-2xl font-semibold text-gray-800">
+        <span class="text-blue-light-850">Shifa</span>
+        <span class="text-green-400">Tech</span>
+      </span>
+    </div>
+
+    <!-- Card -->
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-gray-200 px-6 py-7 sm:px-8 sm:py-8 transition-all duration-300">
+      <h2 class="text-base sm:text-2xl font-medium text-center text-gray-900">Bon retour</h2>
+      <p class="text-sm text-gray-500 mt-1 text-center">Entrez vos identifiants pour accéder à votre compte</p>
+
+      <form class="mt-6 space-y-4" (ngSubmit)="onSubmit()">
+        <div>
+          <app-label for="email">Adresse mail</app-label>
+      <div class="relative">
+        <div class="pointer-events-none absolute inset-y-0 left-4 z-10 flex items-center text-gray-400">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M4 4h16v16H4V4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0" />
+            <path d="M4 8l8 5 8-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M20 8v10H4V8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </div>
+        <app-input-field
+          id="email"
+          name="email"
+          type="email"
+          placeholder="Entrer l'adresse mail"
+          [(value)]="email"
+          className="relative z-0 pl-11"
+        />
+      </div>
+        </div>
+
+        <div class="mt-2">
+          <app-label for="password">Mot de passe</app-label>
+      <div class="relative">
+        <div class="pointer-events-none absolute inset-y-0 left-4 z-10 flex items-center text-gray-400">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M7 10V8a5 5 0 0 1 10 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M6 10h12v10H6V10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M12 14v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </div>
+        <app-input-field
+          id="password"
+          name="password"
+          [type]="showPassword ? 'text' : 'password'"
+          placeholder="**************"
+          [(value)]="password"
+          className="relative z-0 pl-11 pr-11"
+        />
+
+        <button
+          type="button"
+          (click)="togglePasswordVisibility()"
+          class="absolute inset-y-0 right-4 z-10 flex items-center text-gray-400 hover:text-gray-600"
+          [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+        >
+          @if (showPassword) {
+            <!-- Eye Off -->
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M10.477 10.465a3 3 0 0 0 4.243 4.243" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M9.88 5.093A10.38 10.38 0 0 1 12 4c5 0 9.27 3.11 11 8-0.657 1.86-1.732 3.375-3.11 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M6.61 6.61C4.7 8.05 3.23 9.88 2 12c1.73 4.89 6 8 10 8 1.54 0 3.02-0.3 4.38-0.84" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M3 3l18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          } @else {
+            <!-- Eye -->
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M2 12s3.636-7 10-7 10 7 10 7-3.636 7-10 7S2 12 2 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          }
+        </button>
+      </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <app-checkbox id="rememberMe" label="Souvenir de moi" [(checked)]="rememberMe" />
+          <a class="text-sm text-red-500 hover:underline cursor-pointer">Mot de passe oublié ?</a>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full h-11 rounded-lg bg-green-400 text-white font-medium hover:bg-green-500 active:scale-[0.98] transition"
+        >
+          Se connecter
+        </button>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3 py-1">
+          <div class="flex-1 h-px bg-gray-200"></div>
+          <span class="text-xs text-gray-500">OU</span>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+
+        <button
+          type="button"
+          (click)="onGoogleLogin()"
+          class="w-full hover:bg-gray-50 hover:shadow-lg h-11 flex justify-center font-medium items-center rounded-lg border border-black bg-white"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="me-2">
+            <path d="M18.7511 10.1944C18.7511 9.47495 18.6915 8.94995 18.5626 8.40552H10.1797V11.6527H15.1003C15.0011 12.4597 14.4654 13.675 13.2749 14.4916L13.2582 14.6003L15.9087 16.6126L16.0924 16.6305C17.7788 15.1041 18.7511 12.8583 18.7511 10.1944Z" fill="#4285F4" />
+            <path d="M10.1788 18.75C12.5895 18.75 14.6133 17.9722 16.0915 16.6305L13.274 14.4916C12.5201 15.0068 11.5081 15.3666 10.1788 15.3666C7.81773 15.3666 5.81379 13.8402 5.09944 11.7305L4.99473 11.7392L2.23868 13.8295L2.20264 13.9277C3.67087 16.786 6.68674 18.75 10.1788 18.75Z" fill="#34A853" />
+            <path d="M5.10014 11.7305C4.91165 11.186 4.80257 10.6027 4.80257 9.99992C4.80257 9.3971 4.91165 8.81379 5.09022 8.26935L5.08523 8.1534L2.29464 6.02954L2.20333 6.0721C1.5982 7.25823 1.25098 8.5902 1.25098 9.99992C1.25098 11.4096 1.5982 12.7415 2.20333 13.9277L5.10014 11.7305Z" fill="#FBBC05" />
+            <path d="M10.1789 4.63331C11.8554 4.63331 12.9864 5.34303 13.6312 5.93612L16.1511 3.525C14.6035 2.11528 12.5895 1.25 10.1789 1.25C6.68676 1.25 3.67088 3.21387 2.20264 6.07218L5.08953 8.26943C5.81381 6.15972 7.81776 4.63331 10.1789 4.63331Z" fill="#EB4335" />
+          </svg>
+          Connecter avec Google
+        </button>
+
+        <div class="text-sm text-gray-600 text-center">
+          Vous n'avez pas de compte ?
+          <span class="text-green-400 hover:underline cursor-pointer">Contacter l'administration</span>
+        </div>
+      </form>
+    </div>
+
+    <p class="text-sm text-gray-700 mt-6 text-center">Copyright © 2026 - ShifaTech</p>
+  </div>
+</div>
