@@ -20,17 +20,17 @@ Toutes les requêtes doivent inclure un Header : `Authorization: Bearer <votre_t
 *   `DOCTEUR` : Peut modifier son profil, gérer son planning et accéder aux patients.
 *   `PATIENT` : Peut voir le profil public d'un docteur.
 
-### Docteurs (`/api/doctors`)
+### Docteurs (`/`)
 
 | Méthode | Endpoint | Description | Rôles Requis |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/doctors` | Liste tous les docteurs | `ADMIN`, `DOCTEUR` |
-| `POST` | `/api/doctors` | Crée un nouveau docteur | `ADMIN` |
-| `GET` | `/api/doctors/{id}` | Détails d'un docteur | `ADMIN`, `DOCTEUR`, `PATIENT` |
-| `PUT` | `/api/doctors/{id}` | Mise à jour profil | `ADMIN`, `DOCTEUR` |
-| `DELETE`| `/api/doctors/{id}` | Supprime un docteur | `ADMIN` |
+| `GET` | `/` | Liste tous les docteurs | `ADMIN`, `DOCTEUR` |
+| `POST` | `/` | Crée un nouveau docteur | `ADMIN` |
+| `GET` | `/{id}` | Détails d'un docteur | `ADMIN`, `DOCTEUR`, `PATIENT` |
+| `PUT` | `/{id}` | Mise à jour profil | `ADMIN`, `DOCTEUR` |
+| `DELETE`| `/{id}` | Supprime un docteur | `ADMIN` |
 
-### Planning (`/api/doctors/planning`)
+### Planning (`/planning`)
 
 | Méthode | Endpoint | Description |
 | :--- | :--- | :--- |

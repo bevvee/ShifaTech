@@ -16,35 +16,35 @@ public interface PatientClient {
     // /api/patient/
     // It has /api/patient/profile/{idUser}. I'll keep this as is if it was intended
     // to call a missing endpoint.
-    @GetMapping("/api/patient/")
+    @GetMapping("/")
     List<PatientDTO> getAllPatients();
 
-    @GetMapping("/api/patient/profile/{idUser}")
+    @GetMapping("/profile/{idUser}")
     PatientDTO getPatientProfile(@PathVariable("idUser") Long idUser);
 
     // Medical Record (Dossier Medical) Operations
-    // GET /api/patient/{idPatient}/dossier-medical returns a single object in
+    // GET /{idPatient}/dossier-medical returns a single object in
     // patient-service
-    @GetMapping("/api/patient/{idPatient}/dossier-medical")
+    @GetMapping("/{idPatient}/dossier-medical")
     ConsultationDTO getMedicalRecordByPatient(@PathVariable("idPatient") Long patientId);
 
-    @GetMapping("/api/patient/{idPatient}/dossier-medical/exists")
+    @GetMapping("/{idPatient}/dossier-medical/exists")
     boolean checkMedicalRecordExists(@PathVariable("idPatient") Long patientId);
 
-    // Note: POST /api/patient/dossier-medical is currently missing in
+    // Note: POST /dossier-medical is currently missing in
     // patient-service controller
-    @PostMapping("/api/patient/dossier-medical")
+    @PostMapping("/dossier-medical")
     ConsultationDTO addMedicalRecord(@RequestBody ConsultationDTO consultationDTO);
 
     // Prescription (Ordonnance) Operations
-    @GetMapping("/api/patient/{idPatient}/ordonnances")
+    @GetMapping("/{idPatient}/ordonnances")
     List<PrescriptionDTO> getPrescriptionsByPatient(@PathVariable("idPatient") Long patientId);
 
-    @GetMapping("/api/patient/ordonnances/{idOrdonnance}")
+    @GetMapping("/ordonnances/{idOrdonnance}")
     PrescriptionDTO getPrescriptionById(@PathVariable("idOrdonnance") Long idOrdonnance);
 
-    // Note: POST /api/patient/ordonnances is currently missing in patient-service
+    // Note: POST /ordonnances is currently missing in patient-service
     // controller
-    @PostMapping("/api/patient/ordonnances")
+    @PostMapping("/ordonnances")
     PrescriptionDTO createPrescription(@RequestBody PrescriptionDTO prescriptionDTO);
 }
