@@ -1,4 +1,9 @@
 export const environment = {
   production: false,
-  apiBaseUrl: '/api', // gateway (nginx) route
+  api: {
+    auth: '/auth',
+    patient: '/patient',
+    doctor: '/doctor',
+    rdv: '/rdv/api/rendez_vouses'
+  }
 };

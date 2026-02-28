@@ -1,36 +1,26 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class ApiService {
-  private base = environment.apiBaseUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(protected http: HttpClient) {}
 
-  get<T>(url: string, params?: Record<string, any>) {
-    let httpParams = new HttpParams();
-    if (params) {
-      Object.entries(params).forEach(([k, v]) => {
-        if (v !== undefined && v !== null && v !== '') httpParams = httpParams.set(k, String(v));
-      });
-    }
-    return this.http.get<T>(`${this.base}${url}`, { params: httpParams });
+  protected get<T>(url: string) {
+    return this.http.get<T>(url);
   }
 
-  post<T>(url: string, body: any) {
-    return this.http.post<T>(`${this.base}${url}`, body);
+  protected post<T>(url: string, body: any) {
+    return this.http.post<T>(url, body);
   }
 
-  put<T>(url: string, body: any) {
-    return this.http.put<T>(`${this.base}${url}`, body);
+  protected put<T>(url: string, body: any) {
+    return this.http.put<T>(url, body);
   }
 
-  patch<T>(url: string, body: any) {
-    return this.http.patch<T>(`${this.base}${url}`, body);
-  }
-
-  delete<T>(url: string) {
-    return this.http.delete<T>(`${this.base}${url}`);
+  protected delete<T>(url: string) {
+    return this.http.delete<T>(url);
   }
 }
