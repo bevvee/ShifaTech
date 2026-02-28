@@ -2,6 +2,8 @@ package com.ShifaTech.DoctorService.config;
 
 import com.ShifaTech.DoctorService.util.JwtUtil;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,50 +39,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             try {
-                if (jwtUtil.isTokenValid(token)) {
-                    Claims claims = jwtUtil.extractClaims(token);
-                    String userId = claims.getSubject();
-                    if (userId == null) {
-                        Object uid = claims.get("userId");
-                        userId = uid != null ? uid.toString() : null;
+                Claims claims = jwtUtil.extractClaims(token);
+                Object userIdObj = claims.get("userId");
+                String userId = userIdObj != null ? userIdObj.toString() : null;
+                Object rolesObject = claims.get("role");
+
+                if (rolesObject == null) rolesObject = claims.get("roles");
+
+
+                if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    List<SimpleGrantedAuthority> authorities;
+
+                    if (rolesObject instanceof List) {
+                        authorities = ((List<?>) rolesObject).stream()
+                                .map(r -> r.toString().startsWith("ROLE_") ? r.toString() : "ROLE_" + r.toString())
+                                .map(SimpleGrantedAuthority::new)
+                                .toList();
+                    } else if (rolesObject != null) {
+                        String role = rolesObject.toString();
+                        if (!role.startsWith("ROLE_")) role = "ROLE_" + role;
+                        authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
+                    } else {
+                        authorities = Collections.emptyList();
                     }
-                    Object rolesObject = claims.get("role");
-                    if (rolesObject == null) {
-                        rolesObject = claims.get("roles");
-                    }
 
-                    log.debug("Token Valid for User: {}, Roles: {}", userId, rolesObject);
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
-                    if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                        List<SimpleGrantedAuthority> authorities;
-
-                        if (rolesObject instanceof List) {
-                            authorities = ((List<?>) rolesObject).stream()
-                                    .map(r -> r.toString().startsWith("ROLE_") ? r.toString() : "ROLE_" + r.toString())
-                                    .map(SimpleGrantedAuthority::new)
-                                    .toList();
-                        } else if (rolesObject != null) {
-                            String role = rolesObject.toString();
-                            if (!role.startsWith("ROLE_")) {
-                                role = "ROLE_" + role;
-                            }
-                            authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
-                        } else {
-                            authorities = Collections.emptyList();
-                        }
-
-                        log.debug("Assigning Authorities: {}", authorities);
-
-                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                                userId, null, authorities);
-
-                        SecurityContextHolder.getContext().setAuthentication(authToken);
-                    }
-                } else {
-                    log.warn("Token INVALID according to JwtUtil");
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
-            } catch (Exception e) {
-                log.error("Error processing token: {}", e.getMessage());
+
+            } catch (ExpiredJwtException e) {
+                log.warn("Token EXPIRED: {}", e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":true,\"message\":\"Token expired\"}");
+                return;
+            } catch (JwtException e) {
+                log.warn("Token INVALID: {}", e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":true,\"message\":\"Invalid token\"}");
+                return;
             }
         }
         filterChain.doFilter(request, response);

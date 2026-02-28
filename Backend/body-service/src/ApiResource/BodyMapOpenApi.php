@@ -9,6 +9,7 @@ use ApiPlatform\OpenApi\Model\Operation;
 use App\Controller\BodyMapController;
 
 #[ApiResource(
+    routePrefix: '/body',
     operations: [
         new GetCollection(
             uriTemplate: '/body-map',
