@@ -94,15 +94,55 @@ public class OrdonnanceService {
         return mapToDTO(ordonnance);
     }
 
+    @Transactional(readOnly = true)
+    public List<OrdonnanceDTO> getAllOrdonnances() {
+        if (!isAdmin() && !isDocteur()) {
+            throw new AccessDeniedException("Seul un médecin ou un administrateur peut lister les ordonnances.");
+        }
+        log.info("Récupération de toutes les ordonnances");
+        return ordonnanceRepository.findAll().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public OrdonnanceDTO updateOrdonnance(Long id, CreateOrdonnanceRequest request) {
+        if (!isDocteur()) {
+            throw new AccessDeniedException("Seul un médecin peut modifier une ordonnance.");
+        }
+        log.info("Mise à jour de l'ordonnance ID: {}", id);
+        Ordonnance ordonnance = ordonnanceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ordonnance", "id", id));
+
+        ordonnance.setMedicaments(request.getMedicaments());
+        ordonnance.setDescription(request.getDescription());
+        ordonnance.setPosologie(request.getPosologie());
+        ordonnance.setDureeTraitement(request.getDureeTraitement());
+        ordonnance.setInstructions(request.getInstructions());
+        ordonnance.setDateValidite(request.getDateValidite());
+
+        return mapToDTO(ordonnanceRepository.save(ordonnance));
+    }
+
+    public void deleteOrdonnance(Long id) {
+        if (!isDocteur()) {
+            throw new AccessDeniedException("Seul un médecin peut supprimer une ordonnance.");
+        }
+        log.info("Suppression de l'ordonnance ID: {}", id);
+        Ordonnance ordonnance = ordonnanceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ordonnance", "id", id));
+        ordonnance.setStatut(false);
+        ordonnanceRepository.save(ordonnance);
+    }
+
     private void checkReadAccess(Patient patient) {
         Long currentUserId = jwtUtil.getUserIdFromToken();
-        if (currentUserId != null && !isAdmin() && !isDoctor() && !patient.getIdUser().equals(currentUserId)) {
+        if (currentUserId != null && !isAdmin() && !isDocteur() && !patient.getIdUser().equals(currentUserId)) {
             throw new AccessDeniedException("Accès refusé aux ordonnances de ce patient.");
         }
     }
 
     private boolean hasWriteAccess() {
-        return isAdmin() || isDoctor();
+        return isAdmin() || isDocteur();
     }
 
     private boolean isAdmin() {
@@ -114,13 +154,13 @@ public class OrdonnanceService {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
-    private boolean isDoctor() {
+    private boolean isDocteur() {
         var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication();
         if (authentication == null)
             return false;
         return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_DOCTOR"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_DOCTEUR"));
     }
 
     private OrdonnanceDTO mapToDTO(Ordonnance ordonnance) {

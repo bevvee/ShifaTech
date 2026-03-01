@@ -15,7 +15,6 @@ public class JwtUtil {
     private final SecretKey SECRET_KEY;
     private final long accessMillis;
 
-    // Inject secret key and token expiration duration from properties
     public JwtUtil(
             @Value("${jwt.secret}") String jwtSecret,
             @Value("${jwt.accessMillis}") long accessMillis
@@ -24,7 +23,7 @@ public class JwtUtil {
         this.accessMillis = accessMillis;
     }
 
-    // Generate JWT for a user
+    // Générer un token JWT
     public String generateToken(Long userId, String email, String role) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
@@ -37,8 +36,8 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Extract claims from a JWT
-    public Claims extractClaims(String token) {
+    // Extraire les claims depuis le JWT
+    public Claims extractClaims(String token) throws JwtException {
         return Jwts.parserBuilder()
                 .setSigningKey(SECRET_KEY)
                 .build()
@@ -46,7 +45,7 @@ public class JwtUtil {
                 .getBody();
     }
 
-    // Validate a JWT
+    // Vérifier si le JWT est valide
     public boolean isTokenValid(String token) {
         try {
             extractClaims(token);
@@ -55,7 +54,7 @@ public class JwtUtil {
             System.out.println("JWT expired: " + e.getMessage());
             return false;
         } catch (JwtException e) {
-            System.out.println("JWT validation failed: " + e.getMessage());
+            System.out.println("JWT invalid: " + e.getMessage());
             return false;
         }
     }
