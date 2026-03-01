@@ -28,22 +28,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-<<<<<<< HEAD
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        if (jwtEnabled) {
-            http
-                    .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/actuator/**", "/error").permitAll()
-                            .requestMatchers("/api/patient/**").authenticated()
-                            .anyRequest().authenticated())
-                    .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        } else {
-            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-        }
-=======
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
@@ -65,7 +49,6 @@ public class SecurityConfig {
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .cors(cors -> {});
->>>>>>> fc6a5b7e28f8c80f2cb7dae8d206584467bff861
 
         return http.build();
     }
