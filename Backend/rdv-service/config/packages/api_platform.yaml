@@ -2,7 +2,12 @@ api_platform:
     title: 'RDV Service API'
     version: '1.0.0'
     description: 'Rendez-vous Management Service'
-    
+
+    defaults:
+        pagination_enabled: true
+        pagination_items_per_page: 10
+        pagination_maximum_items_per_page: 50
+
 
     swagger:
         versions: [3]
