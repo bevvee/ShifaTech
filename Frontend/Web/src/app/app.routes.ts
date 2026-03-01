@@ -28,8 +28,8 @@ import { DocteursComponent } from './pages/docteurs/docteurs.component';
 import { InfirmiersComponent } from './pages/infirmiers/infirmiers.component';
 import { ServicesComponent } from './pages/services/services.component';
 import { SpecialisationsComponent } from './pages/specialisations/specialisations.component';
-/* import { roleGuard } from './core/guards/auth.guard';
-import { Role } from './core/models/role.enum'; */
+import { roleGuard } from './core/guards/auth.guard';
+import { Role } from './core/models/role.enum';
 export const routes: Routes = [
   {
     path:'',
@@ -38,12 +38,20 @@ export const routes: Routes = [
       {
         path:'admin',
         component:Admin,
-        title:'Admin | ShifaTech'
+        title:'Admin | ShifaTech',
+        canActivate: [roleGuard],
+        data: {
+          roles: [Role.ADMIN]
+        }
       },
       {
         path:'docteur',
         component:Docteur,
-        title:'Docteur | ShifaTech'
+        title:'Docteur | ShifaTech',
+        canActivate: [roleGuard],
+        data: {
+          roles: [Role.DOCTEUR]
+        }
       },
       {
         path:'infirmier',

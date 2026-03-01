@@ -4,13 +4,22 @@ import { SidebarService } from '../../services/sidebar.service';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { SafeHtmlPipe } from '../../pipe/safe-html.pipe';
 import { combineLatest, Subscription } from 'rxjs';
+import { Role } from '../../../core/models/role.enum';
+import { AuthService } from '../../../core/services/auth.service';
 
 type NavItem = {
   name: string;
   icon: string;
   path?: string;
+  roles?: Role[];
   new?: boolean;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: {
+    name: string;
+    path: string;
+    roles?: Role[];
+    pro?: boolean;
+    new?: boolean;
+  }[];
 };
 
 @Component({
@@ -24,15 +33,19 @@ type NavItem = {
 })
 export class AppSidebarComponent {
 
-  // Main nav items
+  currentRole!: Role;
+  filteredNavItems: NavItem[] = [];
+  filteredOthersItems: NavItem[] = [];
+
   navItems: NavItem[] = [
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.5 3.25C4.25736 3.25 3.25 4.25736 3.25 5.5V8.99998C3.25 10.2426 4.25736 11.25 5.5 11.25H9C10.2426 11.25 11.25 10.2426 11.25 8.99998V5.5C11.25 4.25736 10.2426 3.25 9 3.25H5.5ZM4.75 5.5C4.75 5.08579 5.08579 4.75 5.5 4.75H9C9.41421 4.75 9.75 5.08579 9.75 5.5V8.99998C9.75 9.41419 9.41421 9.74998 9 9.74998H5.5C5.08579 9.74998 4.75 9.41419 4.75 8.99998V5.5ZM5.5 12.75C4.25736 12.75 3.25 13.7574 3.25 15V18.5C3.25 19.7426 4.25736 20.75 5.5 20.75H9C10.2426 20.75 11.25 19.7427 11.25 18.5V15C11.25 13.7574 10.2426 12.75 9 12.75H5.5ZM4.75 15C4.75 14.5858 5.08579 14.25 5.5 14.25H9C9.41421 14.25 9.75 14.5858 9.75 15V18.5C9.75 18.9142 9.41421 19.25 9 19.25H5.5C5.08579 19.25 4.75 18.9142 4.75 18.5V15ZM12.75 5.5C12.75 4.25736 13.7574 3.25 15 3.25H18.5C19.7426 3.25 20.75 4.25736 20.75 5.5V8.99998C20.75 10.2426 19.7426 11.25 18.5 11.25H15C13.7574 11.25 12.75 10.2426 12.75 8.99998V5.5ZM15 4.75C14.5858 4.75 14.25 5.08579 14.25 5.5V8.99998C14.25 9.41419 14.5858 9.74998 15 9.74998H18.5C18.9142 9.74998 19.25 9.41419 19.25 8.99998V5.5C19.25 5.08579 18.9142 4.75 18.5 4.75H15ZM15 12.75C13.7574 12.75 12.75 13.7574 12.75 15V18.5C12.75 19.7426 13.7574 20.75 15 20.75H18.5C19.7426 20.75 20.75 19.7427 20.75 18.5V15C20.75 13.7574 19.7426 12.75 18.5 12.75H15ZM14.25 15C14.25 14.5858 14.5858 14.25 15 14.25H18.5C18.9142 14.25 19.25 14.5858 19.25 15V18.5C19.25 18.9142 18.9142 19.25 18.5 19.25H15C14.5858 19.25 14.25 18.9142 14.25 18.5V15Z" fill="currentColor"></path></svg>`,
       name: "Dashboard",
+      roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER],
       subItems: [
-        { name: "Admin", path: "/admin" },
-        { name: "Docteur", path: "/docteur" },
-        { name: "Infirmier", path: "/infirmier" },
+        { name: "Admin", path: "/admin", roles: [Role.ADMIN]},
+        { name: "Docteur", path: "/docteur", roles: [Role.DOCTEUR] },
+        { name: "Infirmier", path: "/infirmier", roles: [Role.INFIRMIER] },
       ],
     },
 /*     {
@@ -210,46 +223,51 @@ export class AppSidebarComponent {
   private subscription: Subscription = new Subscription();
 
   constructor(
-    public sidebarService: SidebarService,
-    private router: Router,
-    private cdr: ChangeDetectorRef
-  ) {
-    this.isExpanded$ = this.sidebarService.isExpanded$;
-    this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
-    this.isHovered$ = this.sidebarService.isHovered$;
-  }
+  public sidebarService: SidebarService,
+  private router: Router,
+  private cdr: ChangeDetectorRef,
+  private authService: AuthService
+) {
+  this.isExpanded$ = this.sidebarService.isExpanded$;
+  this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
+  this.isHovered$ = this.sidebarService.isHovered$;
+}
+private filterMenuByRole(items: NavItem[]): NavItem[] {
+  return items
+    .filter(item => !item.roles || item.roles.includes(this.currentRole))
+    .map(item => {
+      if (item.subItems) {
+        const filteredSubItems = item.subItems.filter(sub =>
+          !sub.roles || sub.roles.includes(this.currentRole)
+        );
+
+        return {
+          ...item,
+          subItems: filteredSubItems.length ? filteredSubItems : undefined
+        };
+      }
+      return item;
+    })
+    .filter(item => item.subItems || item.path);
+}
 
   ngOnInit() {
-    // Subscribe to router events
-    this.subscription.add(
-      this.router.events.subscribe(event => {
-        if (event instanceof NavigationEnd) {
-          this.setActiveMenuFromRoute(this.router.url);
-        }
-      })
-    );
 
-    // Subscribe to combined observables to close submenus when all are false
-    this.subscription.add(
-      combineLatest([this.isExpanded$, this.isMobileOpen$, this.isHovered$]).subscribe(
-        ([isExpanded, isMobileOpen, isHovered]) => {
-          if (!isExpanded && !isMobileOpen && !isHovered) {
-            // this.openSubmenu = null;
-            // this.savedSubMenuHeights = { ...this.subMenuHeights };
-            // this.subMenuHeights = {};
-            this.cdr.detectChanges();
-          } else {
-            // Restore saved heights when reopening
-            // this.subMenuHeights = { ...this.savedSubMenuHeights };
-            // this.cdr.detectChanges();
-          }
-        }
-      )
-    );
+  this.currentRole = this.authService.getUserRole(); // 👈 must return Role
 
-    // Initial load
-    this.setActiveMenuFromRoute(this.router.url);
-  }
+  this.filteredNavItems = this.filterMenuByRole(this.navItems);
+  this.filteredOthersItems = this.filterMenuByRole(this.othersItems);
+
+  this.subscription.add(
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.setActiveMenuFromRoute(this.router.url);
+      }
+    })
+  );
+
+  this.setActiveMenuFromRoute(this.router.url);
+}
 
   ngOnDestroy() {
     // Clean up subscriptions

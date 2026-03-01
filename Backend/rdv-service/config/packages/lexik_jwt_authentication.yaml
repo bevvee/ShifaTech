@@ -1,7 +1,7 @@
 lexik_jwt_authentication:
     secret_key: '%env(JWT_SECRET_KEY)%'
     public_key: ~  # Set to null for HS256
-    user_id_claim: sub  # ← This will use "3" as identifier
+    user_id_claim: userId  # ← This will use "3" as identifier
 
     token_extractors:
         authorization_header:
