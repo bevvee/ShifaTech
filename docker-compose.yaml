@@ -258,7 +258,6 @@ services:
       - ./Backend/rdv-service/public:/var/www/rdv/public:ro
       - ./Backend/infirmier-service/public:/var/www/infirmier/public:ro
       - ./Backend/body-service/public:/var/www/body/public:ro
-      - ./var/log/nginx:/var/log/nginx
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - shifatech-net
