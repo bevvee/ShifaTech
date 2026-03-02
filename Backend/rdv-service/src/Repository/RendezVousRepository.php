@@ -40,19 +40,13 @@ class RendezVousRepository extends ServiceEntityRepository
 
     public function countDoctorAppointmentsForDay(int $doctorId, \DateTime $date): int
     {
-        $startOfDay = (clone $date)->setTime(0, 0, 0);
-        $endOfDay = (clone $date)->setTime(23, 59, 59);
-
         return (int) $this->createQueryBuilder('r')
             ->select('COUNT(r.id)')
             ->where('r.id_docteur = :doctor')
-/*            ->andWhere('r.date_rdv BETWEEN :start AND :end')*/
             ->andWhere('r.date_rdv = :date')
-            ->andWhere('r.heure_rdv = :time')
             ->andWhere('r.deleted_at IS NULL')
             ->setParameter('doctor', $doctorId)
-            ->setParameter('start', $startOfDay)
-            ->setParameter('end', $endOfDay)
+            ->setParameter('date', $date->format('Y-m-d'))
             ->getQuery()
             ->getSingleScalarResult();
     }

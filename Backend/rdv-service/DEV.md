@@ -279,3 +279,183 @@ php bin/phpunit
 
 * API: `http://localhost:8081`
 * phpMyAdmin: `http://localhost:8082`
+------------------------------------------------------
+All secured routes require:
+
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+---
+
+# 📌 RendezVous Service – API Routes
+
+## 🔐 Authentication
+
+JWT must be obtained from `auth-service`.
+
+Example:
+
+```
+POST /auth/login
+```
+
+Use returned token in all requests:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+---
+
+# 📋 1️⃣ Get All RendezVous (Paginated)
+
+```
+GET /api/rendez_vouses
+```
+
+### Pagination
+
+```
+GET /api/rendez_vouses?page=2
+```
+
+Custom page size:
+
+```
+GET /api/rendez_vouses?itemsPerPage=20
+```
+
+---
+
+# 🔎 2️⃣ Filtering
+
+## 🔹 By Patient
+
+```
+GET /api/rendez_vouses?id_patient=5
+```
+
+## 🔹 By Doctor
+
+```
+GET /api/rendez_vouses?id_docteur=3
+```
+
+## 🔹 By Status
+
+```
+GET /api/rendez_vouses?statut=EN_ATTENTE
+GET /api/rendez_vouses?statut=CONFIRME
+GET /api/rendez_vouses?statut=ANNULE
+GET /api/rendez_vouses?statut=TERMINE
+```
+
+## 🔹 By Date (After)
+
+```
+GET /api/rendez_vouses?date_rdv[after]=2026-07-01
+```
+
+## 🔹 By Date (Before)
+
+```
+GET /api/rendez_vouses?date_rdv[before]=2026-07-15
+```
+
+## 🔹 Combined Filters
+
+```
+GET /api/rendez_vouses?id_docteur=3&statut=CONFIRME
+```
+
+---
+
+# 🔄 3️⃣ Ordering
+
+## Order by Date (ASC)
+
+```
+GET /api/rendez_vouses?order[date_rdv]=asc
+```
+
+## Order by Date (DESC)
+
+```
+GET /api/rendez_vouses?order[date_rdv]=desc
+```
+
+---
+
+# 📄 4️⃣ Get Single RendezVous
+
+```
+GET /api/rendez_vouses/{id}
+```
+
+Example:
+
+```
+GET /api/rendez_vouses/5
+```
+
+Expected:
+
+* 200 if allowed
+* 403 if not owner
+* 404 if not found
+
+---
+
+# ➕ 5️⃣ Create RendezVous
+
+```
+POST /api/rendez_vouses
+```
+
+### Body Example:
+
+```json
+{
+  "id_patient": 10,
+  "id_docteur": 3,
+  "date_rdv": "2026-07-10",
+  "heure_rdv": "10:00:00",
+  "statut": "EN_ATTENTE"
+}
+```
+
+### Business Rules:
+
+* Doctor cannot have two RDV at same time
+* Doctor cannot exceed 20 RDV per day
+* created_at and created_by auto-filled from JWT
+
+---
+
+# ✏️ 6️⃣ Update RendezVous
+
+```
+PUT /api/rendez_vouses/{id}
+```
+
+Example:
+
+```json
+{
+  "statut": "CONFIRME"
+}
+```
+
+---
+
+# ❌ 7️⃣ Delete RendezVous (Soft Delete)
+
+```
+DELETE /api/rendez_vouses/{id}
+```
+
+* Sets `deleted_at`
+* Record will not appear in GET requests
+
+---

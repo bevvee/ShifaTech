@@ -8,35 +8,43 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Metadata\ApiFilter;
+use App\State\RendezVousProcessor;
+use App\State\RendezVousUpdateProcessor;
+use App\State\SoftDeleteProcessor;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ApiResource(
     operations: [
         new Get(
-            security: "is_granted('ROLE_ADMIN') or object.getIdPatient() == user.getId() or object.getIdDocteur() == user.getId()"
+            security: "is_granted('ROLE_ADMIN') or
+             object.getIdPatient() == user.getUserIdentifier() or
+             object.getIdDocteur() == user.getUserIdentifier() or
+            is_granted('ROLE_INFIRMIER')"
         ),
         new GetCollection(
-            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_DOCTOR') or is_granted('ROLE_PATIENT')"
+            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_DOCTOR') or is_granted('ROLE_PATIENT') or
+        is_granted('ROLE_INFIRMIER')"
         ),
         new Post(
-            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_PATIENT')",
+            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_PATIENT') or
+        is_granted('ROLE_INFIRMIER')",
             processor: RendezVousProcessor::class
         ),
-        new Put(
-            security: "is_granted('ROLE_ADMIN') or object.getIdDocteur() == user.getId()"
+        new Patch(
+            security: "is_granted('ROLE_ADMIN') or object.getIdDocteur() == user.getUserIdentifier()",
+            processor: RendezVousUpdateProcessor::class
         ),
         new Delete(
             security: "is_granted('ROLE_ADMIN')",
             processor: SoftDeleteProcessor::class
-
-        ),
+        )
     ],
     paginationItemsPerPage: 10
 )]

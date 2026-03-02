@@ -9,16 +9,14 @@ class JwtUserProvider implements PayloadAwareUserProviderInterface
 {
     public function loadUserByIdentifierAndPayload(string $identifier, array $payload): UserInterface
     {
-        // Extract email for display (optional)
-        $email = $payload['email'] ?? $identifier;
+        // ✅ Use userId as identifier (important)
+        $userId = $payload['userId'] ?? $identifier;
 
-        // Extract role - your token has "role" (singular), not "roles"
+        // Convert single "role" claim into Symfony roles
         $role = $payload['role'] ?? 'USER';
-
-        // Convert to Symfony role format (ROLE_ prefix)
         $roles = ['ROLE_' . strtoupper($role)];
 
-        return new User($email, $roles);
+        return new User((string) $userId, $roles);
     }
 
     public function loadUserByIdentifier(string $identifier): UserInterface
