@@ -18,6 +18,12 @@
       <h2 class="text-base sm:text-2xl font-medium text-center text-gray-900">Bon retour</h2>
       <p class="text-sm text-gray-500 mt-1 text-center">Entrez vos identifiants pour accéder à votre compte</p>
 
+      @if (errorMessage) {
+        <div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm text-center">
+          {{ errorMessage }}
+        </div>
+      }
+
       <form class="mt-6 space-y-4" (ngSubmit)="onSubmit()">
         <div>
           <app-label for="email">Adresse mail</app-label>
@@ -86,14 +92,15 @@
 
         <div class="flex items-center justify-between">
           <app-checkbox id="rememberMe" label="Souvenir de moi" [(checked)]="rememberMe" />
-          <a class="text-sm text-red-500 hover:underline cursor-pointer">Mot de passe oublié ?</a>
+          <a routerLink="/forgot-password" class="text-sm text-red-500 hover:underline cursor-pointer">Mot de passe oublié ?</a>
         </div>
 
         <button
           type="submit"
-          class="w-full h-11 rounded-lg bg-green-400 text-white font-medium hover:bg-green-500 active:scale-[0.98] transition"
+          [disabled]="isLoading"
+          class="w-full h-11 rounded-lg bg-green-400 text-white font-medium hover:bg-green-500 active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Se connecter
+          {{ isLoading ? 'Connexion...' : 'Se connecter' }}
         </button>
 
         <!-- Divider -->

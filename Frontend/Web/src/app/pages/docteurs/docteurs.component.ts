@@ -146,7 +146,7 @@ export class DocteursComponent {
     prenom: string;
     cin: string;
     email: string;
-    motDePasse: string;
+    password: string;
     sexe: Sexe;
     statutValue: 'true' | 'false';
     dateNaissance: string;
@@ -177,7 +177,7 @@ export class DocteursComponent {
       prenom: row.prenom,
       cin: row.cin,
       email: row.email,
-      motDePasse: '',
+      password: '',
       sexe: row.sexe,
       statutValue: row.statut ? 'true' : 'false',
       dateNaissance: row.dateNaissance,
@@ -208,7 +208,7 @@ export class DocteursComponent {
       this.form.numeroOrdre.trim().length > 0 &&
       this.form.idSpecialite.trim().length > 0 &&
       Number(this.form.idSpecialite) > 0 &&
-      (this.mode === 'edit' || this.form.motDePasse.trim().length > 0)
+      (this.mode === 'edit' || this.form.password.trim().length > 0)
     );
   }
 
@@ -250,7 +250,7 @@ export class DocteursComponent {
       prenom: '',
       cin: '',
       email: '',
-      motDePasse: '',
+      password: '',
       sexe: 'M' as Sexe,
       statutValue: 'true' as const,
       dateNaissance: '',

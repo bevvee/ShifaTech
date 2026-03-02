@@ -1,31 +1,27 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { environment } from '../../../environments/environment';
 import { ApiService } from './api.service';
 import { Role } from '../models/role.enum';
-
-type JwtPayload = {
-  sub?: string | number;
-  id?: string | number;
-  userId?: string | number;
-
-  role?: Role | string;
-  roles?: Array<Role | string>;
-
-  exp?: number;
-  iat?: number;
-
-  [key: string]: any;
-};
+import { JwtPayload, loadToken, logout } from '../store/auth/auth.actions';
+import { selectIsAuthenticated } from '../store/auth/auth.selectors';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService extends ApiService {
   private router = inject(Router);
+  private store = inject(Store);
 
   private base = environment.api.auth;
   private tokenKey = 'token';
+
+  constructor() {
+    super(inject(HttpClient));
+    this.hydrateStateFromToken();
+  }
 
   // API
   login(data: any) {
@@ -36,9 +32,22 @@ export class AuthService extends ApiService {
     return this.post(`${this.base}/register`, data);
   }
 
+  getProfile() {
+    return this.get<any>(`${this.base}/profile`);
+  }
+
+  forgotPassword(email: string) {
+    return this.get(`${this.base}/forgot-password?email=${email}`);
+  }
+
+  resetPassword(token: string, newPassword: string, confirmPassword: string) {
+    return this.post(`${this.base}/reset-password?token=${token}&newPassword=${newPassword}&confirmPassword=${confirmPassword}`, {});
+  }
+
   // TOKEN STORAGE
   saveToken(token: string) {
     localStorage.setItem(this.tokenKey, token);
+    this.hydrateStateFromToken();
   }
 
   getToken(): string | null {
@@ -47,19 +56,28 @@ export class AuthService extends ApiService {
 
   clearToken() {
     localStorage.removeItem(this.tokenKey);
+    this.store.dispatch(logout());
+  }
+
+  private hydrateStateFromToken() {
+    const token = this.getToken();
+    const payload = this.decodeToken();
+    if (token && payload && this.isTokenValid(payload)) {
+      this.store.dispatch(loadToken({ token, payload }));
+    } else {
+      this.clearToken();
+    }
+  }
+
+  private isTokenValid(payload: JwtPayload): boolean {
+    if (!payload?.exp) return true;
+    const now = Math.floor(Date.now() / 1000);
+    return payload.exp > now;
   }
 
   // AUTH STATE
-  isLoggedIn(): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-
-    const payload = this.decodeToken();
-    if (!payload?.exp) return true; // if exp missing, treat as valid (or change to false)
-
-    // exp is in seconds
-    const now = Math.floor(Date.now() / 1000);
-    return payload.exp > now;
+  isLoggedIn() {
+    return this.store.select(selectIsAuthenticated);
   }
 
   logout() {
@@ -69,37 +87,6 @@ export class AuthService extends ApiService {
   logoutAndRedirect(path = '/signin') {
     this.logout();
     this.router.navigate([path]);
-  }
-
-  // USER INFO FROM JWT
-  getUserRole(): Role | null {
-    const payload = this.decodeToken();
-    if (!payload) return null;
-
-    // Case 1: payload.role = "ADMIN"
-    if (payload.role) return payload.role as Role;
-
-    // Case 2: payload.roles = ["ADMIN"]
-    if (Array.isArray(payload.roles) && payload.roles.length > 0) {
-      return payload.roles[0] as Role;
-    }
-
-    return null;
-  }
-
-  getUserId(): number | null {
-    const payload = this.decodeToken();
-    if (!payload) return null;
-
-    const raw =
-      payload.sub ??
-      payload.id ??
-      payload.userId;
-
-    if (raw === undefined || raw === null) return null;
-
-    const n = Number(raw);
-    return Number.isFinite(n) ? n : null;
   }
 
   decodeToken(): JwtPayload | null {
