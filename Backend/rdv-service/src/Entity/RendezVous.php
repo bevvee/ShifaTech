@@ -5,10 +5,59 @@ namespace App\Entity;
 use App\Enum\StatutEnum;
 use App\Repository\RendezVousRepository;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new Get(
+            security: "is_granted('ROLE_ADMIN') or object.getIdPatient() == user.getId() or object.getIdDocteur() == user.getId()"
+        ),
+        new GetCollection(
+            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_DOCTOR') or is_granted('ROLE_PATIENT')"
+        ),
+        new Post(
+            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_PATIENT')",
+            processor: RendezVousProcessor::class
+        ),
+        new Put(
+            security: "is_granted('ROLE_ADMIN') or object.getIdDocteur() == user.getId()"
+        ),
+        new Delete(
+            security: "is_granted('ROLE_ADMIN')",
+            processor: SoftDeleteProcessor::class
+
+        ),
+    ],
+    paginationItemsPerPage: 10
+)]
+
+#[ApiFilter(SearchFilter::class, properties: [
+    'id_patient' => 'exact',
+    'id_docteur' => 'exact',
+    'statut' => 'exact'
+])]
+
+#[ApiFilter(OrderFilter::class, properties: [
+    'date_rdv',
+    'heure_rdv',
+    'created_at'
+])]
+
+#[ApiFilter(DateFilter::class, properties: [
+    'date_rdv',
+    'created_at'
+])]
+
 #[ORM\Entity(repositoryClass: RendezVousRepository::class)]
 class RendezVous
 {

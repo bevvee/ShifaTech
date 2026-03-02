@@ -277,7 +277,18 @@ services:
       - "8083:80"
     networks:
       - shifatech-net
-
+  ##################################
+  # SMTP (MailHog)
+  ##################################
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: mailhog
+    restart: always
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - shifatech-net 
 ##################################
 # NETWORKS & VOLUMES
 ##################################

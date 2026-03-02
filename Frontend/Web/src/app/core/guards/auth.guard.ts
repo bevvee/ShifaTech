@@ -9,7 +9,7 @@ export const roleGuard = (allowedRoles: Role[]): CanActivateFn => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
     if (!user.roles) {
-      router.navigate(['/login']);
+      router.navigate(['/signin']);
       return false;
     }
 
