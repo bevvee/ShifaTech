@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/doctors")
+// @RequestMapping("/api/doctors")
 @RequiredArgsConstructor
 public class DoctorController {
 
@@ -63,25 +63,25 @@ public class DoctorController {
     @GetMapping("/patients")
     @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
     public ResponseEntity<List<PatientDTO>> getAllPatients() {
-        return ResponseEntity.ok(patientClient.getAllPatients().getData());
+        return ResponseEntity.ok(patientClient.getAllPatients());
     }
 
     @GetMapping("/patients/{id}/medical-record")
     @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
     public ResponseEntity<ConsultationDTO> getMedicalRecord(@PathVariable Long id) {
-        return ResponseEntity.ok(patientClient.getMedicalRecordByPatient(id).getData());
+        return ResponseEntity.ok(patientClient.getMedicalRecordByPatient(id));
     }
 
     @PostMapping("/patients/medical-record")
     @PreAuthorize("hasRole('DOCTEUR')")
     public ResponseEntity<ConsultationDTO> addMedicalRecord(@RequestBody ConsultationDTO consultationDTO) {
-        return ResponseEntity.ok(patientClient.addMedicalRecord(consultationDTO).getData());
+        return ResponseEntity.ok(patientClient.addMedicalRecord(consultationDTO));
     }
 
     @PostMapping("/prescriptions")
     @PreAuthorize("hasRole('DOCTEUR')")
     public ResponseEntity<PrescriptionDTO> createPrescription(@RequestBody PrescriptionDTO prescriptionDTO) {
-        return ResponseEntity.ok(patientClient.createPrescription(prescriptionDTO).getData());
+        return ResponseEntity.ok(patientClient.createPrescription(prescriptionDTO));
     }
 
     @GetMapping("/health")

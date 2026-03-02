@@ -65,9 +65,9 @@ public class PatientService {
         Patient patient = patientRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
 
-        // Sécurité : Vérifier que c'est le patient lui-même ou un admin
+        // Sécurité : Vérifier que c'est le patient lui-même, un médecin ou un admin
         Long currentUserId = jwtUtil.getUserIdFromToken();
-        if (currentUserId != null && !isAdmin() && !patient.getIdUser().equals(currentUserId)) {
+        if (currentUserId != null && !isAdmin() && !isDocteur() && !patient.getIdUser().equals(currentUserId)) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Accès refusé au dossier de ce patient.");
         }
@@ -80,7 +80,7 @@ public class PatientService {
         log.info("Récupération du patient par User ID: {}", userId);
 
         Long currentUserId = jwtUtil.getUserIdFromToken();
-        if (currentUserId != null && !isAdmin() && !userId.equals(currentUserId)) {
+        if (currentUserId != null && !isAdmin() && !isDocteur() && !userId.equals(currentUserId)) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Accès refusé au profil de cet utilisateur.");
         }
@@ -92,11 +92,11 @@ public class PatientService {
 
     @Transactional(readOnly = true)
     public List<PatientDTO> getAllPatients(String authHeader) {
-        if (!isAdmin()) {
+        if (!isAdmin() && !isDocteur()) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Seuls les administrateurs peuvent lister tous les patients.");
+                    "Seuls les médecins ou administrateurs peuvent lister tous les patients.");
         }
-        log.info("Récupération de tous les patients actifs (Admin)");
+        log.info("Récupération de tous les patients actifs");
         return patientRepository.findAllActive().stream()
                 .map(p -> mapToDTO(p, authHeader))
                 .collect(Collectors.toList());
@@ -137,9 +137,9 @@ public class PatientService {
         Patient patient = patientRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
 
-        if (!isAdmin() && !patient.getIdUser().equals(deletedBy)) {
+        if (!isAdmin()) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Vous ne pouvez supprimer que votre propre dossier patient.");
+                    "Seuls les administrateurs peuvent supprimer un dossier patient.");
         }
 
         patient.setDeletedAt(LocalDateTime.now());
@@ -191,14 +191,13 @@ public class PatientService {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
-    private boolean isMedicalStaff() {
+    private boolean isDocteur() {
         var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication();
         if (authentication == null)
             return false;
         return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") ||
-                        a.getAuthority().equals("ROLE_DOCTEUR") ||
-                        a.getAuthority().equals("ROLE_INFIRMIER"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_DOCTEUR"));
     }
+
 }

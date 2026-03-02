@@ -50,7 +50,7 @@ export class PatientsFormPageComponent {
     prenom: string;
     cin: string;
     email: string;
-    motDePasse: string;
+    password: string;
     sexe: Sexe;
     statutValue: 'true' | 'false';
     dateNaissance: string;
@@ -97,7 +97,7 @@ export class PatientsFormPageComponent {
       this.form.email.trim().length > 0 &&
       this.form.telephone.trim().length > 0 &&
       this.form.dateNaissance.trim().length > 0 &&
-      (this.mode === 'edit' || this.form.motDePasse.trim().length > 0)
+      (this.mode === 'edit' || this.form.password.trim().length > 0)
     );
   }
 
@@ -147,7 +147,7 @@ export class PatientsFormPageComponent {
       prenom: '',
       cin: '',
       email: '',
-      motDePasse: '',
+      password: '',
       sexe: 'M' as Sexe,
       statutValue: 'true' as const,
       dateNaissance: '',
@@ -163,7 +163,7 @@ export class PatientsFormPageComponent {
       prenom: row.prenom,
       cin: row.cin,
       email: row.email,
-      motDePasse: '',
+      password: '',
       sexe: row.sexe,
       statutValue,
       dateNaissance: row.dateNaissance,

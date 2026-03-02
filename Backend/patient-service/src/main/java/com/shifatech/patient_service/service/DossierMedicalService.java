@@ -13,7 +13,6 @@ import com.shifatech.patient_service.repository.PatientRepository;
 import com.shifatech.patient_service.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,11 +36,25 @@ public class DossierMedicalService {
         DossierMedical dossier = dossierMedicalRepository.findByIdPatient(idPatient)
                 .orElseThrow(() -> new ResourceNotFoundException("Dossier médical", "idPatient", idPatient));
 
+        checkReadAccess(idPatient);
+
         return mapToDTO(dossier);
     }
 
     public boolean hasDossierMedical(Long idPatient) {
         return dossierMedicalRepository.existsByIdPatient(idPatient);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<DossierMedicalDTO> getAllDossiers() {
+        if (!isAdmin() && !isDocteur() && !isInfirmier()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Seul le personnel médical peut lister les dossiers.");
+        }
+        log.info("Récupération de tous les dossiers médicaux");
+        return dossierMedicalRepository.findAll().stream()
+                .map(this::mapToDTO)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public DossierMedicalDTO createDossier(Long idPatient, CreateDossierRequest request, Long createdBy) {
@@ -116,6 +129,29 @@ public class DossierMedicalService {
         return mapToDTO(updatedDossier);
     }
 
+    public void deleteDossier(Long idPatient) {
+        if (!isAdmin() && !isInfirmier()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Seuls les infirmiers ou administrateurs peuvent supprimer un dossier.");
+        }
+        log.info("Suppression du dossier médical pour le patient ID: {}", idPatient);
+        DossierMedical dossier = dossierMedicalRepository.findByIdPatient(idPatient)
+                .orElseThrow(() -> new ResourceNotFoundException("Dossier médical", "idPatient", idPatient));
+        dossier.setStatus(DossierMedical.StatusDossier.ARCHIVED);
+        dossierMedicalRepository.save(dossier);
+    }
+
+    private void checkReadAccess(Long idPatient) {
+        Long currentUserId = jwtUtil.getUserIdFromToken();
+        Patient patient = patientRepository.findById(idPatient)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", idPatient));
+
+        if (currentUserId != null && !isAdmin() && !isDocteur() && !patient.getIdUser().equals(currentUserId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Accès refusé au dossier médical de ce patient.");
+        }
+    }
+
     private boolean isAdmin() {
         var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext()
                 .getAuthentication();
@@ -123,6 +159,24 @@ public class DossierMedicalService {
             return false;
         return authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    private boolean isDocteur() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication();
+        if (authentication == null)
+            return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_DOCTEUR"));
+    }
+
+    private boolean isInfirmier() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication();
+        if (authentication == null)
+            return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_INFIRMIER"));
     }
 
     private DossierMedicalDTO mapToDTO(DossierMedical dossier) {

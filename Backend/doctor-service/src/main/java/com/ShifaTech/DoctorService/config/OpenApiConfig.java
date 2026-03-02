@@ -5,8 +5,11 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
@@ -17,14 +20,22 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("Doctor Service API")
                         .version("1.0")
-                        .description("Documentation des APIs du microservice Doctor Service"))
-                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                        .description("Documentation des APIs du microservice Doctor Service")
+                )
+                .servers(List.of(
+                        new Server().url("http://localhost:8082/doctor")
+                ))
+                .addSecurityItem(
+                        new SecurityRequirement().addList("bearerAuth")
+                )
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth",
                                 new SecurityScheme()
                                         .name("bearerAuth")
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
-                                        .bearerFormat("JWT")));
+                                        .bearerFormat("JWT")
+                        )
+                );
     }
 }

@@ -1,0 +1,5 @@
+lexik_jwt_authentication:
+    user_id_claim: sub
+    secret_key: '%env(JWT_SECRET)%'
+    encoder:
+        signature_algorithm: HS256
