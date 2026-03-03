@@ -1,10 +1,6 @@
 package com.ShifaTech.DoctorService.controller;
 
-import com.ShifaTech.DoctorService.client.PatientClient;
-import com.ShifaTech.DoctorService.dto.ConsultationDTO;
 import com.ShifaTech.DoctorService.dto.DoctorDTO;
-import com.ShifaTech.DoctorService.dto.PatientDTO;
-import com.ShifaTech.DoctorService.dto.PrescriptionDTO;
 import com.ShifaTech.DoctorService.service.DoctorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +16,6 @@ import java.util.List;
 public class DoctorController {
 
     private final DoctorService doctorService;
-    private final PatientClient patientClient;
 
     // --- CRUD Operations ---
 
@@ -56,32 +51,6 @@ public class DoctorController {
     public ResponseEntity<DoctorDTO> updateDoctorProfile(@PathVariable Long id,
             @Valid @RequestBody DoctorDTO doctorDTO) {
         return ResponseEntity.ok(doctorService.updateDoctorProfile(id, doctorDTO));
-    }
-
-    // --- Patient Management Interactions ---
-
-    @GetMapping("/patients")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
-    public ResponseEntity<List<PatientDTO>> getAllPatients() {
-        return ResponseEntity.ok(patientClient.getAllPatients());
-    }
-
-    @GetMapping("/patients/{id}/medical-record")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
-    public ResponseEntity<ConsultationDTO> getMedicalRecord(@PathVariable Long id) {
-        return ResponseEntity.ok(patientClient.getMedicalRecordByPatient(id));
-    }
-
-    @PostMapping("/patients/medical-record")
-    @PreAuthorize("hasRole('DOCTEUR')")
-    public ResponseEntity<ConsultationDTO> addMedicalRecord(@RequestBody ConsultationDTO consultationDTO) {
-        return ResponseEntity.ok(patientClient.addMedicalRecord(consultationDTO));
-    }
-
-    @PostMapping("/prescriptions")
-    @PreAuthorize("hasRole('DOCTEUR')")
-    public ResponseEntity<PrescriptionDTO> createPrescription(@RequestBody PrescriptionDTO prescriptionDTO) {
-        return ResponseEntity.ok(patientClient.createPrescription(prescriptionDTO));
     }
 
     @GetMapping("/health")
