@@ -20,7 +20,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
             uriTemplate: '/infirmier'
         ),
         new Post(
-            uriTemplate: '/infirmier'
+            uriTemplate: '/infirmier',
+            security: "is_granted('PUBLIC_ACCESS')"
         ),
         new Get(
             uriTemplate: '/infirmier/{id}'
@@ -112,7 +113,7 @@ class Infirmier implements UserInterface
 
     public function getRoles(): array
     {
-        return ['ROLE_INFERMIER'];
+        return ['ROLE_INFIRMIER'];
     }
 
     public function eraseCredentials(): void {}
