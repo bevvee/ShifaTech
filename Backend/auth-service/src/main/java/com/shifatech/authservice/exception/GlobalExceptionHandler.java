@@ -7,6 +7,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.validation.FieldError;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -30,5 +32,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse> handleRuntime(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ApiResponse(true, ex.getMessage()));
+    }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        StringBuilder errors = new StringBuilder();
+
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            errors.append(error.getField())
+                    .append(": ")
+                    .append(error.getDefaultMessage())
+                    .append("; ");
+        }
+
+        ApiResponse response = new ApiResponse(true, errors.toString());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }
