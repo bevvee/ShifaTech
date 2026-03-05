@@ -47,8 +47,8 @@ class InfirmierSpecialite
 
     #[ORM\Column(length: 50)]
     private ?string $label = null;
-
-    public function __construct(){
+    public function __construct()
+    {
         $this -> infirmiers = new ArrayCollection();
     }
     public function getId(): ?int
