@@ -135,7 +135,14 @@ public class AuthController {
 
         return ResponseEntity.ok(new ApiResponse(false, "Password reset successfully"));
     }
-
+    // Get user by ID
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse> getUserById(@PathVariable Integer userId) {
+        ApiResponse response = authService.getUserById(userId);
+        HttpStatus status = response.isError() ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
+        return new ResponseEntity<>(response, status);
+    }
+    
     // Health check
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {

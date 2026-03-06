@@ -202,6 +202,18 @@ public class AuthService {
             return new ApiResponse(true, "Something went wrong during logout");
         }
     }
+    // Get user by ID
+    public ApiResponse getUserById(Integer userId) {
+        try {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user == null || user.getDeletedAt() != null) {
+                return new ApiResponse(true, "User not found or deleted");
+            }
+            return new ApiResponse(false, "User found successfully", new UserDto().toUserDto(user));
+        } catch (Exception ex) {
+            return new ApiResponse(true, "Something went wrong while fetching user");
+        }
+    }
 
 
 }
