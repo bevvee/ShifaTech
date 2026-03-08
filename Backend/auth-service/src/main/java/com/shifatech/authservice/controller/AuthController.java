@@ -62,7 +62,7 @@ public class AuthController {
         // 1️⃣ Get Authorization header
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse(true, "User not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse(true, "Utilisateur non authentifié"));
         }
         // 2️⃣ Extract token
         String token = authHeader.substring(7);
@@ -78,7 +78,7 @@ public class AuthController {
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse> getProfile(HttpServletRequest request) {
         ApiResponse response = authService.getProfile(request);
-        HttpStatus status = response.isError() ? (response.getMessage().equals("User not authenticated") ? HttpStatus.UNAUTHORIZED : HttpStatus.BAD_REQUEST) : HttpStatus.OK;
+        HttpStatus status = response.isError() ? (response.getMessage().equals("Utilisateur non authentifié") ? HttpStatus.UNAUTHORIZED : HttpStatus.BAD_REQUEST) : HttpStatus.OK;
         return new ResponseEntity<>(response, status);
     }
 
@@ -86,7 +86,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse> logout(HttpServletRequest request) {
         authService.logout(request);
-        return ResponseEntity.ok(new ApiResponse(false, "Logged out successfully"));
+        return ResponseEntity.ok(new ApiResponse(false, "Déconnecté avec succès"));
     }
 
     // forgot-password
@@ -108,7 +108,7 @@ public class AuthController {
             emailService.sendResetPasswordEmail(user.getEmail(), resetToken.getToken());
         });
 
-        return ResponseEntity.ok(new ApiResponse(false, "If your email exists, a password reset link has been sent"));
+        return ResponseEntity.ok(new ApiResponse(false, "Si votre email existe, un lien de réinitialisation de mot de passe a été envoyé"));
     }
 
     // reset-password
@@ -116,13 +116,13 @@ public class AuthController {
     public ResponseEntity<ApiResponse> resetPassword(@RequestParam String token, @RequestParam String newPassword, @RequestParam String confirmPassword) {
 
         if (!newPassword.equals(confirmPassword)) {
-            return ResponseEntity.badRequest().body(new ApiResponse(true, "Password and confirmation do not match"));
+            return ResponseEntity.badRequest().body(new ApiResponse(true, "Le mot de passe et la confirmation ne correspondent pas"));
         }
 
-        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token).orElseThrow(() -> new RuntimeException("Invalid or expired token"));
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token).orElseThrow(() -> new RuntimeException("Token invalide ou expiré"));
 
         if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.badRequest().body(new ApiResponse(true, "Token has expired"));
+            return ResponseEntity.badRequest().body(new ApiResponse(true, "Le token a expiré"));
         }
 
         User user = resetToken.getUser();
@@ -133,7 +133,7 @@ public class AuthController {
         // 🔥 VERY IMPORTANT — token must be deleted
         passwordResetTokenRepository.delete(resetToken);
 
-        return ResponseEntity.ok(new ApiResponse(false, "Password reset successfully"));
+        return ResponseEntity.ok(new ApiResponse(false, "Mot de passe réinitialisé avec succès"));
     }
     // Get user by ID
     @GetMapping("/user/{userId}")

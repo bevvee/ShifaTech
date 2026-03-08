@@ -17,14 +17,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ApiResponse(true, "You are not authorized"));
+                .body(new ApiResponse(true, "Vous n'êtes pas autorisé"));
     }
 
     // 401 Unauthorized
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse> handleAuthException(AuthenticationException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ApiResponse(true, "Invalid or missing token"));
+                .body(new ApiResponse(true, "Token invalide ou manquant"));
     }
 
     // Other runtime exceptions
