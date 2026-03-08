@@ -5,10 +5,36 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\InfirmierSpecialiteRepository;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 
 #[ORM\Entity(repositoryClass: InfirmierSpecialiteRepository::class)]
-#[ApiResource]
+#[ApiResource
+(
+    operations: [
+        new GetCollection(
+            uriTemplate: '/infirmier_specialites'
+        ),
+        new Post(
+            uriTemplate: '/infirmier_specialites',
+            security: "is_granted('PUBLIC_ACCESS')"
+        ),
+        new Get(
+            uriTemplate: '/infirmier_specialites/{id}'
+        ),
+        new Put(
+            uriTemplate: '/infirmier_specialites/{id}'
+        ),
+        new Delete(
+            uriTemplate: '/infirmier_specialites/{id}'
+        ),
+        ]
+)]
 class InfirmierSpecialite
 {
     #[ORM\Id]
@@ -21,9 +47,9 @@ class InfirmierSpecialite
 
     #[ORM\Column(length: 50)]
     private ?string $label = null;
-
     public function __construct()
     {
+        $this -> infirmiers = new ArrayCollection();
     }
     public function getId(): ?int
     {

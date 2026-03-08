@@ -15,12 +15,14 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: InfirmierRepository::class)]
 #[ApiResource(
+    shortName: 'Infirmier',
     operations: [
         new GetCollection(
             uriTemplate: '/infirmier'
         ),
         new Post(
-            uriTemplate: '/infirmier'
+            uriTemplate: '/infirmier',
+            security: "is_granted('PUBLIC_ACCESS')"
         ),
         new Get(
             uriTemplate: '/infirmier/{id}'
@@ -31,21 +33,6 @@ use Symfony\Component\Security\Core\User\UserInterface;
         new Delete(
             uriTemplate: '/infirmier/{id}'
         ),
-        // new Post(
-        //     uriTemplate: '/rendezvous',
-        //     security: "is_granted('ROLE_SECRETAIRE')",
-        //     processor: RendezVousProcessor::class
-        // ),
-        // new Put(
-        //     uriTemplate: '/rendezvous/{id}',
-        //     security: "is_granted('ROLE_SECRETAIRE')",
-        //     processor: RendezVousProcessor::class
-        // ),
-        // new Delete(
-        //     uriTemplate: '/rendezvous/{id}',
-        //     security: "is_granted('ROLE_SECRETAIRE')",
-        //     processor: RendezVousProcessor::class
-        // ),
     ]
 )]
 class Infirmier implements UserInterface
@@ -112,7 +99,7 @@ class Infirmier implements UserInterface
 
     public function getRoles(): array
     {
-        return ['ROLE_INFERMIER'];
+        return ['ROLE_INFIRMIER'];
     }
 
     public function eraseCredentials(): void {}

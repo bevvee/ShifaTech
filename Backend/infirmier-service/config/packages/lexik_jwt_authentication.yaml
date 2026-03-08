@@ -1,5 +1,12 @@
 lexik_jwt_authentication:
-    user_id_claim: sub
     secret_key: '%env(JWT_SECRET)%'
+    public_key: ~
+    user_id_claim: userId
+    token_extractors:
+        authorization_header:
+            enabled: true
+            prefix: Bearer
+            name: Authorization
     encoder:
+        service: lexik_jwt_authentication.encoder.lcobucci
         signature_algorithm: HS256

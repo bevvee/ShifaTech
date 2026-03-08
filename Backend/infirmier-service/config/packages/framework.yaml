@@ -7,7 +7,7 @@ framework:
 
     assets:
         base_path: /infirmier
-    
+
     #esi: true
     #fragments: true
 
