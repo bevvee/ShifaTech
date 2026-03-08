@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { LabelComponent } from '../../../shared/components/form/label/label.component';
 import { InputFieldComponent } from '../../../shared/components/form/input/input-field.component';
 import { AuthService } from '../../../core/services/auth.service';
@@ -12,6 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
     imports: [
         FormsModule,
         CommonModule,
+        RouterModule,
         LabelComponent,
         InputFieldComponent,
     ],

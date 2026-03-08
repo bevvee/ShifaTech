@@ -39,10 +39,50 @@
         </div>
         <div>
           <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+            Date de Naissance
+          </p>
+          <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+            {{ user?.dateNaissance || 'Non renseigné' }}
+          </p>
+        </div>
+        <div>
+          <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+            CIN
+          </p>
+          <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+            {{ user?.cin || 'Non renseigné' }}
+          </p>
+        </div>
+        <div>
+          <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
             Role
           </p>
           <p class="text-sm font-medium text-gray-800 dark:text-white/90">
             {{ user?.role }}
+          </p>
+        </div>
+        <div>
+          <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+            Address
+          </p>
+          <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+            {{ user?.adresse || 'Non renseigné' }}
+          </p>
+        </div>
+        <div>
+          <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+            Sexe
+          </p>
+          <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+            {{ user?.sexe === 'M' ? 'Homme' : user?.sexe === 'F' ? 'Femme' : 'Non renseigné' }}
+          </p>
+        </div>
+        <div>
+          <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+            Statut
+          </p>
+          <p class="text-sm font-medium text-gray-800 dark:text-white/90">
+            {{ user?.statut ? 'Active' : 'Inactive' }}
           </p>
         </div>
       </div>
@@ -73,53 +113,49 @@
       </div>
       <form class="flex flex-col" (ngSubmit)="handleSave()">
         <div class="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
-          <div>
-            <h5 class="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-              Social Links
-            </h5>
-            <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-              <div>
-                <app-label>Facebook</app-label>
-                <app-input-field type="text" value="" />
-              </div>
-              <div>
-                <app-label>X.com</app-label>
-                <app-input-field type="text" value="" />
-              </div>
-              <div>
-                <app-label>Linkedin</app-label>
-                <app-input-field type="text" value="" />
-              </div>
-              <div>
-                <app-label>Instagram</app-label>
-                <app-input-field type="text" value="" />
-              </div>
-            </div>
-          </div>
-          <div class="mt-7">
+          <div class="mt-2">
             <h5 class="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
               Personal Information
             </h5>
             <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
               <div class="col-span-2 lg:col-span-1">
                 <app-label>Prenom</app-label>
-                <app-input-field type="text" [value]="user?.prenom" />
+                <app-input-field type="text" [(value)]="editedUser.prenom" />
               </div>
               <div class="col-span-2 lg:col-span-1">
                 <app-label>Nom</app-label>
-                <app-input-field type="text" [value]="user?.nom" />
+                <app-input-field type="text" [(value)]="editedUser.nom" />
               </div>
               <div class="col-span-2 lg:col-span-1">
                 <app-label>Email Address</app-label>
-                <app-input-field type="text" [value]="user?.email" />
+                <app-input-field type="text" [(value)]="editedUser.email" />
               </div>
               <div class="col-span-2 lg:col-span-1">
                 <app-label>Phone</app-label>
-                <app-input-field type="text" [value]="user?.telephone" />
+                <app-input-field type="text" [(value)]="editedUser.telephone" />
+              </div>
+              <div class="col-span-2 relative">
+                <app-label>Date de Naissance</app-label>
+                <div class="relative">
+                  <app-input-field type="date" [(value)]="editedUser.dateNaissance" className="[&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:opacity-0" />
+                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </span>
+                </div>
+              </div>
+              <div class="col-span-2 lg:col-span-1">
+                <app-label>CIN</app-label>
+                <app-input-field type="text" [(value)]="editedUser.cin" />
+              </div>
+              <div class="col-span-2 lg:col-span-1">
+                <app-label>Sexe</app-label>
+                <app-select [options]="sexeOptions" [(value)]="editedUser.sexe" [hasSearch]="false" placeholder="Sélectionnez" />
               </div>
               <div class="col-span-2">
-                <app-label>Bio</app-label>
-                <app-input-field type="text" value="Médecine Générale" />
+                <app-label>Address</app-label>
+                <app-input-field type="text" [(value)]="editedUser.adresse" />
               </div>
             </div>
           </div>

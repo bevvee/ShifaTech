@@ -30,9 +30,16 @@ import { DocteursComponent } from './pages/docteurs/docteurs.component';
 import { InfirmiersComponent } from './pages/infirmiers/infirmiers.component';
 import { ServicesComponent } from './pages/services/services.component';
 import { SpecialisationsComponent } from './pages/specialisations/specialisations.component';
-import { roleGuard } from './core/guards/auth.guard';
+import { roleGuard, rootGuard } from './core/guards/auth.guard';
 import { Role } from './core/models/role.enum';
+
 export const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [rootGuard],
+    children: []
+  },
   {
     path: '',
     component: AppLayoutComponent,
@@ -58,79 +65,107 @@ export const routes: Routes = [
       {
         path: 'infirmier',
         component: Infirmier,
-        title: 'Infirmier | ShifaTech'
+        title: 'Infirmier | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.INFIRMIER, Role.ADMIN] }
       },
       {
         path: 'calendar',
         component: CalenderComponent,
-        title: 'Calender | ShifaTech'
+        title: 'Calender | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.DOCTEUR, Role.INFIRMIER, Role.ADMIN] }
       },
       {
         path: 'rendez-vous',
         component: RendezVousComponent,
-        title: 'Liste des Rendez Vous | ShifaTech'
+        title: 'Liste des Rendez Vous | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.DOCTEUR, Role.INFIRMIER, Role.ADMIN] }
       },
       {
         path: 'docteurs',
         component: DocteursComponent,
-        title: 'Liste des Docteurs | ShifaTech'
+        title: 'Liste des Docteurs | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.DOCTEUR] }
       },
       {
         path: 'docteurs/new',
         component: DocteursComponent,
-        title: 'Ajouter un Docteur | ShifaTech'
+        title: 'Ajouter un Docteur | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.DOCTEUR] }
       },
       {
         path: 'patients',
         component: PatientsComponent,
-        title: 'Liste des Patients | ShifaTech'
+        title: 'Liste des Patients | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
       },
       {
         path: 'patients/new',
         component: PatientsFormPageComponent,
-        title: 'Ajouter un Patient | ShifaTech'
+        title: 'Ajouter un Patient | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
       },
       {
         path: 'patients/:id',
         component: PatientsFormPageComponent,
         title: 'Détails Patient | ShifaTech',
-        data: { mode: 'view' }
+        canActivate: [roleGuard],
+        data: { mode: 'view', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
       },
       {
         path: 'patients/:id/edit',
         component: PatientsFormPageComponent,
         title: 'Modifier Patient | ShifaTech',
-        data: { mode: 'edit' }
+        canActivate: [roleGuard],
+        data: { mode: 'edit', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
       },
       {
         path: 'infirmiers',
         component: InfirmiersComponent,
-        title: 'Liste des Infirmiers | ShifaTech'
+        title: 'Liste des Infirmiers | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN] }
       },
       {
         path: 'infirmiers/new',
         component: InfirmiersComponent,
-        title: 'Ajouter un Infirmier | ShifaTech'
+        title: 'Ajouter un Infirmier | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN] }
       },
       {
         path: 'services',
         component: ServicesComponent,
-        title: 'Liste des Services | ShifaTech'
+        title: 'Liste des Services | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN] }
       },
       {
         path: 'services/new',
         component: ServicesComponent,
-        title: 'Ajouter un Service | ShifaTech'
+        title: 'Ajouter un Service | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN] }
       },
       {
         path: 'specialisations',
         component: SpecialisationsComponent,
-        title: 'Liste des Spécialisations | ShifaTech'
+        title: 'Liste des Spécialisations | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN] }
       },
       {
         path: 'specialisations/new',
         component: SpecialisationsComponent,
-        title: 'Ajouter une Spécialisation | ShifaTech'
+        title: 'Ajouter une Spécialisation | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN] }
       },
       {
         path: 'profile',
