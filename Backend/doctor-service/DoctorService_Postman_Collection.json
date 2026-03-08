@@ -1,8 +1,8 @@
 {
     "info": {
         "_postman_id": "shifatech-gateway-tests",
-        "name": "ShifaTech - Doctor Service Full API (FIXED)",
-        "description": "Collection complète corrigée pour Doctor Service via Gateway NGINX (Port 8082).",
+        "name": "ShifaTech - Doctor Service Full API (DIRECT v2)",
+        "description": "Collection complète corrigée : accès direct via Nginx (8082). Inclus : Profil Docteur, Planning, Patients, RDV.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "auth": {
@@ -19,22 +19,6 @@
         {
             "name": "0. AUTH",
             "item": [
-                {
-                    "name": "Register (New User)",
-                    "request": {
-                        "method": "POST",
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"nom\": \"Admin\",\n    \"prenom\": \"User\",\n    \"cin\": \"AA111111\",\n    \"email\": \"admin@gmail.com\",\n    \"password\": \"Password123\",\n    \"passwordConfirmation\": \"Password123\",\n    \"role\": \"ADMIN\",\n    \"sexe\": \"M\",\n    \"dateNaissance\": \"1990-01-01\",\n    \"telephone\": \"0600000000\",\n    \"adresse\": \"Casablanca, Maroc\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": "http://localhost:8082/auth/register"
-                    }
-                },
                 {
                     "name": "Login",
                     "event": [
@@ -63,128 +47,115 @@
                         },
                         "url": "http://localhost:8082/auth/login"
                     }
-                },
+                }
+            ]
+        },
+        {
+            "name": "1. DOCTOR PROFILE",
+            "item": [
                 {
-                    "name": "Get Profile",
+                    "name": "List All Doctors",
                     "request": {
                         "method": "GET",
-                        "url": "http://localhost:8082/auth/profile"
+                        "url": "http://localhost:8082/doctor/all"
+                    }
+                },
+                {
+                    "name": "Get Doctor By ID",
+                    "request": {
+                        "method": "GET",
+                        "url": "http://localhost:8082/doctor/1"
+                    }
+                },
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "method": "PUT",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"numeroOrdre\": \"ORD-2026-X\",\n    \"idSpecialite\": 1\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:8082/doctor/1"
                     }
                 }
             ]
         },
-       {
-    "name": "1. DOCTORS (FIXED)",
-    "item": [
         {
-            "name": "Health Check",
-            "request": {
-                "method": "GET",
-                "url": "http://localhost:8082/doctor/health"
-            }
-        },
-        {
-            "name": "List All Doctors",
-            "request": {
-                "method": "GET",
-                "url": "http://localhost:8082/doctor/all"
-            }
-        },
-        {
-            "name": "Get Doctor By ID",
-            "request": {
-                "method": "GET",
-                "url": "http://localhost:8082/doctor/1"
-            }
-        },
-        {
-            "name": "Create Doctor",
-            "request": {
-                "method": "POST",
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n    \"idUser\": 1,\n    \"numeroOrdre\": \"ORD-2026-X\",\n    \"idSpecialite\": 1\n}",
-                    "options": {
-                        "raw": {
-                            "language": "json"
-                        }
+            "name": "2. PLANNING (Doctor Availability)",
+            "item": [
+                {
+                    "name": "Get Planning by DoctorID",
+                    "request": {
+                        "method": "GET",
+                        "url": "http://localhost:8082/doctor/planning/1"
                     }
                 },
-                "url": "http://localhost:8082/doctor/c"
-            }
-        },
-        {
-            "name": "Update Doctor",
-            "request": {
-                "method": "PUT",
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n    \"numeroOrdre\": \"ORD-XYZ-99\",\n    \"idSpecialite\": 2\n}",
-                    "options": {
-                        "raw": {
-                            "language": "json"
-                        }
+                {
+                    "name": "Create Planning Slot",
+                    "request": {
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"idDoctor\": 1,\n    \"jour\": \"LUNDI\",\n    \"heureDebut\": \"09:00:00\",\n    \"heureFin\": \"17:00:00\",\n    \"pauseDebut\": \"12:00:00\",\n    \"pauseFin\": \"13:00:00\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:8082/doctor/planning"
                     }
-                },
-                "url": "http://localhost:8082/doctor/1"
-            }
+                }
+            ]
         },
         {
-            "name": "Delete Doctor (Admin Only)",
-            "request": {
-                "method": "DELETE",
-                "url": "http://localhost:8082/doctor/1"
-            }
-        }
-    ]
-},
-        {
-            "name": "2. PATIENTS PROXY",
+            "name": "3. PATIENTS (DIRECT)",
             "item": [
                 {
                     "name": "List All Patients",
                     "request": {
                         "method": "GET",
-                        "url": "http://localhost:8082/doctor/patients"
+                        "url": "http://localhost:8082/patient/"
                     }
                 },
                 {
-                    "name": "Get Patient Medical Record",
+                    "name": "Get Patient Dossier Medical",
                     "request": {
                         "method": "GET",
-                        "url": "http://localhost:8082/doctor/patients/1/medical-record"
+                        "url": "http://localhost:8082/patient/1/dossier-medical"
                     }
                 },
                 {
-                    "name": "Add Medical Record Entry",
+                    "name": "Create Ordonnance",
                     "request": {
                         "method": "POST",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"idPatient\": 1,\n    \"idDocteur\": 1,\n    \"dateConsultation\": \"2025-12-28\",\n    \"observations\": \"Patient en bonne santé.\",\n    \"diagnostic\": \"RAS\"\n}",
+                            "raw": "{\n    \"idPatient\": 1,\n    \"medicaments\": \"Doliprane\",\n    \"posologie\": \"1g x 3\",\n    \"dureeTraitement\": \"5 jours\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
                                 }
                             }
                         },
-                        "url": "http://localhost:8082/doctor/patients/medical-record"
+                        "url": "http://localhost:8082/patient/ordonnances"
                     }
-                },
+                }
+            ]
+        },
+        {
+            "name": "4. RDV (DIRECT)",
+            "item": [
                 {
-                    "name": "Create Prescription",
+                    "name": "List All RDVs",
                     "request": {
-                        "method": "POST",
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"idConsultation\": 1,\n    \"medicaments\": \"Paracétamol 500mg\",\n    \"dosage\": \"1 comprimé 3 fois par jour\",\n    \"duree\": \"5 jours\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": "http://localhost:8082/doctor/prescriptions"
+                        "method": "GET",
+                        "url": "http://localhost:8082/rdv/api/rendez/vous"
                     }
                 }
             ]
@@ -193,7 +164,7 @@
     "variable": [
         {
             "key": "jwt_token",
-            "value": "PASTE_TOKEN_HERE",
+            "value": "token_here",
             "type": "string"
         }
     ]

@@ -5,7 +5,7 @@ import { Store } from '@ngrx/store';
 import { environment } from '../../../environments/environment';
 import { ApiService } from './api.service';
 import { Role } from '../models/role.enum';
-import { JwtPayload, loadToken, logout } from '../store/auth/auth.actions';
+import { JwtPayload, loadToken, logout, loadProfileSuccess } from '../store/auth/auth.actions';
 import { selectIsAuthenticated } from '../store/auth/auth.selectors';
 
 @Injectable({
@@ -20,12 +20,20 @@ export class AuthService extends ApiService {
 
   constructor() {
     super(inject(HttpClient));
+  }
+
+  /** Called by APP_INITIALIZER to hydrate the store before routing begins. */
+  init(): void {
     this.hydrateStateFromToken();
   }
 
   // API
   login(data: any) {
     return this.post<{ token: string }>(`${this.base}/login`, data);
+  }
+
+  updateUser(userId: number, data: any) {
+    return this.put<any>(`${this.base}/update/${userId}`, data);
   }
 
   register(data: any) {
@@ -62,8 +70,17 @@ export class AuthService extends ApiService {
   private hydrateStateFromToken() {
     const token = this.getToken();
     const payload = this.decodeToken();
+
     if (token && payload && this.isTokenValid(payload)) {
       this.store.dispatch(loadToken({ token, payload }));
+      this.getProfile().subscribe({
+        next: (res) => {
+          if (!res.error) {
+            this.store.dispatch(loadProfileSuccess({ profile: res.user }));
+          }
+        },
+        error: (err) => console.error('[AUTH SERVICE] Erreur lors de la récupération du profil :', err)
+      });
     } else {
       this.clearToken();
     }

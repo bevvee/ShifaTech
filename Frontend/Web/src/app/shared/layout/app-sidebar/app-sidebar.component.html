@@ -59,7 +59,7 @@
             }"
           >
             @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) 
-            { Menu } 
+            { <!-- Menu -->  } 
            @else {
             <svg
               width="1em"
@@ -262,7 +262,7 @@
                 (isHovered$ | async) ||
                 (isMobileOpen$ | async)
             ) {
-              Others
+              <!-- Others -->
             } @else {
               <svg
                 width="1em"
