@@ -5,6 +5,7 @@ import com.ShifaTech.DoctorService.entity.Doctor;
 import com.ShifaTech.DoctorService.entity.Planning;
 import com.ShifaTech.DoctorService.repository.DoctorRepository;
 import com.ShifaTech.DoctorService.repository.PlanningRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +40,34 @@ public class PlanningService {
         return mapToDTO(saved);
     }
 
+    @Transactional
+    public PlanningDTO updatePlanningSlot(Long id, PlanningDTO planningDTO) {
+        Planning planning = planningRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Planning slot not found"));
+
+        if (planningDTO.getJour() != null)
+            planning.setJour(planningDTO.getJour());
+        if (planningDTO.getHeureDebut() != null)
+            planning.setHeureDebut(planningDTO.getHeureDebut());
+        if (planningDTO.getHeureFin() != null)
+            planning.setHeureFin(planningDTO.getHeureFin());
+        if (planningDTO.getPauseDebut() != null)
+            planning.setPauseDebut(planningDTO.getPauseDebut());
+        if (planningDTO.getPauseFin() != null)
+            planning.setPauseFin(planningDTO.getPauseFin());
+
+        Planning saved = planningRepository.save(planning);
+        return mapToDTO(saved);
+    }
+
+    @Transactional
+    public void deletePlanningSlot(Long id) {
+        if (!planningRepository.existsById(id)) {
+            throw new RuntimeException("Planning slot not found");
+        }
+        planningRepository.deleteById(id);
+    }
+
     private PlanningDTO mapToDTO(Planning planning) {
         PlanningDTO dto = new PlanningDTO();
         dto.setIdPlan(planning.getIdPlan());
@@ -48,6 +77,8 @@ public class PlanningService {
         dto.setHeureFin(planning.getHeureFin());
         dto.setPauseDebut(planning.getPauseDebut());
         dto.setPauseFin(planning.getPauseFin());
+        dto.setCreatedAt(planning.getCreatedAt());
+        dto.setUpdatedAt(planning.getUpdatedAt());
         return dto;
     }
 }

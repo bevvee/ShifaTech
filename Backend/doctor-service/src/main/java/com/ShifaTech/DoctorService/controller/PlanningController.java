@@ -24,4 +24,15 @@ public class PlanningController {
     public ResponseEntity<PlanningDTO> addPlanningSlot(@RequestBody PlanningDTO planningDTO) {
         return ResponseEntity.ok(planningService.addPlanningSlot(planningDTO));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PlanningDTO> updatePlanningSlot(@PathVariable Long id, @RequestBody PlanningDTO planningDTO) {
+        return ResponseEntity.ok(planningService.updatePlanningSlot(id, planningDTO));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePlanningSlot(@PathVariable Long id) {
+        planningService.deletePlanningSlot(id);
+        return ResponseEntity.noContent().build();
+    }
 }
