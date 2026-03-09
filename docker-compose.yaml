@@ -152,9 +152,9 @@ services:
     networks:
       - shifatech-net
     volumes:
-      - ./Backend/rdv-service:/var/www/html:cached   
-      - rdv-service-logs:/var/www/html/var/log      
-      - rdv-service-cache:/var/www/html/var/cache   
+      - ./Backend/rdv-service:/var/www/html:cached
+      - rdv-service-logs:/var/www/html/var/log
+      - rdv-service-cache:/var/www/html/var/cache
 
   patient-service:
     build: ./Backend/patient-service
@@ -285,10 +285,10 @@ services:
     container_name: mailhog
     restart: always
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
     networks:
-      - shifatech-net 
+      - shifatech-net
 ##################################
 # NETWORKS & VOLUMES
 ##################################
