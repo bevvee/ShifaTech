@@ -7,6 +7,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.validation.FieldError;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -15,14 +17,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ApiResponse(true, "You are not authorized"));
+                .body(new ApiResponse(true, "Vous n'êtes pas autorisé"));
     }
 
     // 401 Unauthorized
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse> handleAuthException(AuthenticationException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ApiResponse(true, "Invalid or missing token"));
+                .body(new ApiResponse(true, "Token invalide ou manquant"));
     }
 
     // Other runtime exceptions
@@ -30,5 +32,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse> handleRuntime(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ApiResponse(true, ex.getMessage()));
+    }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        StringBuilder errors = new StringBuilder();
+
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            errors.append(error.getField())
+                    .append(": ")
+                    .append(error.getDefaultMessage())
+                    .append("; ");
+        }
+
+        ApiResponse response = new ApiResponse(true, errors.toString());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }

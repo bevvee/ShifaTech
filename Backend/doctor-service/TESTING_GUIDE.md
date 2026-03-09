@@ -11,12 +11,14 @@ Ce token est délivré par votre **Auth Service**.
 2.  Lancez **Postman**.
 3.  Faites une requête `POST` vers votre Auth Service pour vous connecter (Login) :
 
-🚀 Étape 1 : Enregistrer un nouvel utilisateur
+🚀 **Étape 1 : Enregistrer un nouvel utilisateur**
 Vous devez d'abord créer le compte. Utilisez cette requête dans Postman :
 
-Méthode : POST URL : http://localhost:8082/auth/register Body (raw JSON) :
+**Méthode** : `POST`  
+**URL** : `http://localhost:8082/auth/register`  
+**Body** (raw JSON) :
 
-json
+```json
 {
     "nom": "Niss",
     "prenom": "User",
@@ -30,16 +32,20 @@ json
     "telephone": "0600000000",
     "adresse": "Casablanca, Maroc"
 }
-🔑 Étape 2 : Se connecter
+```
+🔑 **Étape 2 : Se connecter**
 Une fois que vous avez reçu un message de succès pour le "Register", faites le Login :
 
-Méthode : POST URL : http://localhost:8082/auth/login Body (raw JSON) :
+**Méthode** : `POST`  
+**URL** : `http://localhost:8082/auth/login`  
+**Body** (raw JSON) :
 
-json
+```json
 {
     "email": "niss@gmail.com",
     "password": "Password123"
 }
+```
    
 4.  La réponse contiendra un `accessToken` (une longue chaîne de caractères qui commence souvent par `eyJ...`).
 5.  **Copiez ce token**. C'est votre "Passeport".

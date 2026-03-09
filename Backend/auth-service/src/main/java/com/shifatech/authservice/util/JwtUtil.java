@@ -17,8 +17,7 @@ public class JwtUtil {
 
     public JwtUtil(
             @Value("${jwt.secret}") String jwtSecret,
-            @Value("${jwt.accessMillis}") long accessMillis
-    ) {
+            @Value("${jwt.accessMillis}") long accessMillis) {
         this.SECRET_KEY = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         this.accessMillis = accessMillis;
     }
@@ -41,6 +40,7 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
     public boolean isTokenValid(String token) {
         try {
             extractClaims(token);
@@ -50,4 +50,3 @@ public class JwtUtil {
         }
     }
 }
-

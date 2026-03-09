@@ -1,49 +1,80 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { InputFieldComponent } from './../../form/input/input-field.component';
 import { ModalService } from '../../../services/modal.service';
 
 import { ModalComponent } from '../../ui/modal/modal.component';
 import { ButtonComponent } from '../../ui/button/button.component';
+import { AuthService } from '../../../../core/services/auth.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ToastService } from '../../../services/toast.service';
+import { loadProfileSuccess } from '../../../../core/store/auth/auth.actions';
+import { Store } from '@ngrx/store';
 
 @Component({
   selector: 'app-user-meta-card',
   imports: [
     ModalComponent,
     InputFieldComponent,
-    ButtonComponent
-],
+    ButtonComponent,
+    FormsModule
+  ],
   templateUrl: './user-meta-card.component.html',
   styles: ``
 })
 export class UserMetaCardComponent {
 
-  constructor(public modal: ModalService) {}
+  constructor(
+    public modal: ModalService,
+    private authService: AuthService,
+    private store: Store,
+    private toast: ToastService
+  ) { }
 
   isOpen = false;
-  openModal() { this.isOpen = true; }
+  openModal() {
+    this.editedUser = { ...this.user };
+    this.isOpen = true;
+  }
   closeModal() { this.isOpen = false; }
 
-  // Example user data (could be made dynamic)
-  user = {
-    firstName: 'Musharof',
-    lastName: 'Chowdhury',
-    role: 'Team Manager',
-    location: 'Arizona, United States',
-    avatar: '/images/user/owner.jpg',
-    social: {
-      facebook: 'https://www.facebook.com/PimjoHQ',
-      x: 'https://x.com/PimjoHQ',
-      linkedin: 'https://www.linkedin.com/company/pimjo',
-      instagram: 'https://instagram.com/PimjoHQ',
-    },
-    email: 'randomuser@pimjo.com',
-    phone: '+09 363 398 46',
-    bio: 'Team Manager',
-  };
+  @Input() user: any;
+  editedUser: any = {};
 
   handleSave() {
-    // Handle save logic here
-    console.log('Saving changes...');
-    this.modal.closeModal();
+    const userId = this.user?.idUser;
+    if (!userId) {
+      console.error('User ID not found', this.user);
+      return;
+    }
+
+    const payload = {
+      nom: this.editedUser.nom,
+      prenom: this.editedUser.prenom,
+      email: this.editedUser.email,
+      telephone: this.editedUser.telephone,
+      adresse: this.editedUser.adresse,
+      sexe: this.editedUser.sexe,
+      role: this.editedUser.role,
+      dateNaissance: this.editedUser.dateNaissance
+    };
+
+    this.authService.updateUser(userId, payload).subscribe({
+      next: (res: any) => {
+        if (!res.error) {
+          // Use the user object returned by the API
+          const updatedUser = res.user || { ...this.user, ...payload };
+          this.store.dispatch(loadProfileSuccess({ profile: updatedUser }));
+          this.toast.success('Succès', 'Profil mis à jour avec succès.');
+          this.isOpen = false;
+          this.modal.closeModal();
+        } else {
+          console.error('Update failed:', res.message);
+        }
+      },
+      error: (err: any) => {
+        console.error('Error updating profile:', err);
+      }
+    });
   }
 }

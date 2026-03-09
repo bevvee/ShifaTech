@@ -167,8 +167,8 @@
 						name="mot_de_passe"
 						type="password"
 						placeholder="Mot de passe"
-						[(value)]="form.motDePasse"
-						[error]="submitted && mode === 'create' && !form.motDePasse.trim()"
+						[(value)]="form.password"
+						[error]="submitted && mode === 'create' && !form.password.trim()"
 						[hint]="mode === 'edit' ? 'Laisser vide pour ne pas changer.' : ''"
 					/>
 				</div>

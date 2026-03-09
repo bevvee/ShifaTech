@@ -98,7 +98,7 @@ export class InfirmiersComponent {
     prenom: string;
     cin: string;
     email: string;
-    motDePasse: string;
+    password: string;
     sexe: Sexe;
     statutValue: 'true' | 'false';
     dateNaissance: string;
@@ -142,7 +142,7 @@ export class InfirmiersComponent {
       prenom: row.prenom,
       cin: row.cin,
       email: row.email,
-      motDePasse: '',
+      password: '',
       sexe: row.sexe,
       statutValue: row.statut ? 'true' : 'false',
       dateNaissance: row.dateNaissance,
@@ -189,7 +189,7 @@ export class InfirmiersComponent {
       this.form.email.trim().length > 0 &&
       this.form.telephone.trim().length > 0 &&
       this.form.dateNaissance.trim().length > 0 &&
-      (this.mode === 'edit' || this.form.motDePasse.trim().length > 0)
+      (this.mode === 'edit' || this.form.password.trim().length > 0)
     );
   }
 
@@ -246,7 +246,7 @@ export class InfirmiersComponent {
       prenom: '',
       cin: '',
       email: '',
-      motDePasse: '',
+      password: '',
       sexe: 'M' as Sexe,
       statutValue: 'true' as const,
       dateNaissance: '',
