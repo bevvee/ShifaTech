@@ -8,14 +8,6 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class RendezVousController extends AbstractController
 {
-    #[Route('/api/rendez/vous', name: 'app_api_rendez_vous')]
-    public function index(): Response
-    {
-        return $this->render('api/rendez_vous/index.html.twig', [
-            'controller_name' => 'Api/RendezVousController',
-        ]);
-    }
-
     #[Route('/health', name: 'health', methods: ['GET'])]
     public function healthCheck(): Response
     {

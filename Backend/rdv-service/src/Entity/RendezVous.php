@@ -14,6 +14,7 @@ use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Metadata\ApiFilter;
+use App\State\CancelRendezVousProcessor;
 use App\State\RendezVousProcessor;
 use App\State\RendezVousUpdateProcessor;
 use App\State\SoftDeleteProcessor;
@@ -26,23 +27,32 @@ use Doctrine\ORM\Mapping as ORM;
             security: "is_granted('ROLE_ADMIN') or
              object.getIdPatient() == user.getUserIdentifier() or
              object.getIdDocteur() == user.getUserIdentifier() or
-            is_granted('ROLE_INFIRMIER')"
+            is_granted('ROLE_INFIRMIER') or
+            is_granted('ROLE_SECRETAIRE')"
         ),
         new GetCollection(
             security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_DOCTOR') or is_granted('ROLE_PATIENT') or
-        is_granted('ROLE_INFIRMIER')"
+        is_granted('ROLE_INFIRMIER') or is_granted('ROLE_SECRETAIRE')"
         ),
         new Post(
             security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_PATIENT') or
-        is_granted('ROLE_INFIRMIER')",
+        is_granted('ROLE_INFIRMIER') or is_granted('ROLE_SECRETAIRE')",
             processor: RendezVousProcessor::class
         ),
         new Patch(
-            security: "is_granted('ROLE_ADMIN') or object.getIdDocteur() == user.getUserIdentifier()",
+            security: "is_granted('ROLE_ADMIN') or object.getIdDocteur() == user.getUserIdentifier() or is_granted('ROLE_SECRETAIRE')",
             processor: RendezVousUpdateProcessor::class
         ),
+        // ✅ Cancel appointment
+        new Patch(
+            uriTemplate: '/rendez_vouses/{id}/annuler',
+            security: "is_granted('ROLE_ADMIN') or object.getIdPatient() == user.getUserIdentifier() or is_granted('ROLE_INFIRMIER') or
+        is_granted('ROLE_SECRETAIRE')",
+            processor: CancelRendezVousProcessor::class,
+            input: false,
+        ),
         new Delete(
-            security: "is_granted('ROLE_ADMIN')",
+            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_SECRETAIRE')",
             processor: SoftDeleteProcessor::class
         )
     ],
@@ -57,7 +67,8 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ApiFilter(OrderFilter::class, properties: [
     'date_rdv',
-    'heure_rdv',
+    'heure_debut',
+    'heure_fin',
     'created_at'
 ])]
 
@@ -84,10 +95,13 @@ class RendezVous
     private ?\DateTime $date_rdv = null;
 
     #[ORM\Column(type: Types::TIME_MUTABLE)]
-    private ?\DateTime $heure_rdv = null;
+    private ?\DateTime $heure_debut = null;
+
+    #[ORM\Column(type: Types::TIME_MUTABLE)]
+    private ?\DateTime $heure_fin = null;
 
     #[ORM\Column(enumType: StatutEnum::class)]
-    private ?StatutEnum $statut = null;
+    private ?StatutEnum $statut = StatutEnum::EN_ATTENTE;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
@@ -148,15 +162,25 @@ class RendezVous
         return $this;
     }
 
-    public function getHeureRdv(): ?\DateTime
+    public function getHeureDebut(): ?\DateTime
     {
-        return $this->heure_rdv;
+        return $this->heure_debut;
     }
 
-    public function setHeureRdv(\DateTime $heure_rdv): static
+    public function setHeureDebut(\DateTime $heure_debut): static
     {
-        $this->heure_rdv = $heure_rdv;
+        $this->heure_debut = $heure_debut;
+        return $this;
+    }
 
+    public function getHeureFin(): ?\DateTime
+    {
+        return $this->heure_fin;
+    }
+
+    public function setHeureFin(\DateTime $heure_fin): static
+    {
+        $this->heure_fin = $heure_fin;
         return $this;
     }
 
