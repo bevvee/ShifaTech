@@ -1,6 +1,7 @@
 package com.ShifaTech.DoctorService.dto;
 
 import lombok.Data;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Data
@@ -12,4 +13,6 @@ public class PlanningDTO {
     private LocalTime heureFin;
     private LocalTime pauseDebut;
     private LocalTime pauseFin;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
