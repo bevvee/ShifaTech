@@ -152,9 +152,14 @@ services:
     networks:
       - shifatech-net
     volumes:
-      - ./Backend/rdv-service:/var/www/html:cached   
-      - rdv-service-logs:/var/www/html/var/log      
-      - rdv-service-cache:/var/www/html/var/cache   
+      - ./Backend/rdv-service/src:/var/www/html/src
+      - ./Backend/rdv-service/config:/var/www/html/config
+      - ./Backend/rdv-service/public:/var/www/html/public
+      - ./Backend/rdv-service/templates:/var/www/html/templates
+      - ./Backend/rdv-service/migrations:/var/www/html/migrations
+      - /var/www/html/vendor
+      - rdv-service-logs:/var/www/html/var/log
+      - rdv-service-cache:/var/www/html/var/cache  
 
   patient-service:
     build: ./Backend/patient-service
