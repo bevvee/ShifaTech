@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Security;
+namespace App\Provider;
 
 use App\Entity\Infirmier;
 use App\Repository\InfirmierRepository;

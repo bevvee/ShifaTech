@@ -10,7 +10,7 @@ security:
          #       class: App\Entity\Infirmier
          #       property: id
         jwt_user_provider:
-            id: App\Security\JwtUserProvider
+            id: App\Provider\JwtUserProvider
 
 
     firewalls:

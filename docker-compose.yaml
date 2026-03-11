@@ -187,6 +187,10 @@ services:
       - "9000"
     networks:
       - shifatech-net
+    volumes:
+      - ./Backend/infirmier-service:/var/www/html:cached
+      - /var/www/html/vendor
+      - /var/www/html/var
 
   doctor-service:
     build: ./Backend/doctor-service

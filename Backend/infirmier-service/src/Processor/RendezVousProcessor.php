@@ -2,48 +2,55 @@
 
 namespace App\Processor;
 
-// use ApiPlatform\Metadata\Operation;
-// use ApiPlatform\State\ProcessorInterface;
-// use Symfony\Contracts\HttpClient\HttpClientInterface;
+use ApiPlatform\Metadata\Operation;
+use ApiPlatform\State\ProcessorInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
-// class RendezVousProcessor implements ProcessorInterface
-// {
-//     public function __construct(
-//         private HttpClientInterface $httpClient
-//     ) {}
+class RendezVousProcessor implements ProcessorInterface
+{
+    public function __construct(
+        private HttpClientInterface $httpClient,
+        private RequestStack $requestStack
+    ) {}
 
-//     public function process(
-//         mixed $data,
-//         Operation $operation,
-//         array $uriVariables = [],
-//         array $context = []
-//     ) {
-//         $method = $operation->getMethod();
-//         $id = $uriVariables['id'] ?? null;
+    public function process(
+        mixed $data,
+        Operation $operation,
+        array $uriVariables = [],
+        array $context = []
+    ) {
+        dump('RendezVousProcessor appelé!!!!');
+        $method = $operation->getMethod();
+        $id = $uriVariables['id'] ?? null;
 
-//         if ($method === 'POST') {
-//             return $this->httpClient->request(
-//                 'POST',
-//                 'http://rendezvous-service/api/rendezvous',
-//                 ['json' => $data]
-//             )->toArray();
-//         }
+        $authHeader = $this->requestStack->getCurrentRequest()?->headers->get('Authorization');
+        $headers = $authHeader ? ['Authorization' => $authHeader] : [];
 
-//         if ($method === 'PUT' && $id) {
-//             return $this->httpClient->request(
-//                 'PUT',
-//                 'http://rendezvous-service/api/rendezvous/' . $id,
-//                 ['json' => $data]
-//             )->toArray();
-//         }
+        if ($method === 'POST') {
+            return $this->httpClient->request(
+                'POST',
+                'http://rdv-service:9000/api/rendez_vouses',
+                ['headers' => $headers, 'json' => $data]
+            )->toArray();
+        }
 
-//         if ($method === 'DELETE' && $id) {
-//             return $this->httpClient->request(
-//                 'DELETE',
-//                 'http://rendezvous-service/api/rendezvous/' . $id
-//             )->toArray();
-//         }
+        if ($method === 'PATCH' && $id) {
+            return $this->httpClient->request(
+                'PATCH',
+                'http://rdv-service:9000/api/rendez_vouses/' . $id,
+                ['headers' => $headers, 'json' => $data]
+            )->toArray();
+        }
 
-//         return null;
-//     }
-// }
+        if ($method === 'DELETE' && $id) {
+            return $this->httpClient->request(
+                'DELETE',
+                'http://rdv-service:9000/api/rendez_vouses/' . $id,
+                ['headers' => $headers]
+            )->toArray();
+        }
+
+        return null;
+    }
+}
