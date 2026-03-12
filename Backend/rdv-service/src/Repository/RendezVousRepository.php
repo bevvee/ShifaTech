@@ -23,19 +23,18 @@ class RendezVousRepository extends ServiceEntityRepository
         return parent::createQueryBuilder($alias, $indexBy)
             ->andWhere(sprintf('%s.deleted_at IS NULL', $alias));
     }
-    public function doctorHasAppointment(int $doctorId, \DateTime $date, \DateTime $time): bool
+    public function doctorHasAppointment($doctorId, $date, $start, $end): bool
     {
-        return (bool) $this->createQueryBuilder('r')
-            ->select('COUNT(r.id)')
-            ->where('r.id_docteur = :doctor')
+        $qb = $this->createQueryBuilder('r');
+        $qb->andWhere('r.id_docteur = :doctor')
             ->andWhere('r.date_rdv = :date')
-            ->andWhere('r.heure_rdv = :time')
-            ->andWhere('r.deleted_at IS NULL')
+            ->andWhere('r.heure_debut < :end')
+            ->andWhere('r.heure_fin > :start')
             ->setParameter('doctor', $doctorId)
             ->setParameter('date', $date)
-            ->setParameter('time', $time)
-            ->getQuery()
-            ->getSingleScalarResult();
+            ->setParameter('start', $start)
+            ->setParameter('end', $end);
+        return (bool) $qb->getQuery()->getOneOrNullResult();
     }
 
     public function countDoctorAppointmentsForDay(int $doctorId, \DateTime $date): int
@@ -46,6 +45,19 @@ class RendezVousRepository extends ServiceEntityRepository
             ->andWhere('r.date_rdv = :date')
             ->andWhere('r.deleted_at IS NULL')
             ->setParameter('doctor', $doctorId)
+            ->setParameter('date', $date->format('Y-m-d'))
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countPatientAppointmentsForDay(int $patientId, \DateTime $date): int
+    {
+        return (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->where('r.id_patient = :patient')
+            ->andWhere('r.date_rdv = :date')
+            ->andWhere('r.deleted_at IS NULL')
+            ->setParameter('patient', $patientId)
             ->setParameter('date', $date->format('Y-m-d'))
             ->getQuery()
             ->getSingleScalarResult();

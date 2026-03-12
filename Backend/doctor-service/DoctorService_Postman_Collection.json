@@ -1,8 +1,8 @@
 {
     "info": {
-        "_postman_id": "shifatech-gateway-tests",
-        "name": "ShifaTech - Doctor Service Full API (DIRECT v2)",
-        "description": "Collection complète corrigée : accès direct via Nginx (8082). Inclus : Profil Docteur, Planning, Patients, RDV.",
+        "_postman_id": "shifatech-gateway-tests-full",
+        "name": "ShifaTech - Doctor Service Full API (DIRECT v3)",
+        "description": "Collection complète : accès direct via Nginx (8082). Inclus : AUTH (Register/Login), Profil Docteur, Spécialités, Planning, Patients, Ordonnances.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "auth": {
@@ -20,6 +20,35 @@
             "name": "0. AUTH",
             "item": [
                 {
+                    "name": "Register",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"nom\": \"Admin\",\n    \"prenom\": \"User\",\n    \"cin\": \"A1234567\",\n    \"email\": \"admin@gmail.com\",\n    \"password\": \"Password123\",\n    \"passwordConfirmation\": \"Password123\",\n    \"role\": \"ADMIN\",\n    \"sexe\": \"M\",\n    \"dateNaissance\": \"1990-01-01\",\n    \"telephone\": \"0612345678\",\n    \"adresse\": \"123 Main St\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "http://localhost:8082/auth/register",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8082",
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
                     "name": "Login",
                     "event": [
                         {
@@ -27,15 +56,17 @@
                             "script": {
                                 "exec": [
                                     "var jsonData = pm.response.json();",
-                                    "if (jsonData.accessToken) {",
-                                    "    pm.collectionVariables.set(\"jwt_token\", jsonData.accessToken);",
+                                    "if (jsonData.accessToken || jsonData.token) {",
+                                    "    pm.collectionVariables.set(\"jwt_token\", jsonData.accessToken || jsonData.token);",
                                     "}"
-                                ]
+                                ],
+                                "type": "text/javascript"
                             }
                         }
                     ],
                     "request": {
                         "method": "POST",
+                        "header": [],
                         "body": {
                             "mode": "raw",
                             "raw": "{\n    \"email\": \"admin@gmail.com\",\n    \"password\": \"Password123\"\n}",
@@ -45,14 +76,69 @@
                                 }
                             }
                         },
-                        "url": "http://localhost:8082/auth/login"
-                    }
+                        "url": {
+                            "raw": "http://localhost:8082/auth/login",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8082",
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Profile (Me)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8082/auth/profile",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8082",
+                            "path": [
+                                "auth",
+                                "profile"
+                            ]
+                        }
+                    },
+                    "response": []
                 }
             ]
         },
         {
             "name": "1. DOCTOR PROFILE",
             "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "url": "http://localhost:8082/doctor/health"
+                    }
+                },
+                {
+                    "name": "Create Doctor Profile (ADMIN)",
+                    "request": {
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"idUser\": 1,\n    \"numeroOrdre\": \"ORD-2026-X\",\n    \"idSpecialite\": 1,\n    \"idService\": 10\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:8082/doctor/c"
+                    }
+                },
                 {
                     "name": "List All Doctors",
                     "request": {
@@ -73,7 +159,7 @@
                         "method": "PUT",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"numeroOrdre\": \"ORD-2026-X\",\n    \"idSpecialite\": 1\n}",
+                            "raw": "{\n    \"numeroOrdre\": \"ORD-2026-UPD\",\n    \"idSpecialite\": 2,\n    \"idService\": 11\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -82,11 +168,83 @@
                         },
                         "url": "http://localhost:8082/doctor/1"
                     }
+                },
+                {
+                    "name": "Delete Doctor (ADMIN)",
+                    "request": {
+                        "method": "DELETE",
+                        "url": "http://localhost:8082/doctor/1"
+                    }
+                },
+                {
+                    "name": "Get RDV (Secured: Owner/Admin)",
+                    "request": {
+                        "method": "GET",
+                        "url": "http://localhost:8082/doctor/1/rdv"
+                    }
                 }
             ]
         },
         {
-            "name": "2. PLANNING (Doctor Availability)",
+            "name": "2. SPECIALITIES",
+            "item": [
+                {
+                    "name": "List All",
+                    "request": {
+                        "method": "GET",
+                        "url": "http://localhost:8082/doctor/speciality/all"
+                    }
+                },
+                {
+                    "name": "Get By ID",
+                    "request": {
+                        "method": "GET",
+                        "url": "http://localhost:8082/doctor/speciality/1"
+                    }
+                },
+                {
+                    "name": "Create (ADMIN)",
+                    "request": {
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"label\": \"Cardiologie\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:8082/doctor/speciality"
+                    }
+                },
+                {
+                    "name": "Update (ADMIN)",
+                    "request": {
+                        "method": "PUT",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"label\": \"Cardiologie Interventionnelle\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:8082/doctor/speciality/1"
+                    }
+                },
+                {
+                    "name": "Delete (ADMIN)",
+                    "request": {
+                        "method": "DELETE",
+                        "url": "http://localhost:8082/doctor/speciality/1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "3. PLANNING",
             "item": [
                 {
                     "name": "Get Planning by DoctorID",
@@ -110,11 +268,34 @@
                         },
                         "url": "http://localhost:8082/doctor/planning"
                     }
+                },
+                {
+                    "name": "Update Planning Slot",
+                    "request": {
+                        "method": "PUT",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"jour\": \"MARDI\",\n    \"heureDebut\": \"08:00:00\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:8082/doctor/planning/1"
+                    }
+                },
+                {
+                    "name": "Delete Planning Slot",
+                    "request": {
+                        "method": "DELETE",
+                        "url": "http://localhost:8082/doctor/planning/1"
+                    }
                 }
             ]
         },
         {
-            "name": "3. PATIENTS (DIRECT)",
+            "name": "4. PATIENTS (Direct)",
             "item": [
                 {
                     "name": "List All Patients",
@@ -124,10 +305,45 @@
                     }
                 },
                 {
-                    "name": "Get Patient Dossier Medical",
+                    "name": "Get Patient Profile by UserID",
+                    "request": {
+                        "method": "GET",
+                        "url": "http://localhost:8082/patient/profile/1"
+                    }
+                },
+                {
+                    "name": "Get Dossier Medical",
                     "request": {
                         "method": "GET",
                         "url": "http://localhost:8082/patient/1/dossier-medical"
+                    }
+                },
+                {
+                    "name": "Update/Create Dossier Medical",
+                    "request": {
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"idPatient\": 1,\n    \"antecedents\": \"Aucun\",\n    \"observations\": \"Patient en bonne santé\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:8082/patient/dossier-medical"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "5. ORDONNANCES (Direct)",
+            "item": [
+                {
+                    "name": "List by Patient",
+                    "request": {
+                        "method": "GET",
+                        "url": "http://localhost:8082/patient/1/ordonnances"
                     }
                 },
                 {
@@ -145,11 +361,18 @@
                         },
                         "url": "http://localhost:8082/patient/ordonnances"
                     }
+                },
+                {
+                    "name": "Get by ID",
+                    "request": {
+                        "method": "GET",
+                        "url": "http://localhost:8082/patient/ordonnances/1"
+                    }
                 }
             ]
         },
         {
-            "name": "4. RDV (DIRECT)",
+            "name": "6. RDV (Direct)",
             "item": [
                 {
                     "name": "List All RDVs",

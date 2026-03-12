@@ -1,5 +1,6 @@
 package com.ShifaTech.DoctorService.service;
 
+import com.ShifaTech.DoctorService.client.AppointmentClient;
 import com.ShifaTech.DoctorService.dto.DoctorDTO;
 import com.ShifaTech.DoctorService.entity.Doctor;
 import com.ShifaTech.DoctorService.entity.DoctorSpeciality;
@@ -21,6 +22,7 @@ public class DoctorService {
 
 	private final DoctorRepository doctorRepository;
 	private final DoctorSpecialityRepository specialityRepository;
+	private final AppointmentClient appointmentClient;
 
 	/**
 	 * Get aggregated Doctor Profile (Local only, as per independence rule)
@@ -34,9 +36,11 @@ public class DoctorService {
 
 	@Transactional
 	public DoctorDTO getDoctorProfileByUserId(Long userId) {
-		return doctorRepository.findByIdUser(userId)
-				.map(this::mapToDTO)
-				.orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found for user ID: " + userId));
+		List<Doctor> doctors = doctorRepository.findByIdUser(userId);
+		if (doctors.isEmpty()) {
+			throw new ResourceNotFoundException("Doctor profile not found for user ID: " + userId);
+		}
+		return mapToDTO(doctors.get(0));
 	}
 
 	/**
@@ -53,8 +57,13 @@ public class DoctorService {
 
 		if (doctorDTO.getIdSpecialite() != null) {
 			DoctorSpeciality spec = specialityRepository.findById(doctorDTO.getIdSpecialite())
-					.orElseThrow(() -> new RuntimeException("Speciality not found"));
+					.orElseThrow(() -> new ResourceNotFoundException(
+							"Speciality not found with id: " + doctorDTO.getIdSpecialite()));
 			doctor.setSpecialite(spec);
+		}
+
+		if (doctorDTO.getIdService() != null) {
+			doctor.setIdService(doctorDTO.getIdService());
 		}
 
 		doctor = doctorRepository.save(doctor);
@@ -77,8 +86,15 @@ public class DoctorService {
 		}
 
 		// Check if profile already exists
-		if (doctorRepository.findByIdUser(idUserToUse).isPresent()) {
+		if (!doctorRepository.findByIdUser(idUserToUse).isEmpty()) {
 			throw new IllegalStateException("Doctor profile already exists for this User (ID: " + idUserToUse + ")");
+		}
+
+		// Check if numeroOrdre is already used
+		if (doctorDTO.getNumeroOrdre() != null
+				&& !doctorRepository.findByNumeroOrdre(doctorDTO.getNumeroOrdre()).isEmpty()) {
+			throw new IllegalStateException(
+					"Doctor profile already exists with this Numero d'Ordre: " + doctorDTO.getNumeroOrdre());
 		}
 
 		Doctor doctor = new Doctor();
@@ -87,12 +103,21 @@ public class DoctorService {
 
 		if (doctorDTO.getIdSpecialite() != null) {
 			DoctorSpeciality spec = specialityRepository.findById(doctorDTO.getIdSpecialite())
-					.orElseThrow(() -> new RuntimeException("Speciality not found"));
+					.orElseThrow(() -> new ResourceNotFoundException(
+							"Speciality not found with id: " + doctorDTO.getIdSpecialite()));
 			doctor.setSpecialite(spec);
 		}
 
+		doctor.setIdService(doctorDTO.getIdService());
 		Doctor saved = doctorRepository.save(doctor);
 		return mapToDTO(saved);
+	}
+
+	public DoctorDTO filterSensitiveInfo(DoctorDTO dto) {
+		dto.setIdUser(null);
+		dto.setCreatedAt(null);
+		dto.setUpdatedAt(null);
+		return dto;
 	}
 
 	@Transactional
@@ -101,6 +126,10 @@ public class DoctorService {
 			throw new ResourceNotFoundException("Doctor not found");
 		}
 		doctorRepository.deleteById(idDoctor);
+	}
+
+	public List<Object> getAppointmentsByDoctor(Long idDoctor) {
+		return appointmentClient.getAppointmentsByDoctor(idDoctor);
 	}
 
 	// Helper mapper
@@ -115,6 +144,10 @@ public class DoctorService {
 			dto.setIdSpecialite(doctor.getSpecialite().getIdSpecialite());
 			dto.setSpecialiteLabel(doctor.getSpecialite().getLabel());
 		}
+
+		dto.setIdService(doctor.getIdService());
+		dto.setCreatedAt(doctor.getCreatedAt());
+		dto.setUpdatedAt(doctor.getUpdatedAt());
 
 		return dto;
 	}

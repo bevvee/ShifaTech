@@ -4,17 +4,26 @@ namespace App\State;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
+use App\Service\AppointmentMailer;
+use App\Service\AppointmentValidator;
+use App\Service\AuthServiceClient;
+use App\Service\DoctorServiceClient;
+use App\Service\PatientServiceClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use App\Entity\RendezVous;
-use App\Repository\RendezVousRepository;
 
 class RendezVousProcessor implements ProcessorInterface
 {
     public function __construct(
-        private RendezVousRepository $repository,
         private EntityManagerInterface $em,
-        private Security $security
+        private Security $security,
+        private AppointmentValidator $validator,
+        private PatientServiceClient $patientClient,
+        private DoctorServiceClient $doctorClient,
+        private AuthServiceClient $authClient,
+        private AppointmentMailer $mailer
     ) {}
 
     public function process($data, Operation $operation, array $uriVariables = [], array $context = [])
@@ -23,35 +32,82 @@ class RendezVousProcessor implements ProcessorInterface
             return $data;
         }
 
-        // ✅ Get userId from JWT safely
         $user = $this->security->getUser();
-        $userId = $user?->getUserIdentifier();
+        $roles = $user?->getRoles() ?? [];
+        $userId = (int) $user?->getUserIdentifier();
 
-        // Prevent double booking
-        if ($this->repository->doctorHasAppointment(
-            $data->getIdDocteur(),
-            $data->getDateRdv(),
-            $data->getHeureRdv()
-        )) {
-            throw new \RuntimeException('Doctor already has appointment at this time.');
+        $patientUserId = null;
+
+        /*
+        |-------------------------------------------------
+        | 1️⃣ Determine Patient
+        |-------------------------------------------------
+        */
+
+        if (in_array('ROLE_PATIENT', $roles)) {
+
+            // Patient creates appointment for himself
+            $data->setIdPatient($userId);
+            $patientUserId = $userId;
+
+        } else {
+
+            // Infirmier/Admin must provide patient ID
+            if (!$data->getIdPatient()) {
+                throw new BadRequestHttpException('Patient requis.');
+            }
+
+            // Resolve patient userId from patient-service
+            $patientUserId = $this->patientClient->resolvePatientUserId(
+                $data->getIdPatient()
+            );
         }
 
-        // Max 20 per day
-        $count = $this->repository->countDoctorAppointmentsForDay(
-            $data->getIdDocteur(),
-            $data->getDateRdv()
-        );
+        /*
+        |-------------------------------------------------
+        | 2️⃣ Verify Doctor Exists
+        |-------------------------------------------------
+        */
 
-        if ($count >= 20) {
-            throw new \RuntimeException('Doctor reached maximum 20 appointments for this day.');
-        }
+        $this->doctorClient->verifyDoctorExists($data->getIdDocteur());
 
-        // Audit fields
+        /*
+        |-------------------------------------------------
+        | 3️⃣ Validate Business Rules
+        |-------------------------------------------------
+        */
+
+        $this->validator->validate($data);
+
+        /*
+        |-------------------------------------------------
+        | 4️⃣ Audit Fields
+        |-------------------------------------------------
+        */
+
         $data->setCreatedAt(new \DateTimeImmutable());
-        $data->setCreatedBy((int) $userId);
+        $data->setCreatedBy($userId);
+
+        /*
+        |-------------------------------------------------
+        | 5️⃣ Save RDV
+        |-------------------------------------------------
+        */
 
         $this->em->persist($data);
         $this->em->flush();
+
+        /*
+        |-------------------------------------------------
+        | 6️⃣ Send Email Confirmation
+        |-------------------------------------------------
+        */
+
+        $email = $this->authClient->getUserEmail($patientUserId);
+
+        if ($email) {
+            $this->mailer->sendConfirmation($email, $data);
+        }
 
         return $data;
     }
