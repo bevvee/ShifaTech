@@ -4,5 +4,6 @@ public enum RoleEnum {
     ADMIN,
     DOCTEUR,
     INFIRMIER,
-    PATIENT
+    PATIENT,
+    SECRETARIAT
 }

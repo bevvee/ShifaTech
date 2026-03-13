@@ -1,16 +1,16 @@
-// package com.ShifaTech.DoctorService.client;
+package com.ShifaTech.DoctorService.client;
 
-// import com.ShifaTech.DoctorService.dto.ApiResponse;
-// import com.ShifaTech.DoctorService.dto.ConsultationDTO;
-// import com.ShifaTech.DoctorService.dto.PatientDTO;
-// import com.ShifaTech.DoctorService.dto.PrescriptionDTO;
-// import org.springframework.cloud.openfeign.FeignClient;
-// import org.springframework.web.bind.annotation.*;
+import com.ShifaTech.DoctorService.dto.ApiResponse;
+import com.ShifaTech.DoctorService.dto.ConsultationDTO;
+import com.ShifaTech.DoctorService.dto.PatientDTO;
+import com.ShifaTech.DoctorService.dto.PrescriptionDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.*;
 
-// import java.util.List;
+import java.util.List;
 
-// @FeignClient(name = "PATIENT-SERVICE", url = "${application.config.patient-service-url}")
-// public interface PatientClient {
+@FeignClient(name = "PATIENT-SERVICE", url = "${application.config.patient-service-url}")
+public interface PatientClient {
 
     @GetMapping("/")
     ApiResponse<List<PatientDTO>> getAllPatients(@RequestHeader("Authorization") String authHeader);

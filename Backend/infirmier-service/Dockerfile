@@ -13,10 +13,7 @@ COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 RUN composer install --no-interaction --no-progress
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
 
 EXPOSE 9000
 
-CMD ["docker-entrypoint.sh"]
+CMD ["php", "-S", "0.0.0.0:9000", "-t", "public"]

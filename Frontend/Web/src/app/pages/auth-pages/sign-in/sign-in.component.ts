@@ -82,11 +82,11 @@ export class SignInComponent {
               this.router.navigate(['/infirmier']);
 
             } else if (userRole === 'PATIENT') {
-               this.errorMessage = "Les patients n'ont pas accès à cette plateforme web.";
+               this.errorMessage = "Email ou mot de passe incorrect.";
               this.authService.logout();
 
             } else {
-                  this.errorMessage = "Rôle inconnu ou non autorisé.";
+                  this.errorMessage = "Email ou mot de passe incorrect.";
               this.authService.logout();
             }
           });
