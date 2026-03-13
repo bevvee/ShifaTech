@@ -1,31 +1,27 @@
 package com.ShifaTech.DoctorService.controller;
 
-import com.ShifaTech.DoctorService.client.PatientClient;
-import com.ShifaTech.DoctorService.dto.ConsultationDTO;
 import com.ShifaTech.DoctorService.dto.DoctorDTO;
-import com.ShifaTech.DoctorService.dto.PatientDTO;
-import com.ShifaTech.DoctorService.dto.PrescriptionDTO;
 import com.ShifaTech.DoctorService.service.DoctorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/")
 @RequiredArgsConstructor
 public class DoctorController {
 
     private final DoctorService doctorService;
-    private final PatientClient patientClient;
 
     // --- CRUD Operations ---
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT')")
     public ResponseEntity<List<DoctorDTO>> getAllDoctors() {
         return ResponseEntity.ok(doctorService.getAllDoctors());
     }
@@ -46,42 +42,59 @@ public class DoctorController {
     // --- Profile Management ---
 
     @GetMapping("/{id:[0-9]+}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT','INFIRMIER')")
     public ResponseEntity<DoctorDTO> getDoctorProfile(@PathVariable Long id) {
-        return ResponseEntity.ok(doctorService.getDoctorProfile(id));
+        DoctorDTO doctor = doctorService.getDoctorProfile(id);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = auth.getName();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOwner = doctor.getIdUser() != null && doctor.getIdUser().toString().equals(currentUserId);
+
+        if (isAdmin || isOwner) {
+            return ResponseEntity.ok(doctor);
+        } else {
+            return ResponseEntity.ok(doctorService.filterSensitiveInfo(doctor));
+        }
     }
 
     @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
     public ResponseEntity<DoctorDTO> updateDoctorProfile(@PathVariable Long id,
             @Valid @RequestBody DoctorDTO doctorDTO) {
+        DoctorDTO existingDoctor = doctorService.getDoctorProfile(id);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = auth.getName();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOwner = existingDoctor.getIdUser() != null
+                && existingDoctor.getIdUser().toString().equals(currentUserId);
+
+        if (!isAdmin && !isOwner) {
+            return ResponseEntity.status(403).build();
+        }
+
         return ResponseEntity.ok(doctorService.updateDoctorProfile(id, doctorDTO));
     }
 
-    // --- Patient Management Interactions ---
-
-    @GetMapping("/patients")
+    @GetMapping("/{id:[0-9]+}/rdv")
     @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
-    public ResponseEntity<List<PatientDTO>> getAllPatients() {
-        return ResponseEntity.ok(patientClient.getAllPatients());
-    }
+    public ResponseEntity<List<Object>> getAppointmentsForDoctor(@PathVariable Long id) {
+        DoctorDTO doctor = doctorService.getDoctorProfile(id);
 
-    @GetMapping("/patients/{id}/medical-record")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
-    public ResponseEntity<ConsultationDTO> getMedicalRecord(@PathVariable Long id) {
-        return ResponseEntity.ok(patientClient.getMedicalRecordByPatient(id));
-    }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = auth.getName();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOwner = doctor.getIdUser() != null && doctor.getIdUser().toString().equals(currentUserId);
 
-    @PostMapping("/patients/medical-record")
-    @PreAuthorize("hasRole('DOCTEUR')")
-    public ResponseEntity<ConsultationDTO> addMedicalRecord(@RequestBody ConsultationDTO consultationDTO) {
-        return ResponseEntity.ok(patientClient.addMedicalRecord(consultationDTO));
-    }
+        if (!isAdmin && !isOwner) {
+            return ResponseEntity.status(403).build();
+        }
 
-    @PostMapping("/prescriptions")
-    @PreAuthorize("hasRole('DOCTEUR')")
-    public ResponseEntity<PrescriptionDTO> createPrescription(@RequestBody PrescriptionDTO prescriptionDTO) {
-        return ResponseEntity.ok(patientClient.createPrescription(prescriptionDTO));
+        return ResponseEntity.ok(doctorService.getAppointmentsByDoctor(id));
     }
 
     @GetMapping("/health")

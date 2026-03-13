@@ -125,7 +125,6 @@ handleAddOrUpdateEvent() {
 
   this.rdvService.create(dto).subscribe({
     next: (res) => {
-      console.log('Saved RDV:', res);
       this.loading = false;
       this.closeModal();
     },

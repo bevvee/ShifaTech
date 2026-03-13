@@ -2,39 +2,13 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Metadata\ApiResource;
-use ApiPlatform\Metadata\Delete;
-use ApiPlatform\Metadata\Get;
-use ApiPlatform\Metadata\GetCollection;
-use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\Put;
-// use App\Processor\RendezVousProcessor;
+
+use App\Processor\InfirmierProcessor;
 use App\Repository\InfirmierRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: InfirmierRepository::class)]
-#[ApiResource(
-    shortName: 'Infirmier',
-    operations: [
-        new GetCollection(
-            uriTemplate: '/infirmier'
-        ),
-        new Post(
-            uriTemplate: '/infirmier',
-            security: "is_granted('PUBLIC_ACCESS')"
-        ),
-        new Get(
-            uriTemplate: '/infirmier/{id}'
-        ),
-        new Put(
-            uriTemplate: '/infirmier/{id}'
-        ),
-        new Delete(
-            uriTemplate: '/infirmier/{id}'
-        ),
-    ]
-)]
 class Infirmier implements UserInterface
 {
     #[ORM\Id]
@@ -94,7 +68,7 @@ class Infirmier implements UserInterface
     }
     public function getUserIdentifier(): string
     {
-        return (string) $this->id; // ou email
+        return (string) $this->id;
     }
 
     public function getRoles(): array

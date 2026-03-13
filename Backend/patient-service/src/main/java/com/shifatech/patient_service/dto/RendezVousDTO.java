@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Data
@@ -14,16 +13,11 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RendezVousDTO {
-    private Long idRdv;
-    private Long idPatient;
-    private Long idDoctor;
+    private Integer id;
+    private Integer idPatient;
+    private Integer idDocteur;
+    private Integer idSpecialite;
     private LocalDate dateRdv;
-    private LocalTime heureRdv;
-    private String statut; // EN_ATTENTE, CONFIRME, ANNULE, TERMINE
-    private LocalDateTime createdAt;
-
-    // Informations supplémentaires (optionnelles)
-    private String nomPatient;
-    private String nomDoctor;
-    private String motif;
+    private LocalTime heurRdv;
+    private Boolean statut;
 }

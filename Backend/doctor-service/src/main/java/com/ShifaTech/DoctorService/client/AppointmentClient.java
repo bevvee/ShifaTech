@@ -6,10 +6,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "APPOINTMENT-SERVICE", url = "${application.config.appointment-service-url}")
+@FeignClient(name = "rdv-service", url = "${application.config.appointment-service-url}")
 public interface AppointmentClient {
 
-    @GetMapping("/appointments")
-    List<Object> getAppointmentsByDoctor(@RequestParam("doctorId") Long doctorId); // Using Object as placeholder for
-                                                                                   // generic RDV struct
+    @GetMapping("/api/rendez_vouses")
+    List<Object> getAppointmentsByDoctor(@RequestParam("id_docteur") Long idDocteur);
 }

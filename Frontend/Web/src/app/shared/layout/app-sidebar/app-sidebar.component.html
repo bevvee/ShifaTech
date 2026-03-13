@@ -59,7 +59,7 @@
             }"
           >
             @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) 
-            { Menu } 
+            { <!-- Menu -->  } 
            @else {
             <svg
               width="1em"
@@ -79,7 +79,7 @@
             }
           </h2>
           <ul class="flex flex-col gap-1">
-            @for (nav of navItems; track $index;let i = $index) {
+            @for (nav of filteredNavItems; track $index;let i = $index) {
             <li>
               @if (nav.subItems) {
                 <button
@@ -262,7 +262,7 @@
                 (isHovered$ | async) ||
                 (isMobileOpen$ | async)
             ) {
-              Others
+              <!-- Others -->
             } @else {
               <svg
                 width="1em"
@@ -283,7 +283,7 @@
           </h2>
 
           <ul class="flex flex-col gap-1">
-            @for (nav of othersItems; track $index;let i = $index) {
+            @for (nav of filteredOthersItems; track $index;let i = $index){
             <li>
               @if (nav.subItems) {
                 <button

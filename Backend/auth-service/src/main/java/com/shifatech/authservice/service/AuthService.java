@@ -30,7 +30,7 @@ public class AuthService {
     // Register with friendly messages
     public ApiResponse register(RegisterRequest request) {
         if (!request.getPassword().equals(request.getPasswordConfirmation())) {
-            return new ApiResponse(true, "Password and password confirmation do not match");
+            return new ApiResponse(true, "Le mot de passe et la confirmation ne correspondent pas");
         }
 
         try {
@@ -48,7 +48,7 @@ public class AuthService {
             user.setStatut(false);
 
             userRepository.save(user);
-            return new ApiResponse(false, "User registered successfully", new UserDto().toUserDto(user));
+            return new ApiResponse(false, "Utilisateur inscrit avec succès", new UserDto().toUserDto(user));
 
         } catch (DataIntegrityViolationException ex) {
             Throwable cause = ex.getCause();
@@ -56,15 +56,15 @@ public class AuthService {
                 SQLException sqlEx = cve.getSQLException();
                 if (sqlEx.getErrorCode() == 1062) {
                     String msg = sqlEx.getMessage();
-                    if (msg.contains(request.getEmail())) return new ApiResponse(true, "Email is already used");
-                    if (msg.contains(request.getCin())) return new ApiResponse(true, "CIN is already used");
-                    if (msg.contains(request.getTelephone())) return new ApiResponse(true, "Telephone is already used");
-                    return new ApiResponse(true, "Duplicate value found");
+                    if (msg.contains(request.getEmail())) return new ApiResponse(true, "Cet email est déjà utilisé");
+                    if (msg.contains(request.getCin())) return new ApiResponse(true, "Ce CIN est déjà utilisé");
+                    if (msg.contains(request.getTelephone())) return new ApiResponse(true, "Ce téléphone est déjà utilisé");
+                    return new ApiResponse(true, "Valeur en double trouvée");
                 }
             }
-            return new ApiResponse(true, "Data integrity violation");
+            return new ApiResponse(true, "Violation d'intégrité des données");
         } catch (Exception ex) {
-            return new ApiResponse(true, "Something went wrong");
+            return new ApiResponse(true, "Une erreur s'est produite");
         }
     }
 
@@ -74,18 +74,18 @@ public class AuthService {
             User user = userRepository.findByEmail(request.getEmail()).orElse(null);
 
             if (user == null || user.getDeletedAt() != null) { // check soft delete
-                return new LoginResponse(true, "Invalid email or password", null);
+                return new LoginResponse(true, "Email ou mot de passe incorrect", null);
             }
 
             if (!passwordEncoder.matches(request.getPassword(), user.getMotDePasse())) {
-                return new LoginResponse(true, "Invalid email or password", null);
+                return new LoginResponse(true, "Email ou mot de passe incorrect", null);
             }
 
             String token = jwtUtil.generateToken(user);
-            return new LoginResponse(false, "Login successful", token);
+            return new LoginResponse(false, "Connexion réussie", token);
 
         } catch (Exception ex) {
-            return new LoginResponse(true, "Something went wrong", null);
+            return new LoginResponse(true, "Une erreur s'est produite", null);
         }
     }
 
@@ -94,7 +94,7 @@ public class AuthService {
         try {
             String authHeader = request.getHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return new ApiResponse(true, "User not authenticated");
+                return new ApiResponse(true, "Utilisateur non authentifié");
             }
 
             String token = authHeader.substring(7);
@@ -102,19 +102,19 @@ public class AuthService {
             // Extract userId as Integer
             Integer userId = jwtUtil.extractClaims(token).get("userId", Integer.class);
             if (userId == null) {
-                return new ApiResponse(true, "User not authenticated");
+                return new ApiResponse(true, "Utilisateur non authentifié");
             }
 
             User user = userRepository.findById(userId).orElse(null);
             if (user == null || user.getDeletedAt() != null) {
-                return new ApiResponse(true, "User not found or deleted");
+                return new ApiResponse(true, "Utilisateur introuvable ou supprimé");
             }
 
-            return new ApiResponse(false, "User found successfully", new UserDto().toUserDto(user));
+            return new ApiResponse(false, "Utilisateur trouvé avec succès", new UserDto().toUserDto(user));
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            return new ApiResponse(true, "Something went wrong");
+            return new ApiResponse(true, "Une erreur s'est produite");
         }
     }
 
@@ -124,7 +124,7 @@ public class AuthService {
             User user = userRepository.findById(Math.toIntExact(userId)).orElse(null);
 
             if (user == null || user.getDeletedAt() != null) { // check soft delete
-                return new ApiResponse(true, "User not found or deleted");
+                return new ApiResponse(true, "Utilisateur introuvable ou supprimé");
             }
 
             // Get the ID of the user performing the update from SecurityContext
@@ -153,21 +153,21 @@ public class AuthService {
 
             userRepository.save(user);
 
-            return new ApiResponse(false, "User updated successfully", new UserDto().toUserDto(user));
+            return new ApiResponse(false, "Utilisateur mis à jour avec succès", new UserDto().toUserDto(user));
 
         } catch (Exception ex) {
             System.out.println("Something went wrong" + ex);
-            return new ApiResponse(true, "Something went wrong during update");
+            return new ApiResponse(true, "Une erreur s'est produite lors de la mise à jour");
         }
     }
 
     // Delete user
     public ApiResponse deleteUser(Integer userId, Integer deletedByUserId) {
         try {
-            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
             if (user.getDeletedAt() != null) {
-                return new ApiResponse(true, "User already deleted");
+                return new ApiResponse(true, "L'utilisateur est déjà supprimé");
             }
 
             user.setDeletedAt(LocalDateTime.now());
@@ -175,10 +175,10 @@ public class AuthService {
 
             userRepository.save(user);
 
-            return new ApiResponse(false, "User deleted successfully");
+            return new ApiResponse(false, "Utilisateur supprimé avec succès");
 
         } catch (Exception ex) {
-            return new ApiResponse(true, "Something went wrong while deleting user");
+            return new ApiResponse(true, "Une erreur s'est produite lors de la suppression de l'utilisateur");
         }
     }
 
@@ -192,14 +192,26 @@ public class AuthService {
                 User user = userRepository.findById(userId).orElse(null);
 
                 if (user == null || user.getDeletedAt() != null) {
-                    return new ApiResponse(true, "User not found or deleted");
+                    return new ApiResponse(true, "Utilisateur introuvable ou supprimé");
                 }
 
                 revokedTokenRepository.save(RevokedToken.builder().token(token).revokedAt(Instant.now()).build());
             }
-            return new ApiResponse(false, "Logged out successfully");
+            return new ApiResponse(false, "Déconnecté avec succès");
         } catch (Exception ex) {
-            return new ApiResponse(true, "Something went wrong during logout");
+            return new ApiResponse(true, "Une erreur s'est produite lors de la déconnexion");
+        }
+    }
+    // Get user by ID
+    public ApiResponse getUserById(Integer userId) {
+        try {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user == null || user.getDeletedAt() != null) {
+                return new ApiResponse(true, "Utilisateur introuvable ou supprimé");
+            }
+            return new ApiResponse(false, "Utilisateur trouvé avec succès", new UserDto().toUserDto(user));
+        } catch (Exception ex) {
+            return new ApiResponse(true, "Une erreur s'est produite lors de la récupération de l'utilisateur");
         }
     }
 

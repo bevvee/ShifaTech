@@ -28,7 +28,7 @@ server:
 
 jwt:
   secret: "elaazzouzi-mohammed-amine-oussama-bouikourdassen-nissrine-belmir-farah-bentiress-chaimae-lefrouji-pfa-2026"
-  accessMillis: 3600000
+  accessMillis: 32400000
 
 # Custom Application Config
 application:
@@ -44,5 +44,6 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     url: /doctor/v3/api-docs     # Makes Swagger UI load your API by default
+  config-url: /doctor/v3/api-docs/swagger-config
   operations-sorter: alpha
   tags-sorter: alpha
