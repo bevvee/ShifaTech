@@ -12,24 +12,12 @@ import { LabelComponent } from '../../shared/components/form/label/label.compone
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
 import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
 import { filter, Subscription } from 'rxjs';
+import { DoctorService } from '../../core/services/doctor.service';
+import { SpecialityService } from '../../core/services/speciality.service';
+import { Doctor } from '../../core/models/doctor.model';
+import { Speciality } from '../../core/models/speciality.model';
+import { Sexe } from '../../core/models/sexe.enum';
 
-type Sexe = 'M' | 'F';
-
-type DocteurRow = {
-  id: number;
-  nom: string;
-  prenom: string;
-  cin: string;
-  email: string;
-  role: 'DOCTEUR';
-  sexe: Sexe;
-  statut: boolean;
-  dateNaissance: string; 
-  telephone: string;
-  adresse: string;
-  numeroOrdre: string;
-  idSpecialite: number;
-};
 
 @Component({
   selector: 'app-docteurs',
@@ -51,61 +39,43 @@ type DocteurRow = {
 })
 export class DocteursComponent {
 
-  docteurs: DocteurRow[] = [
-    {
-      id: 1,
-      nom: 'Benali',
-      prenom: 'Sara',
-      cin: 'AB123456',
-      email: 'sara.benali@shifatech.test',
-      role: 'DOCTEUR',
-      sexe: 'F',
-      statut: true,
-      dateNaissance: '1990-04-12',
-      telephone: '+212600000000',
-      adresse: 'Casablanca',
-      numeroOrdre: 'ORD-2026-001',
-      idSpecialite: 1,
-    },
-    {
-      id: 2,
-      nom: 'El Idrissi',
-      prenom: 'Youssef',
-      cin: 'CD789012',
-      email: 'youssef.elidrissi@shifatech.test',
-      role: 'DOCTEUR',
-      sexe: 'M',
-      statut: true,
-      dateNaissance: '1987-09-03',
-      telephone: '+212611111111',
-      adresse: 'Rabat',
-      numeroOrdre: 'ORD-2026-002',
-      idSpecialite: 2,
-    },
-    {
-      id: 3,
-      nom: 'Ait Lahcen',
-      prenom: 'Khadija',
-      cin: 'EF345678',
-      email: 'khadija.aitlahcen@shifatech.test',
-      role: 'DOCTEUR',
-      sexe: 'F',
-      statut: false,
-      dateNaissance: '1993-01-27',
-      telephone: '+212622222222',
-      adresse: 'Marrakech',
-      numeroOrdre: 'ORD-2026-003',
-      idSpecialite: 3,
-    },
-  ];
+  docteurs: Doctor[] = [];
 
   private nextId = 4;
 
   private readonly subscription = new Subscription();
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly doctorService: DoctorService,
+    private readonly specialityService: SpecialityService
+  ) { }
+
+  loadDoctors() {
+    this.doctorService.getDoctors().subscribe({
+      next: (data) => {
+        this.docteurs = data;
+        this.filteredDocteurs = data;
+      },
+      error: (err: any) => console.error('Error loading doctors', err)
+    });
+  }
+
+  loadSpecialities() {
+    this.specialityService.getSpecialities().subscribe({
+      next: (data) => {
+        this.specialiteOptions = data.map(s => ({
+          value: String(s.idSpecialite),
+          label: `${s.idSpecialite} - ${s.label}`
+        }));
+      },
+      error: (err: any) => console.error('Error loading specialities', err)
+    });
+  }
 
   ngOnInit() {
+    this.loadDoctors();
+    this.loadSpecialities();
     this.handleUrl(this.router.url);
     this.subscription.add(
       this.router.events
@@ -124,8 +94,8 @@ export class DocteursComponent {
   editingId: number | null = null;
 
   sexeOptions: Option[] = [
-    { value: 'M', label: 'M' },
-    { value: 'F', label: 'F' },
+    { value: Sexe.H, label: 'Masculin' },
+    { value: Sexe.F, label: 'Féminin' },
   ];
 
   statutOptions: Option[] = [
@@ -133,13 +103,7 @@ export class DocteursComponent {
     { value: 'false', label: 'Inactif' },
   ];
 
-  specialiteOptions: Option[] = [
-    { value: '1', label: '1 - Cardiologie' },
-    { value: '2', label: '2 - Dermatologie' },
-    { value: '3', label: '3 - Pédiatrie' },
-    { value: '4', label: '4 - Neurologie' },
-    { value: '5', label: '5 - Ophtalmologie' },
-  ];
+  specialiteOptions: Option[] = [];
 
   form: {
     nom: string;
@@ -156,6 +120,23 @@ export class DocteursComponent {
     idSpecialite: string;
   } = this.emptyForm();
 
+  searchTerm = '';
+  filteredDocteurs: Doctor[] = [];
+
+  onSearch() {
+    const q = this.searchTerm.toLowerCase().trim();
+    if (!q) {
+      this.filteredDocteurs = this.docteurs;
+    } else {
+      this.filteredDocteurs = this.docteurs.filter(d =>
+        (d.nom?.toLowerCase().includes(q)) ||
+        (d.prenom?.toLowerCase().includes(q)) ||
+        (d.numeroOrdre?.toLowerCase().includes(q)) ||
+        (d.specialiteLabel?.toLowerCase().includes(q))
+      );
+    }
+  }
+
   openCreateModal() {
     this.mode = 'create';
     this.editingId = null;
@@ -168,22 +149,22 @@ export class DocteursComponent {
     this.router.navigate(['/docteurs/new']);
   }
 
-  openEditModal(row: DocteurRow) {
+  openEditModal(row: Doctor) {
     this.mode = 'edit';
-    this.editingId = row.id;
+    this.editingId = row.idDocteur;
     this.submitted = false;
     this.form = {
-      nom: row.nom,
-      prenom: row.prenom,
-      cin: row.cin,
-      email: row.email,
-      motDePasse: '',
-      sexe: row.sexe,
+      nom: row.nom || '',
+      prenom: row.prenom || '',
+      cin: row.cin || '',
+      email: row.email || '',
+      password: '',
+      sexe: row.sexe === ('M' as any) ? Sexe.H : (row.sexe || Sexe.H),
       statutValue: row.statut ? 'true' : 'false',
-      dateNaissance: row.dateNaissance,
-      telephone: row.telephone,
-      adresse: row.adresse,
-      numeroOrdre: row.numeroOrdre,
+      dateNaissance: row.dateNaissance || '',
+      telephone: row.telephone || '',
+      adresse: row.adresse || '',
+      numeroOrdre: row.numeroOrdre || '',
       idSpecialite: String(row.idSpecialite),
     };
     this.isModalOpen = true;
@@ -198,18 +179,18 @@ export class DocteursComponent {
   }
 
   get isValid(): boolean {
-    return (
-      this.form.nom.trim().length > 0 &&
-      this.form.prenom.trim().length > 0 &&
-      this.form.cin.trim().length > 0 &&
-      this.form.email.trim().length > 0 &&
-      this.form.telephone.trim().length > 0 &&
-      this.form.dateNaissance.trim().length > 0 &&
-      this.form.numeroOrdre.trim().length > 0 &&
-      this.form.idSpecialite.trim().length > 0 &&
-      Number(this.form.idSpecialite) > 0 &&
-      (this.mode === 'edit' || this.form.motDePasse.trim().length > 0)
+    const valid = (
+      !!this.form.nom?.trim() &&
+      !!this.form.prenom?.trim() &&
+      !!this.form.cin?.trim() &&
+      !!this.form.email?.trim() &&
+      !!this.form.telephone?.trim() &&
+      !!this.form.dateNaissance?.trim() &&
+      !!this.form.numeroOrdre?.trim() &&
+      !!this.form.idSpecialite &&
+      (this.mode === 'edit' || (!!this.form.password && this.form.password.trim().length > 0))
     );
+    return valid;
   }
 
   save() {
@@ -217,31 +198,51 @@ export class DocteursComponent {
     if (!this.isValid) return;
 
     const statut = this.form.statutValue === 'true';
-    const payload: Omit<DocteurRow, 'id'> = {
+    const payload: Omit<Doctor, 'idDocteur'> = {
+      idUser: 1, // Placeholder, should be handled by auth
       nom: this.form.nom.trim(),
       prenom: this.form.prenom.trim(),
       cin: this.form.cin.trim(),
       email: this.form.email.trim(),
-      role: 'DOCTEUR',
-      sexe: this.form.sexe,
       statut,
       dateNaissance: this.form.dateNaissance,
       telephone: this.form.telephone.trim(),
       adresse: this.form.adresse.trim(),
       numeroOrdre: this.form.numeroOrdre.trim(),
       idSpecialite: Number(this.form.idSpecialite),
+      specialiteLabel: '', // Will be updated by server
+      sexe: (this.form.sexe === Sexe.H ? 'M' : this.form.sexe) as any,
     };
 
     if (this.mode === 'create') {
-      this.docteurs = [{ id: this.nextId++, ...payload }, ...this.docteurs];
-      this.closeModal();
+      this.doctorService.createDoctor({ ...payload, idUser: 1 }).subscribe({ // idUser needs to be handled
+        next: () => {
+          this.loadDoctors();
+          this.closeModal();
+        },
+        error: (err: any) => console.error('Error creating doctor', err)
+      });
       return;
     }
 
     const id = this.editingId;
     if (id == null) return;
-    this.docteurs = this.docteurs.map((d) => (d.id === id ? { id, ...payload } : d));
-    this.closeModal();
+    this.doctorService.updateDoctor(id, payload).subscribe({
+      next: () => {
+        this.loadDoctors();
+        this.closeModal();
+      },
+      error: (err: any) => console.error('Error updating doctor', err)
+    });
+  }
+
+  deleteDoctor(id: number) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce docteur ?')) {
+      this.doctorService.deleteDoctor(id).subscribe({
+        next: () => this.loadDoctors(),
+        error: (err: any) => console.error('Error deleting doctor', err)
+      });
+    }
   }
 
   private emptyForm() {
@@ -250,8 +251,8 @@ export class DocteursComponent {
       prenom: '',
       cin: '',
       email: '',
-      motDePasse: '',
-      sexe: 'M' as Sexe,
+      password: '',
+      sexe: Sexe.H,
       statutValue: 'true' as const,
       dateNaissance: '',
       telephone: '',

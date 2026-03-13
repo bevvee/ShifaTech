@@ -12,24 +12,32 @@ import java.util.List;
 @FeignClient(name = "PATIENT-SERVICE", url = "${application.config.patient-service-url}")
 public interface PatientClient {
 
-    @GetMapping("/api/patient/")
-    ApiResponse<List<PatientDTO>> getAllPatients();
+    @GetMapping("/")
+    ApiResponse<List<PatientDTO>> getAllPatients(@RequestHeader("Authorization") String authHeader);
 
-    @GetMapping("/api/patient/user/{userId}")
-    ApiResponse<PatientDTO> getPatientByUserId(@PathVariable("userId") Long userId);
+    @GetMapping("/{id}")
+    ApiResponse<PatientDTO> getPatientById(@PathVariable("id") Long id,
+            @RequestHeader("Authorization") String authHeader);
 
-    @GetMapping("/api/patient/{idPatient}/dossier-medical")
-    ApiResponse<ConsultationDTO> getMedicalRecordByPatient(@PathVariable("idPatient") Long patientId);
+    @GetMapping("/user/{userId}")
+    ApiResponse<PatientDTO> getPatientByUserId(@PathVariable("userId") Long userId,
+            @RequestHeader("Authorization") String authHeader);
 
-    @PostMapping("/api/patient/dossier-medical")
-    ApiResponse<ConsultationDTO> addMedicalRecord(@RequestBody ConsultationDTO consultationDTO);
+    @GetMapping("/{idPatient}/dossier-medical")
+    ConsultationDTO getMedicalRecordByPatient(@PathVariable("idPatient") Long patientId);
 
-    @GetMapping("/api/patient/{idPatient}/ordonnances")
-    ApiResponse<List<PrescriptionDTO>> getPrescriptionsByPatient(@PathVariable("idPatient") Long patientId);
+    @GetMapping("/{idPatient}/dossier-medical/exists")
+    boolean checkMedicalRecordExists(@PathVariable("idPatient") Long patientId);
 
-    @GetMapping("/api/patient/ordonnances/{idOrdonnance}")
-    ApiResponse<PrescriptionDTO> getPrescriptionById(@PathVariable("idOrdonnance") Long idOrdonnance);
+    @PostMapping("/dossier-medical")
+    ConsultationDTO addMedicalRecord(@RequestBody ConsultationDTO consultationDTO);
 
-    @PostMapping("/api/patient/ordonnances")
-    ApiResponse<PrescriptionDTO> createPrescription(@RequestBody PrescriptionDTO prescriptionDTO);
+    @GetMapping("/{idPatient}/ordonnances")
+    List<PrescriptionDTO> getPrescriptionsByPatient(@PathVariable("idPatient") Long patientId);
+
+    @GetMapping("/ordonnances/{idOrdonnance}")
+    PrescriptionDTO getPrescriptionById(@PathVariable("idOrdonnance") Long idOrdonnance);
+
+    @PostMapping("/ordonnances")
+    PrescriptionDTO createPrescription(@RequestBody PrescriptionDTO prescriptionDTO);
 }

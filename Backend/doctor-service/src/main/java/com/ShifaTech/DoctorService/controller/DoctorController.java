@@ -4,7 +4,6 @@ import com.ShifaTech.DoctorService.client.PatientClient;
 import com.ShifaTech.DoctorService.dto.ConsultationDTO;
 import com.ShifaTech.DoctorService.dto.DoctorDTO;
 import com.ShifaTech.DoctorService.dto.PatientDTO;
-import com.ShifaTech.DoctorService.dto.PrescriptionDTO;
 import com.ShifaTech.DoctorService.service.DoctorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -82,6 +81,17 @@ public class DoctorController {
     @PreAuthorize("hasRole('DOCTEUR')")
     public ResponseEntity<PrescriptionDTO> createPrescription(@RequestBody PrescriptionDTO prescriptionDTO) {
         return ResponseEntity.ok(patientClient.createPrescription(prescriptionDTO).getData());
+    }
+
+    @GetMapping("/my-patients")
+    @PreAuthorize("hasRole('DOCTEUR')")
+    public ResponseEntity<List<PatientDTO>> getMyPatients(
+            @RequestHeader("Authorization") String authHeader) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = auth.getName();
+        // Assuming currentUserId is the idUser
+        DoctorDTO doctor = doctorService.getDoctorProfileByUserId(Long.valueOf(currentUserId));
+        return ResponseEntity.ok(doctorService.getMyPatients(doctor.getIdDocteur(), authHeader));
     }
 
     @GetMapping("/health")
