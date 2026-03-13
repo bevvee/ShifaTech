@@ -12,40 +12,32 @@
 // @FeignClient(name = "PATIENT-SERVICE", url = "${application.config.patient-service-url}")
 // public interface PatientClient {
 
-//     // Patient Operations - Matches PatientController in patient-service
-//     // Note: PatientController doesn't have a GET all patients endpoint at
-//     // /api/patient/
-//     // It has /api/patient/profile/{idUser}. I'll keep this as is if it was intended
-//     // to call a missing endpoint.
-//     @GetMapping("/")
-//     List<PatientDTO> getAllPatients();
+    @GetMapping("/")
+    ApiResponse<List<PatientDTO>> getAllPatients(@RequestHeader("Authorization") String authHeader);
 
-//     @GetMapping("/profile/{idUser}")
-//     PatientDTO getPatientProfile(@PathVariable("idUser") Long idUser);
+    @GetMapping("/{id}")
+    ApiResponse<PatientDTO> getPatientById(@PathVariable("id") Long id,
+            @RequestHeader("Authorization") String authHeader);
 
-//     // Medical Record (Dossier Medical) Operations
-//     // GET /{idPatient}/dossier-medical returns a single object in
-//     // patient-service
-//     @GetMapping("/{idPatient}/dossier-medical")
-//     ConsultationDTO getMedicalRecordByPatient(@PathVariable("idPatient") Long patientId);
+    @GetMapping("/user/{userId}")
+    ApiResponse<PatientDTO> getPatientByUserId(@PathVariable("userId") Long userId,
+            @RequestHeader("Authorization") String authHeader);
 
-//     @GetMapping("/{idPatient}/dossier-medical/exists")
-//     boolean checkMedicalRecordExists(@PathVariable("idPatient") Long patientId);
+    @GetMapping("/{idPatient}/dossier-medical")
+    ConsultationDTO getMedicalRecordByPatient(@PathVariable("idPatient") Long patientId);
 
-//     // Note: POST /dossier-medical is currently missing in
-//     // patient-service controller
-//     @PostMapping("/dossier-medical")
-//     ConsultationDTO addMedicalRecord(@RequestBody ConsultationDTO consultationDTO);
+    @GetMapping("/{idPatient}/dossier-medical/exists")
+    boolean checkMedicalRecordExists(@PathVariable("idPatient") Long patientId);
 
-//     // Prescription (Ordonnance) Operations
-//     @GetMapping("/{idPatient}/ordonnances")
-//     List<PrescriptionDTO> getPrescriptionsByPatient(@PathVariable("idPatient") Long patientId);
+    @PostMapping("/dossier-medical")
+    ConsultationDTO addMedicalRecord(@RequestBody ConsultationDTO consultationDTO);
 
-//     @GetMapping("/ordonnances/{idOrdonnance}")
-//     PrescriptionDTO getPrescriptionById(@PathVariable("idOrdonnance") Long idOrdonnance);
+    @GetMapping("/{idPatient}/ordonnances")
+    List<PrescriptionDTO> getPrescriptionsByPatient(@PathVariable("idPatient") Long patientId);
 
-//     // Note: POST /ordonnances is currently missing in patient-service
-//     // controller
-//     @PostMapping("/ordonnances")
-//     PrescriptionDTO createPrescription(@RequestBody PrescriptionDTO prescriptionDTO);
-// }
+    @GetMapping("/ordonnances/{idOrdonnance}")
+    PrescriptionDTO getPrescriptionById(@PathVariable("idOrdonnance") Long idOrdonnance);
+
+    @PostMapping("/ordonnances")
+    PrescriptionDTO createPrescription(@RequestBody PrescriptionDTO prescriptionDTO);
+}

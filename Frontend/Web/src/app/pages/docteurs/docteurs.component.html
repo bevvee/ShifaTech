@@ -2,9 +2,14 @@
   <app-page-breadcrumb pageTitle="Docteurs" />
   <app-component-card title="Liste Docteurs">
     <div card-actions class="flex items-center gap-3">
-      <app-button size="sm" variant="outline">
-        Filters
-      </app-button>
+      <div class="relative w-64">
+        <input type="text" placeholder="Rechercher un docteur..."
+          class="w-full rounded-lg border border-gray-300 bg-white py-1.5 pl-3 pr-10 text-sm focus:border-primary-500 focus:outline-none dark:border-white/10 dark:bg-white/5"
+          [(ngModel)]="searchTerm" (input)="onSearch()" />
+        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <i class="pi pi-search text-xs"></i>
+        </span>
+      </div>
       <app-button size="sm" (btnClick)="goToCreate()">
         + Ajoute Docteur
       </app-button>
@@ -14,180 +19,161 @@
       Total Doctors : {{ docteurs.length }}
     </span>
 
-  <!-- GRID -->
-  @if (docteurs.length === 0) {
+    <!-- GRID -->
+    @if (docteurs.length === 0) {
     <div class="text-center py-10 text-sm text-gray-500">
       Aucun docteur.
     </div>
-  } @else {
+    } @else {
 
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 
-      @for (d of docteurs; track d.id) {
+      @for (d of filteredDocteurs; track d.idDocteur) {
 
-        <div
-          class="group flex gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-white/5"
-        >
+      <div
+        class="group flex gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-white/5">
 
-          <!-- Avatar -->
-          <div
-            class="h-24 w-24 min-w-24 overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center"
-          >
-            <img
-              src="doctor-03.webp"
-              class="h-full w-full object-cover"
-              alt="doctor"
-            />
-          </div>
-
-          <!-- Content -->
-          <div class="flex flex-1 flex-col justify-between">
-
-            <div>
-              <h4 class="font-semibold text-gray-900 dark:text-white/90">
-                Dr. {{ d.nom }} {{ d.prenom }}
-              </h4>
-
-              <p class="text-sm text-gray-500">
-                Spécialité #{{ d.idSpecialite }}
-              </p>
-
-              <p class="text-xs text-gray-400 mt-1">
-                Disponible : {{ d.dateNaissance }}
-              </p>
-
-              <p class="text-sm font-medium text-primary-600 mt-1">
-                Ordre : {{ d.numeroOrdre }}
-              </p>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex items-center justify-between mt-3">
-
-              <app-badge
-                size="sm"
-                variant="light"
-                [color]="d.statut ? 'success' : 'error'"
-              >
-                {{ d.statut ? 'Actif' : 'Inactif' }}
-              </app-badge>
-
-              <div class="flex items-center gap-2">
-                <app-button
-                  size="sm"
-                  variant="outline"
-                  (btnClick)="openEditModal(d)"
-                >
-                  Modifier
-                </app-button>
-              </div>
-
-            </div>
-
-          </div>
+        <!-- Avatar -->
+        <div class="h-24 w-24 min-w-24 overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center">
+          <img src="doctor-03.webp" class="h-full w-full object-cover" alt="doctor" />
         </div>
+
+        <!-- Content -->
+        <div class="flex flex-1 flex-col justify-between">
+
+          <div>
+            <h4 class="font-semibold text-gray-900 dark:text-white/90">
+              Dr. {{ d.nom }} {{ d.prenom }}
+            </h4>
+
+            <p class="text-sm text-gray-500">
+              {{ d.specialiteLabel || 'Spécialité #' + d.idSpecialite }}
+            </p>
+
+            <p class="text-xs text-gray-400 mt-1">
+              Disponible : {{ d.dateNaissance }}
+            </p>
+
+            <p class="text-sm font-medium text-primary-600 mt-1">
+              Ordre : {{ d.numeroOrdre }}
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-between mt-3">
+
+            <app-badge size="sm" variant="light" [color]="d.statut ? 'success' : 'error'">
+              {{ d.statut ? 'Actif' : 'Inactif' }}
+            </app-badge>
+
+            <div class="flex items-center gap-2">
+              <app-button size="sm" variant="outline" (btnClick)="openEditModal(d)">
+                Modifier
+              </app-button>
+              <app-button size="sm" variant="outline" color="error" (btnClick)="deleteDoctor(d.idDocteur)">
+                <i class="pi pi-trash text-xs mr-1"></i>
+                Supprimer
+              </app-button>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
 
       }
 
     </div>
 
-  }
-</app-component-card>
+    }
+  </app-component-card>
 
-<app-modal
-  [isOpen]="isModalOpen"
-  (close)="closeModal()"
-  className="max-w-225 p-6 lg:p-10"
->
-  <div>
-    <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-      @if (mode === 'create') { Ajouter un docteur } @else { Modifier un docteur }
-    </h4>
-    <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
-      Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
-    </p>
+  <app-modal [isOpen]="isModalOpen" (close)="closeModal()" className="max-w-225 p-6 lg:p-10">
+    <div>
+      <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+        @if (mode === 'create') { Ajouter un docteur } @else { Modifier un docteur }
+      </h4>
+      <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+        Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
+      </p>
 
-    <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <div>
-        <app-label for="nom">Nom <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="nom" name="nom" placeholder="Nom" [(value)]="form.nom" [error]="submitted && !form.nom.trim()" />
-      </div>
-      <div>
-        <app-label for="prenom">Prénom <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="prenom" name="prenom" placeholder="Prénom" [(value)]="form.prenom" [error]="submitted && !form.prenom.trim()" />
+      <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <app-label for="nom">Nom <span class="font-semibold text-error-500">*</span></app-label>
+          <app-input-field id="nom" name="nom" placeholder="Nom" [(value)]="form.nom"
+            [error]="submitted && !form.nom.trim()" />
+        </div>
+        <div>
+          <app-label for="prenom">Prénom <span class="font-semibold text-error-500">*</span></app-label>
+          <app-input-field id="prenom" name="prenom" placeholder="Prénom" [(value)]="form.prenom"
+            [error]="submitted && !form.prenom.trim()" />
+        </div>
+
+        <div>
+          <app-label for="cin">CIN <span class="font-semibold text-error-500">*</span></app-label>
+          <app-input-field id="cin" name="cin" placeholder="CIN" [(value)]="form.cin"
+            [error]="submitted && !form.cin.trim()" />
+        </div>
+        <div>
+          <app-label for="email">Email <span class="font-semibold text-error-500">*</span></app-label>
+          <app-input-field id="email" name="email" type="email" placeholder="email@..." [(value)]="form.email"
+            [error]="submitted && !form.email.trim()" />
+        </div>
+
+        <div>
+          <app-label for="mot_de_passe">
+            Mot de passe
+            @if (mode === 'create') { <span class="font-semibold text-error-500">*</span> }
+          </app-label>
+          <app-input-field id="mot_de_passe" name="mot_de_passe" type="password" placeholder="Mot de passe"
+            [(value)]="form.password" [error]="submitted && mode === 'create' && !form.password.trim()"
+            [hint]="mode === 'edit' ? 'Laisser vide pour ne pas changer.' : ''" />
+        </div>
+
+        <div>
+          <app-label>Sexe</app-label>
+          <app-select [options]="sexeOptions" [(value)]="form.sexe" [hasSearch]="false" />
+        </div>
+        <div>
+          <app-label>Statut</app-label>
+          <app-select [options]="statutOptions" [(value)]="form.statutValue" [hasSearch]="false" />
+        </div>
+
+        <div>
+          <app-label for="date_naissance">Date de naissance <span
+              class="font-semibold text-error-500">*</span></app-label>
+          <app-input-field id="date_naissance" name="date_naissance" type="date" [(value)]="form.dateNaissance"
+            [error]="submitted && !form.dateNaissance.trim()" />
+        </div>
+        <div>
+          <app-label for="telephone">Téléphone <span class="font-semibold text-error-500">*</span></app-label>
+          <app-input-field id="telephone" name="telephone" placeholder="Téléphone" [(value)]="form.telephone"
+            [error]="submitted && !form.telephone.trim()" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <app-label for="adresse">Adresse</app-label>
+          <app-text-area id="adresse" name="adresse" placeholder="Adresse" [(value)]="form.adresse" [rows]="3" />
+        </div>
+
+        <div>
+          <app-label for="numero_ordre">Numéro d'ordre <span class="font-semibold text-error-500">*</span></app-label>
+          <app-input-field id="numero_ordre" name="numero_ordre" placeholder="ORD-..." [(value)]="form.numeroOrdre"
+            [error]="submitted && !form.numeroOrdre.trim()" />
+        </div>
+        <div>
+          <app-label>Spécialité <span class="font-semibold text-error-500">*</span></app-label>
+          <app-select [options]="specialiteOptions" placeholder="Sélectionner une spécialité" [hasSearch]="true"
+            [searchPlaceholder]="'Rechercher une spécialité...'" [searchLimit]="10" [(value)]="form.idSpecialite" />
+        </div>
       </div>
 
-      <div>
-        <app-label for="cin">CIN <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="cin" name="cin" placeholder="CIN" [(value)]="form.cin" [error]="submitted && !form.cin.trim()" />
-      </div>
-      <div>
-        <app-label for="email">Email <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="email" name="email" type="email" placeholder="email@..." [(value)]="form.email" [error]="submitted && !form.email.trim()" />
-      </div>
-
-      <div>
-        <app-label for="mot_de_passe">
-          Mot de passe
-          @if (mode === 'create') { <span class="font-semibold text-error-500">*</span> }
-        </app-label>
-        <app-input-field
-          id="mot_de_passe"
-          name="mot_de_passe"
-          type="password"
-          placeholder="Mot de passe"
-          [(value)]="form.password"
-          [error]="submitted && mode === 'create' && !form.password.trim()"
-          [hint]="mode === 'edit' ? 'Laisser vide pour ne pas changer.' : ''"
-        />
-      </div>
-
-      <div>
-        <app-label>Sexe</app-label>
-        <app-select [options]="sexeOptions" [(value)]="form.sexe" [hasSearch]="false" />
-      </div>
-      <div>
-        <app-label>Statut</app-label>
-        <app-select [options]="statutOptions" [(value)]="form.statutValue" [hasSearch]="false" />
-      </div>
-
-      <div>
-        <app-label for="date_naissance">Date de naissance <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="date_naissance" name="date_naissance" type="date" [(value)]="form.dateNaissance" [error]="submitted && !form.dateNaissance.trim()" />
-      </div>
-      <div>
-        <app-label for="telephone">Téléphone <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="telephone" name="telephone" placeholder="Téléphone" [(value)]="form.telephone" [error]="submitted && !form.telephone.trim()" />
-      </div>
-
-      <div class="sm:col-span-2">
-        <app-label for="adresse">Adresse</app-label>
-        <app-text-area id="adresse" name="adresse" placeholder="Adresse" [(value)]="form.adresse" [rows]="3" />
-      </div>
-
-      <div>
-        <app-label for="numero_ordre">Numéro d'ordre <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="numero_ordre" name="numero_ordre" placeholder="ORD-..." [(value)]="form.numeroOrdre" [error]="submitted && !form.numeroOrdre.trim()" />
-      </div>
-      <div>
-        <app-label>Spécialité <span class="font-semibold text-error-500">*</span></app-label>
-        <app-select
-          [options]="specialiteOptions"
-          placeholder="Sélectionner une spécialité"
-          [hasSearch]="true"
-          [searchPlaceholder]="'Rechercher une spécialité...'"
-          [searchLimit]="10"
-          [(value)]="form.idSpecialite"
-        />
+      <div class="mt-8 flex items-center justify-end gap-3">
+        <app-button size="sm" variant="outline" (btnClick)="closeModal()">Annuler</app-button>
+        <app-button size="sm" (btnClick)="save()" [disabled]="!isValid">
+          Enregistrer
+        </app-button>
       </div>
     </div>
-
-    <div class="mt-8 flex items-center justify-end gap-3">
-      <app-button size="sm" variant="outline" (btnClick)="closeModal()">Annuler</app-button>
-      <app-button size="sm" (btnClick)="save()" [disabled]="!isValid">
-        Enregistrer
-      </app-button>
-    </div>
-  </div>
-</app-modal>
+  </app-modal>
 </div>

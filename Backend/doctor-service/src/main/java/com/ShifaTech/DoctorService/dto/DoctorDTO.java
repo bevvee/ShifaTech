@@ -11,13 +11,19 @@ public class DoctorDTO {
     @NotBlank(message = "numeroOrdre is required")
     private String numeroOrdre;
 
-    // Aggregated Info from auth Service (Removed for independence)
-
     // Linked entities info
     private Long idSpecialite;
     private String specialiteLabel;
 
     private Long idService;
+
+    // Aggregated from Auth-Service
+    private String nom;
+    private String prenom;
+    private String email;
+    private String sexe;
+    private Boolean statut;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
