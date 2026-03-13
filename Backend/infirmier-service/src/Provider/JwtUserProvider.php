@@ -3,6 +3,7 @@
 namespace App\Provider;
 
 use App\Entity\Infirmier;
+use App\Provider\AdminUser;
 use App\Repository\InfirmierRepository;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\User\PayloadAwareUserProviderInterface;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
@@ -19,11 +20,16 @@ class JwtUserProvider implements PayloadAwareUserProviderInterface
         error_log('identifier: ' . $identifier);
 
         $userId = $payload['userId'] ?? null;
+        $role = $payload['role'] ?? null;
         error_log('userId extrait: ' . $userId);
 
         if (!$userId) {
             error_log('ERREUR: userId absent du payload');
             throw new UserNotFoundException('userId absent du token JWT');
+        }
+
+        if ($role === 'ADMIN') {
+            return new AdminUser($userId);
         }
 
         $infirmier = $this->infirmierRepository->findOneBy(['id_utilisateur' => $userId]);

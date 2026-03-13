@@ -16,15 +16,22 @@ use App\Provider\RendezVousProvider;
         new GetCollection(provider: RendezVousProvider::class),
         new Get(provider: RendezVousProvider::class),
         new Post(processor: RendezVousProcessor::class),
-        new Patch(processor: RendezVousProcessor::class),
-        new Delete(processor: RendezVousProcessor::class),
+        new Patch(processor: RendezVousProcessor::class,
+            provider: RendezVousProvider::class
+        ),
+        new Delete(
+            processor: RendezVousProcessor::class,
+            provider: RendezVousProvider::class
+            ),
     ]
 )]
 class RendezVous
 {
+    public ?int $id = null;
     public ?int $id_patient = null;
     public ?int $id_docteur = null;
     public ?string $date_rdv = null;
-    public ?string $heure_rdv = null;
+    public ?string $heure_debut = null;
+    public ?string $heure_fin = null;
     public ?string $statut = 'EN_ATTENTE';
 }

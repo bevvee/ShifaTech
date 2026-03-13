@@ -18,20 +18,26 @@ use ApiPlatform\Metadata\GetCollection;
 (
     operations: [
         new GetCollection(
-            uriTemplate: '/infirmier_specialites'
+            uriTemplate: '/infirmier_specialites',
+            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_INFIRMIER')"
+
         ),
         new Post(
             uriTemplate: '/infirmier_specialites',
-            security: "is_granted('PUBLIC_ACCESS')"
+            security: "is_granted('ROLE_ADMIN')"
         ),
         new Get(
-            uriTemplate: '/infirmier_specialites/{id}'
+            uriTemplate: '/infirmier_specialites/{id}',
+            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_INFIRMIER')"
+
         ),
         new Put(
-            uriTemplate: '/infirmier_specialites/{id}'
+            uriTemplate: '/infirmier_specialites/{id}',
+            security: "is_granted('ROLE_ADMIN')"
         ),
         new Delete(
-            uriTemplate: '/infirmier_specialites/{id}'
+            uriTemplate: '/infirmier_specialites/{id}',
+            security: "is_granted('ROLE_ADMIN')"
         ),
         ]
 )]

@@ -36,10 +36,16 @@ class RendezVousProcessor implements ProcessorInterface
         }
 
         if ($method === 'PATCH' && $id) {
+            $body = array_filter((array) $data, fn($value) => $value !== null);
             return $this->httpClient->request(
                 'PATCH',
                 'http://rdv-service:9000/api/rendez_vouses/' . $id,
-                ['headers' => $headers, 'json' => $data]
+                [
+                    'headers' => array_merge($headers, [
+                        'Content-Type' => 'application/merge-patch+json'
+                    ]),
+                    'body' => json_encode($body)
+                ]
             )->toArray();
         }
 
@@ -48,7 +54,7 @@ class RendezVousProcessor implements ProcessorInterface
                 'DELETE',
                 'http://rdv-service:9000/api/rendez_vouses/' . $id,
                 ['headers' => $headers]
-            )->toArray();
+            )->getStatusCode();
         }
 
         return null;

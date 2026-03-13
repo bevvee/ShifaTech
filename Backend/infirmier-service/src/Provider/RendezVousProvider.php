@@ -24,6 +24,13 @@ class RendezVousProvider implements ProviderInterface
         $authHeader = $this->requestStack->getCurrentRequest()?->headers->get('Authorization');
         $headers = $authHeader ? ['Authorization' => $authHeader] : [];
 
+        // Pour DELETE, retourner un objet fictif sans appeler le rdv-service
+        $method = $operation->getMethod();
+        if ($method === 'DELETE') {
+            $rdv = new \App\ApiResource\RendezVous();
+            $rdv->id = $id;
+            return $rdv;
+        }
         // GET single
         if ($id) {
             return $this->httpClient->request('GET',
