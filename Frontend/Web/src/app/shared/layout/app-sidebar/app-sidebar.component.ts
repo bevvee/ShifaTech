@@ -86,6 +86,7 @@ export class AppSidebarComponent {
   <path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`,
       name: "Patients",
+      roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER],
       subItems: [
         {
           name: 'Liste des Patients',
@@ -95,6 +96,41 @@ export class AppSidebarComponent {
           name: 'Ajouter Patient',
           path: '/patients/new',
         },
+      ],
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`,
+      name: "Dossier Médical",
+      roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER],
+      subItems: [
+        { name: 'Liste des Dossiers', path: '/dossier-medical' },
+        { name: 'Nouveau Dossier', path: '/dossier-medical/new' },
+      ],
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M8 7V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 12v6m-3-3h6M6 7h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`,
+      name: "Visites",
+      roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER],
+      subItems: [
+        { name: 'Historique Visites', path: '/visites' },
+        { name: 'Nouvelle Visite', path: '/visites/new' },
+      ],
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M19 10c0-3.866-3.134-7-7-7s-7 3.134-7 7c0 3.447 2.5 6.307 5.75 6.892V21l1.25-1.25L13.25 21v-4.108C16.5 16.307 19 13.447 19 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 7v6m-3-3h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+</svg>`,
+      name: "Ordonnances",
+      roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER],
+      subItems: [
+        { name: 'Liste Ordonnances', path: '/ordonnances' },
+        { name: 'Nouvelle Ordonnance', path: '/ordonnances/new' },
       ],
     },
     {

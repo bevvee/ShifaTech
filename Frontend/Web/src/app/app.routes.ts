@@ -30,6 +30,12 @@ import { DocteursComponent } from './pages/docteurs/docteurs.component';
 import { InfirmiersComponent } from './pages/infirmiers/infirmiers.component';
 import { ServicesComponent } from './pages/services/services.component';
 import { SpecialisationsComponent } from './pages/specialisations/specialisations.component';
+import { DossierMedicalComponent } from './pages/dossier-medical/dossier-medical.component';
+import { DossierMedicalFormPageComponent } from './pages/dossier-medical/dossier-medical-form-page.component';
+import { VisitesComponent } from './pages/visites/visites.component';
+import { VisitesFormPageComponent } from './pages/visites/visites-form-page.component';
+import { OrdonnancesComponent } from './pages/ordonnances/ordonnances.component';
+import { OrdonnancesFormPageComponent } from './pages/ordonnances/ordonnances-form-page.component';
 import { roleGuard, rootGuard } from './core/guards/auth.guard';
 import { Role } from './core/models/role.enum';
 
@@ -122,6 +128,93 @@ export const routes: Routes = [
         path: 'patients/:id/edit',
         component: PatientsFormPageComponent,
         title: 'Modifier Patient | ShifaTech',
+        canActivate: [roleGuard],
+        data: { mode: 'edit', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      // Dossier Medical
+      {
+        path: 'dossier-medical',
+        component: DossierMedicalComponent,
+        title: 'Dossiers Médicaux | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      {
+        path: 'dossier-medical/new',
+        component: DossierMedicalFormPageComponent,
+        title: 'Nouveau Dossier | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      {
+        path: 'dossier-medical/:id',
+        component: DossierMedicalFormPageComponent,
+        title: 'Détails Dossier | ShifaTech',
+        canActivate: [roleGuard],
+        data: { mode: 'view', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      {
+        path: 'dossier-medical/:id/edit',
+        component: DossierMedicalFormPageComponent,
+        title: 'Modifier Dossier | ShifaTech',
+        canActivate: [roleGuard],
+        data: { mode: 'edit', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      // Visites
+      {
+        path: 'visites',
+        component: VisitesComponent,
+        title: 'Visites | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      {
+        path: 'visites/new',
+        component: VisitesFormPageComponent,
+        title: 'Nouvelle Visite | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      {
+        path: 'visites/:id',
+        component: VisitesFormPageComponent,
+        title: 'Détails Visite | ShifaTech',
+        canActivate: [roleGuard],
+        data: { mode: 'view', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      {
+        path: 'visites/:id/edit',
+        component: VisitesFormPageComponent,
+        title: 'Modifier Visite | ShifaTech',
+        canActivate: [roleGuard],
+        data: { mode: 'edit', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      // Ordonnances
+      {
+        path: 'ordonnances',
+        component: OrdonnancesComponent,
+        title: 'Ordonnances | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      {
+        path: 'ordonnances/new',
+        component: OrdonnancesFormPageComponent,
+        title: 'Nouvelle Ordonnance | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      {
+        path: 'ordonnances/:id',
+        component: OrdonnancesFormPageComponent,
+        title: 'Détails Ordonnance | ShifaTech',
+        canActivate: [roleGuard],
+        data: { mode: 'view', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+      },
+      {
+        path: 'ordonnances/:id/edit',
+        component: OrdonnancesFormPageComponent,
+        title: 'Modifier Ordonnance | ShifaTech',
         canActivate: [roleGuard],
         data: { mode: 'edit', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
       },

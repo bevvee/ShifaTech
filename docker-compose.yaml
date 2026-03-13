@@ -294,10 +294,10 @@ services:
     container_name: mailhog
     restart: always
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
     networks:
-      - shifatech-net 
+      - shifatech-net
 ##################################
 # NETWORKS & VOLUMES
 ##################################

@@ -31,7 +31,7 @@ public class PatientController {
         return tokenUserId != null ? tokenUserId : headerUserId;
     }
 
-    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @PostMapping(value = { "", "/" })
     public ResponseEntity<ApiResponse<PatientDTO>> createPatient(
             @Valid @RequestBody CreatePatientRequest request,
@@ -75,7 +75,7 @@ public class PatientController {
                 String.format("%d patient(s) trouvé(s)", patients.size())));
     }
 
-    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PatientDTO>> updatePatient(
             @PathVariable Long id,

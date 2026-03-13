@@ -1,0 +1,65 @@
+<div class="px-2 pb-4">
+	<app-page-breadcrumb pageTitle="Ordonnance" />
+
+	<app-component-card [title]="title">
+		<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+			Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
+		</p>
+
+		<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+			<div>
+				<app-label>Patient <span class="font-semibold text-error-500">*</span></app-label>
+				<app-select [options]="patientOptions" [(value)]="form.idPatient" [hasSearch]="true" [disabled]="isReadOnly || mode === 'edit'" />
+			</div>
+
+			<div>
+				<app-label>Visite associée (optionnel)</app-label>
+				<app-select [options]="visiteOptions" [(value)]="form.idVisite" [hasSearch]="true" [disabled]="isReadOnly" />
+			</div>
+
+			<div class="sm:col-span-2">
+				<app-label for="description">Description Générale</app-label>
+				<app-input-field id="description" name="description" placeholder="Ex: Traitement pour hypertension" [(value)]="form.description" [disabled]="isReadOnly" />
+			</div>
+
+			<div class="sm:col-span-2">
+				<app-label for="medicaments">Médicaments <span class="font-semibold text-error-500">*</span></app-label>
+				<app-text-area id="medicaments" name="medicaments" placeholder="Liste des médicaments (séparés par des virgules)..." [(value)]="form.medicaments" [rows]="2" [error]="submitted && !form.medicaments.trim()" [disabled]="isReadOnly" />
+			</div>
+
+			<div class="sm:col-span-2">
+				<app-label for="posologie">Posologie</app-label>
+				<app-text-area id="posologie" name="posologie" placeholder="Ex: 1 comp 3 fois/jour..." [(value)]="form.posologie" [rows]="2" [disabled]="isReadOnly" />
+			</div>
+
+			<div>
+				<app-label for="duree">Durée du Traitement</app-label>
+				<app-input-field id="duree" name="duree" placeholder="Ex: 7 jours" [(value)]="form.dureeTraitement" [disabled]="isReadOnly" />
+			</div>
+
+			<div>
+				<app-label for="validite">Date de Validité <span class="font-semibold text-error-500">*</span></app-label>
+				<app-input-field id="validite" name="validite" type="date" [(value)]="form.dateValidite" [error]="submitted && !form.dateValidite" [disabled]="isReadOnly" />
+			</div>
+
+			<div>
+				<app-label>Status</app-label>
+				<app-select [options]="statutOptions" [(value)]="form.statut" [hasSearch]="false" [disabled]="isReadOnly" />
+			</div>
+
+			<div class="sm:col-span-2">
+				<app-label for="instructions">Instructions Spécifiques</app-label>
+				<app-text-area id="instructions" name="instructions" placeholder="Conseils alimentaires, précautions..." [(value)]="form.instructions" [rows]="3" [disabled]="isReadOnly" />
+			</div>
+		</div>
+
+		<div class="mt-8 flex items-center justify-end gap-3">
+			<app-button size="sm" variant="outline" (btnClick)="cancel()">
+				@if (isReadOnly) { Fermer } @else { Annuler }
+			</app-button>
+			@if (!isReadOnly) {
+				<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
+			}
+		</div>
+	</app-component-card>
+</div>

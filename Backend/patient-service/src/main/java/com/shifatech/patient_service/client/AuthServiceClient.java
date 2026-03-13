@@ -1,5 +1,6 @@
 package com.shifatech.patient_service.client;
 
+import com.shifatech.patient_service.dto.RegisterRequest;
 import com.shifatech.patient_service.dto.UserDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,7 @@ public class AuthServiceClient {
             headers.setBearerAuth(token);
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-            String url = authServiceUrl + "/api/auth/profile";
+            String url = authServiceUrl + "/profile";
             ResponseEntity<Map> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
@@ -55,13 +56,66 @@ public class AuthServiceClient {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<?, ?> body = response.getBody();
-                Object data = body.get("data");
-                if (data instanceof Map dataMap) {
+                Object user = body.get("user");
+                if (user instanceof Map dataMap) {
                     return mapToUserDTO(dataMap);
                 }
             }
         } catch (Exception e) {
             log.debug("Erreur appel auth /profile: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Récupère les infos d'un utilisateur par son ID (appel Admin/Docteur).
+     */
+    public UserDTO getUserById(Long idUser, String authHeader) {
+        if (idUser == null) return null;
+        try {
+            String url = authServiceUrl + "/user/" + idUser;
+            log.info("Appel Auth Service: GET {}", url);
+            
+            HttpHeaders headers = new HttpHeaders();
+            if (authHeader != null) {
+                headers.set("Authorization", authHeader);
+            }
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<?, ?> body = response.getBody();
+                Object user = body.get("user");
+                if (user instanceof Map dataMap) {
+                    return mapToUserDTO(dataMap);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération de l'utilisateur {} : {}", idUser, e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Enregistre un nouvel utilisateur dans auth-service.
+     */
+    public UserDTO registerUser(RegisterRequest request) {
+        try {
+            String url = authServiceUrl + "/register";
+            log.info("Appel Auth Service: POST {}", url);
+            
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<?, ?> body = response.getBody();
+                Object user = body.get("user");
+                if (user instanceof Map dataMap) {
+                    return mapToUserDTO(dataMap);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors de l'enregistrement de l'utilisateur : {}", e.getMessage());
         }
         return null;
     }

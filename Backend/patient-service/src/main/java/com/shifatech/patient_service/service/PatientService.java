@@ -3,6 +3,7 @@ package com.shifatech.patient_service.service;
 import com.shifatech.patient_service.client.AuthServiceClient;
 import com.shifatech.patient_service.dto.CreatePatientRequest;
 import com.shifatech.patient_service.dto.PatientDTO;
+import com.shifatech.patient_service.dto.RegisterRequest;
 import com.shifatech.patient_service.dto.UpdatePatientRequest;
 import com.shifatech.patient_service.dto.UserDTO;
 import com.shifatech.patient_service.entity.Patient;
@@ -31,32 +32,60 @@ public class PatientService {
     private final JwtUtil jwtUtil;
 
     public PatientDTO createPatient(CreatePatientRequest request, Long createdBy, String authHeader) {
-        log.info("Création d'un nouveau patient pour l'utilisateur ID: {}", request.getIdUser());
+        log.info("Création d'un nouveau patient. idUser: {}, nom: {}", request.getIdUser(), request.getNom());
 
-        /*
-         * if (!isMedicalStaff() && !request.getIdUser().equals(createdBy)) {
-         * throw new org.springframework.security.access.AccessDeniedException(
-         * "Seul le personnel médical ou l'utilisateur lui-même peut créer ce profil.");
-         * }
-         */
+        Long idUser = request.getIdUser();
 
-        if (patientRepository.existsByIdUser(request.getIdUser())) {
-            throw new ResourceAlreadyExistsException("Patient", "idUser", request.getIdUser());
+        // 1. Si pas d'idUser, on crée le compte dans Auth Service
+        if (idUser == null) {
+            log.info("idUser non fourni, création d'un compte utilisateur dans Auth Service");
+            RegisterRequest registerRequest = RegisterRequest.builder()
+                    .nom(request.getNom())
+                    .prenom(request.getPrenom())
+                    .cin(request.getCin())
+                    .email(request.getEmail())
+                    .password("ShifaTech2026") // Mot de passe temporaire par défaut
+                    .passwordConfirmation("ShifaTech2026")
+                    .role("PATIENT")
+                    .sexe(request.getSexe())
+                    .dateNaissance(request.getDateNaissance())
+                    .telephone(request.getTelephone())
+                    .adresse(request.getAdresse())
+                    .build();
+
+            UserDTO createdUser = authServiceClient.registerUser(registerRequest);
+            if (createdUser == null || createdUser.getIdUser() == null) {
+                log.error("Échec de la création automatique de l'utilisateur dans le service Auth pour {}", request.getEmail());
+                throw new RuntimeException("Échec de la création de l'utilisateur dans le service Auth");
+            }
+            idUser = createdUser.getIdUser();
+            log.info("Utilisateur créé avec succès dans Auth Service. idUser: {}", idUser);
+        } else {
+            log.info("idUser {} fourni, pas de création d'utilisateur nécessaire.", idUser);
+        }
+
+        if (patientRepository.existsByIdUser(idUser)) {
+            log.warn("Tentative de création d'un patient existant pour idUser: {}", idUser);
+            throw new ResourceAlreadyExistsException("Patient", "idUser", idUser);
         }
 
         Patient patient = new Patient();
-        patient.setIdUser(request.getIdUser());
+        patient.setIdUser(idUser);
         patient.setNumDossier(generateNumDossier());
         patient.setAssurance(request.getAssurance());
         patient.setNumeroAssurance(request.getNumeroAssurance());
         patient.setStatut(true);
         patient.setCreatedBy(createdBy);
 
-        Patient savedPatient = patientRepository.save(patient);
-        log.info("Patient créé avec succès. ID: {}, NumDossier: {}", savedPatient.getIdPatient(),
-                savedPatient.getNumDossier());
-
-        return mapToDTO(savedPatient, authHeader);
+        try {
+            Patient savedPatient = patientRepository.save(patient);
+            log.info("Patient enregistré en base avec succès. ID: {}, NumDossier: {}", 
+                    savedPatient.getIdPatient(), savedPatient.getNumDossier());
+            return mapToDTO(savedPatient, authHeader);
+        } catch (Exception e) {
+            log.error("Erreur fatale lors de la sauvegarde du patient pour idUser {}: {}", idUser, e.getMessage());
+            throw e;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -161,15 +190,36 @@ public class PatientService {
                 .createdAt(patient.getCreatedAt())
                 .build();
 
-        if (authHeader != null && patient.getIdUser() != null) {
-            Long tokenUserId = jwtUtil.getUserIdFromToken();
-            if (tokenUserId != null && tokenUserId.equals(patient.getIdUser())) {
-                try {
-                    UserDTO userInfo = authServiceClient.getProfileWithToken(authHeader);
-                    dto.setUserInfo(userInfo);
-                } catch (Exception e) {
-                    log.warn("Impossible de récupérer les infos utilisateur depuis Auth Service", e);
+        if (patient.getIdUser() != null) {
+            UserDTO userInfo = null;
+            
+            // 1. Tenter de récupérer les infos via le token (si c'est le patient lui-même)
+            if (authHeader != null) {
+                Long tokenUserId = jwtUtil.getUserIdFromToken();
+                if (tokenUserId != null && tokenUserId.equals(patient.getIdUser())) {
+                    userInfo = authServiceClient.getProfileWithToken(authHeader);
                 }
+            }
+            
+            // 2. Si non récupéré et que le demandeur est Admin/Docteur, utiliser getUserById
+            if (userInfo == null && (isAdmin() || isDocteur())) {
+                userInfo = authServiceClient.getUserById(patient.getIdUser(), authHeader);
+            }
+
+            if (userInfo != null) {
+                dto.setUserInfo(userInfo);
+                // Aplatir pour le frontend
+                dto.setNom(userInfo.getNom());
+                dto.setPrenom(userInfo.getPrenom());
+                dto.setCin(userInfo.getCin());
+                dto.setEmail(userInfo.getEmail());
+                dto.setSexe(userInfo.getSexe());
+                dto.setDateNaissance(userInfo.getDateNaissance() != null ? userInfo.getDateNaissance().toString() : null);
+                dto.setTelephone(userInfo.getTelephone());
+                dto.setAdresse(userInfo.getAdresse());
+                log.debug("Données utilisateur mappées avec succès pour idUser: {}", patient.getIdUser());
+            } else {
+                log.warn("Impossible de récupérer les infos de l'utilisateur {} pour le DTO", patient.getIdUser());
             }
         }
 

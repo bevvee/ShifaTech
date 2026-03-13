@@ -1,79 +1,62 @@
-import { Injectable } from '@angular/core';
-
-export type Sexe = 'M' | 'F';
-
-export type PatientRow = {
-  id: number;
-  nom: string;
-  prenom: string;
-  cin: string;
-  email: string;
-  role: 'PATIENT';
-  sexe: Sexe;
-  statut: boolean;
-  dateNaissance: string;
-  telephone: string;
-  adresse: string;
-
-  idUser: number;
-  numDossier: string;
-  poids: number;
-};
+import { Injectable, inject } from '@angular/core';
+import { Observable, tap, of } from 'rxjs';
+import { PatientDto, PatientCreateDto } from '../../core/models/patient.model';
+import { PatientApiService } from '../../core/services/api/patient-api.service';
 
 @Injectable({ providedIn: 'root' })
 export class PatientsStore {
-  private nextId = 2;
+  private readonly api = inject(PatientApiService);
+  private patients: PatientDto[] = [];
 
-  patients: PatientRow[] = [
-    {
-      id: 1,
-      nom: 'Amrani',
-      prenom: 'Omar',
-      cin: 'PA123456',
-      email: 'omar.amrani@shifatech.test',
-      role: 'PATIENT',
-      sexe: 'M',
-      statut: true,
-      dateNaissance: '1998-06-05',
-      telephone: '+212633333333',
-      adresse: 'Tanger',
-      idUser: 1,
-      numDossier: 'D-0001',
-      poids: 72,
-    },
-  ];
-
-  getById(id: number): PatientRow | undefined {
-    return this.patients.find((p) => p.id === id);
+  /**
+   * For components that need a quick sync list (like dropdown options),
+   * we can still return the last cached list.
+   * But for the main list view, we should use the API.
+   */
+  getCachedAll(): PatientDto[] {
+    return [...this.patients];
   }
 
-  create(payload: Omit<PatientRow, 'id' | 'idUser' | 'numDossier' | 'poids'>): PatientRow {
-    const id = this.nextId++;
-    const row: PatientRow = {
-      id,
-      ...payload,
-      idUser: id,
-      numDossier: `D-${String(id).padStart(4, '0')}`,
-      poids: 0,
-    };
-    this.patients = [row, ...this.patients];
-    return row;
+  getAll(): Observable<PatientDto[]> {
+    return this.api.getAll().pipe(
+      tap(data => this.patients = data)
+    );
   }
 
-  update(id: number, patch: Omit<PatientRow, 'id' | 'idUser' | 'numDossier' | 'poids'>): boolean {
-    const existing = this.getById(id);
-    if (!existing) return false;
-
-    const updated: PatientRow = {
-      ...existing,
-      ...patch,
-    };
-
-    this.patients = this.patients.map((p) => (p.id === id ? updated : p));
-    return true;
+  getById(id: number): Observable<PatientDto> {
+    return this.api.getById(id);
   }
 
-  delete(id: number): void {
-    this.patients = this.patients.filter((p) => p.id !== id);
+  // Helper for sync access when needed (e.g. navigation resolving)
+  getCachedById(id: number): PatientDto | undefined {
+    return this.patients.find(p => p.id === id);
+  }
+
+  create(payload: PatientCreateDto): Observable<PatientDto> {
+    return this.api.create(payload).pipe(
+      tap(newPatient => {
+        this.patients = [newPatient, ...this.patients];
+      })
+    );
+  }
+
+  update(id: number, patch: Partial<PatientCreateDto>): Observable<PatientDto> {
+    return this.api.update(id, patch).pipe(
+      tap(updatedPatient => {
+        const index = this.patients.findIndex(p => p.id === id);
+        if (index !== -1) {
+          this.patients[index] = updatedPatient;
+        }
+      })
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    return this.api.delete(id).pipe(
+      tap(() => {
+        this.patients = this.patients.filter(p => p.id !== id);
+      })
+    );
   }
 }
+

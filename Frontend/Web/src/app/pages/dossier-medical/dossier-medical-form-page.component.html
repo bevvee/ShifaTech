@@ -1,0 +1,140 @@
+<div class="px-2 pb-4">
+	<app-page-breadcrumb pageTitle="Dossier Médical" />
+
+	<app-component-card [title]="title">
+		<div class="flex items-center justify-between mb-4">
+			<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+				Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
+			</p>
+			@if (isReadOnly) {
+				<app-button size="sm" variant="outline" (btnClick)="createVisite()">
+					<svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+					Nouvelle Visite
+				</app-button>
+			}
+		</div>
+
+		<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+			<!-- Form Fields (Existing) -->
+			<div>
+				<app-label>Patient <span class="font-semibold text-error-500">*</span></app-label>
+				<app-select [options]="patientOptions" [(value)]="form.idPatient" [hasSearch]="true" [disabled]="isReadOnly || mode === 'edit'" />
+			</div>
+
+			<div>
+				<app-label>Status</app-label>
+				<app-select [options]="statusOptions" [(value)]="form.status" [hasSearch]="false" [disabled]="isReadOnly" />
+			</div>
+
+			<div>
+				<app-label for="poids">Poids (kg) <span class="font-semibold text-error-500">*</span></app-label>
+				<app-input-field id="poids" name="poids" type="number" [(value)]="form.poids" [error]="submitted && form.poids <= 0" [disabled]="isReadOnly" />
+			</div>
+
+			<div>
+				<app-label for="taille">Taille (cm) <span class="font-semibold text-error-500">*</span></app-label>
+				<app-input-field id="taille" name="taille" type="number" [(value)]="form.taille" [error]="submitted && form.taille <= 0" [disabled]="isReadOnly" />
+			</div>
+
+			<div>
+				<app-label>Groupe Sanguin</app-label>
+				<app-select [options]="groupeSanguinOptions" [(value)]="form.groupeSanguin" [hasSearch]="false" [disabled]="isReadOnly" />
+			</div>
+
+			<div class="sm:col-span-2">
+				<app-label for="antecedents">Antécédents Médicaux</app-label>
+				<app-text-area id="antecedents" name="antecedents" placeholder="Antécédents..." [(value)]="form.antecedentsMedicaux" [rows]="3" [disabled]="isReadOnly" />
+			</div>
+
+			<div class="sm:col-span-2">
+				<app-label for="allergies">Allergies</app-label>
+				<app-text-area id="allergies" name="allergies" placeholder="Allergies..." [(value)]="form.allergies" [rows]="2" [disabled]="isReadOnly" />
+			</div>
+
+			<div class="sm:col-span-2">
+				<app-label for="pathologies">Pathologies Chroniques</app-label>
+				<app-text-area id="pathologies" name="pathologies" placeholder="Pathologies chroniques..." [(value)]="form.pathologiesChroniques" [rows]="2" [disabled]="isReadOnly" />
+			</div>
+
+			<div class="sm:col-span-2">
+				<app-label for="diagnostic">Diagnostic initial</app-label>
+				<app-text-area id="diagnostic" name="diagnostic" placeholder="Diagnostic..." [(value)]="form.diagnostic" [rows]="3" [disabled]="isReadOnly" />
+			</div>
+
+			<div class="sm:col-span-2">
+				<app-label for="notes">Notes/Observations</app-label>
+				<app-text-area id="notes" name="notes" placeholder="Notes complémentaires..." [(value)]="form.notes" [rows]="3" [disabled]="isReadOnly" />
+			</div>
+		</div>
+
+		<!-- Linked History (View Mode Only) -->
+		@if (isReadOnly) {
+			<div class="mt-12 space-y-8">
+				<section>
+					<h3 class="text-lg font-bold text-heading border-b border-default pb-2 mb-4">Historique des Visites</h3>
+					@if (linkedVisites.length === 0) {
+						<p class="text-sm text-body italic">Aucune visite enregistrée.</p>
+					} @else {
+						<div class="overflow-x-auto rounded-base border border-default">
+							<table class="w-full text-sm text-left text-body">
+								<thead class="bg-neutral-secondary-medium text-xs uppercase font-medium">
+									<tr>
+										<th class="px-4 py-2">Date</th>
+										<th class="px-4 py-2">Traitement</th>
+										<th class="px-4 py-2">Status</th>
+									</tr>
+								</thead>
+								<tbody>
+									@for (v of linkedVisites; track v.id) {
+										<tr class="border-t border-default hover:bg-neutral-secondary-medium pointer-cursor" [routerLink]="['/visites', v.id]">
+											<td class="px-4 py-3">{{ v.dateCreation | date:'dd/MM/yyyy' }}</td>
+											<td class="px-4 py-3 truncate max-w-xs">{{ v.planTraitement }}</td>
+											<td class="px-4 py-3">{{ v.status }}</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					}
+				</section>
+
+				<section>
+					<h3 class="text-lg font-bold text-heading border-b border-default pb-2 mb-4">Ordonnances Récentes</h3>
+					@if (linkedOrdonnances.length === 0) {
+						<p class="text-sm text-body italic">Aucune ordonnance émise.</p>
+					} @else {
+						<div class="overflow-x-auto rounded-base border border-default">
+							<table class="w-full text-sm text-left text-body">
+								<thead class="bg-neutral-secondary-medium text-xs uppercase font-medium">
+									<tr>
+										<th class="px-4 py-2">Date</th>
+										<th class="px-4 py-2">Médicaments</th>
+										<th class="px-4 py-2">Validité</th>
+									</tr>
+								</thead>
+								<tbody>
+									@for (o of linkedOrdonnances; track o.id) {
+										<tr class="border-t border-default hover:bg-neutral-secondary-medium pointer-cursor" [routerLink]="['/ordonnances', o.id]">
+											<td class="px-4 py-3">{{ o.dateCreation | date:'dd/MM/yyyy' }}</td>
+											<td class="px-4 py-3 truncate max-w-xs">{{ o.medicaments }}</td>
+											<td class="px-4 py-3">{{ o.dateValidite | date:'dd/MM/yyyy' }}</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					}
+				</section>
+			</div>
+		}
+
+		<div class="mt-8 flex items-center justify-end gap-3">
+			<app-button size="sm" variant="outline" (btnClick)="cancel()">
+				@if (isReadOnly) { Fermer } @else { Annuler }
+			</app-button>
+			@if (!isReadOnly) {
+				<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
+			}
+		</div>
+	</app-component-card>
+</div>
