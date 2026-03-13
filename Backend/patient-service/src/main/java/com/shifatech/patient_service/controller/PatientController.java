@@ -31,7 +31,7 @@ public class PatientController {
         return tokenUserId != null ? tokenUserId : headerUserId;
     }
 
-    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @PostMapping(value = { "", "/" })
     public ResponseEntity<ApiResponse<PatientDTO>> createPatient(
             @Valid @RequestBody CreatePatientRequest request,
@@ -75,7 +75,7 @@ public class PatientController {
                 String.format("%d patient(s) trouvé(s)", patients.size())));
     }
 
-    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PatientDTO>> updatePatient(
             @PathVariable Long id,
@@ -92,10 +92,11 @@ public class PatientController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePatient(
             @PathVariable Long id,
-            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long headerUserId) {
+            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long headerUserId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         Long userId = resolveUserId(headerUserId);
         log.info("Requête de suppression du patient ID: {}", id);
-        patientService.deletePatient(id, userId);
+        patientService.deletePatient(id, userId, authHeader);
         return ResponseEntity.ok(ApiResponse.success(null, "Patient supprimé avec succès"));
     }
 }

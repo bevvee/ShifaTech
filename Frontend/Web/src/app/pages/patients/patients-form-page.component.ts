@@ -1,20 +1,27 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 import { InputFieldComponent } from '../../shared/components/form/input/input-field.component';
-import { TextAreaComponent } from '../../shared/components/form/input/text-area.component';
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
-import { PatientsStore, PatientRow, Sexe } from './patients.store';
+import { AuthService } from '../../core/services/auth.service';
+import { PatientApiService } from '../../core/services/api/patient-api.service';
+import {
+  AssuranceType,
+  PatientCreateDto,
+  Sexe,
+} from '../../core/models/patient.model';
+import { catchError, of, switchMap } from 'rxjs';
 
 type Mode = 'create' | 'edit' | 'view';
 
 @Component({
   selector: 'app-patients-form-page',
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -22,7 +29,6 @@ type Mode = 'create' | 'edit' | 'view';
     ComponentCardComponent,
     ButtonComponent,
     InputFieldComponent,
-    TextAreaComponent,
     LabelComponent,
     SelectComponent,
   ],
@@ -32,12 +38,27 @@ type Mode = 'create' | 'edit' | 'view';
 export class PatientsFormPageComponent {
   mode: Mode;
   submitted = false;
+  loading = false;
+
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly patientApi = inject(PatientApiService);
 
   private id: number | null;
 
   sexeOptions: Option[] = [
-    { value: 'M', label: 'M' },
-    { value: 'F', label: 'F' },
+    { value: 'M', label: 'Masculin' },
+    { value: 'F', label: 'Féminin' },
+  ];
+
+  assuranceOptions: Option[] = [
+    { value: 'CNSS', label: 'CNSS' },
+    { value: 'CNOPS', label: 'CNOPS' },
+    { value: 'RAMED', label: 'RAMED' },
+    { value: 'FAR', label: 'FAR' },
+    { value: 'Privée', label: 'Privée' },
+    { value: 'Aucune', label: 'Aucune' },
   ];
 
   statutOptions: Option[] = [
@@ -45,42 +66,51 @@ export class PatientsFormPageComponent {
     { value: 'false', label: 'Inactif' },
   ];
 
-  form: {
-    nom: string;
-    prenom: string;
-    cin: string;
-    email: string;
-    password: string;
-    sexe: Sexe;
-    statutValue: 'true' | 'false';
-    dateNaissance: string;
-    telephone: string;
-    adresse: string;
-  } = this.emptyForm();
+  form = {
+    nom: '',
+    prenom: '',
+    cin: '',
+    email: '',
+    sexe: 'M' as Sexe,
+    dateNaissance: '',
+    telephone: '',
+    adresse: '',
+    assurance: 'CNSS' as AssuranceType,
+    numeroAssurance: '',
+    statutValue: 'true' as 'true' | 'false',
+  };
 
-  constructor(
-    private readonly route: ActivatedRoute,
-    private readonly router: Router,
-    private readonly store: PatientsStore,
-  ) {
+  constructor() {
     this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
     const idParam = this.route.snapshot.paramMap.get('id');
     this.id = idParam ? Number(idParam) : null;
 
-    if (this.mode !== 'create') {
-      const existing = this.id != null ? this.store.getById(this.id) : undefined;
-      if (!existing) {
-        this.router.navigate(['/patients']);
-        return;
-      }
-      this.form = this.formFromRow(existing);
+    if (this.mode !== 'create' && this.id != null) {
+      this.patientApi.getById(this.id).subscribe({
+        next: (existing) => {
+          this.form = {
+            nom: existing.nom,
+            prenom: existing.prenom,
+            cin: existing.cin,
+            email: existing.email,
+            sexe: existing.sexe,
+            dateNaissance: existing.dateNaissance,
+            telephone: existing.telephone,
+            adresse: existing.adresse,
+            assurance: existing.assurance,
+            numeroAssurance: existing.numeroAssurance,
+            statutValue: existing.statut ? 'true' : 'false',
+          };
+        },
+        error: () => this.router.navigate(['/patients'])
+      });
     }
   }
 
   get title(): string {
-    if (this.mode === 'create') return 'Ajouter Patient';
-    if (this.mode === 'view') return 'Détails Patient';
-    return 'Modifier Patient';
+    if (this.mode === 'create') return 'Nouveau Patient';
+    if (this.mode === 'view') return 'Détails du Patient';
+    return 'Modifier le Patient';
   }
 
   get isReadOnly(): boolean {
@@ -89,15 +119,11 @@ export class PatientsFormPageComponent {
 
   get isValid(): boolean {
     if (this.isReadOnly) return true;
-
     return (
       this.form.nom.trim().length > 0 &&
       this.form.prenom.trim().length > 0 &&
       this.form.cin.trim().length > 0 &&
-      this.form.email.trim().length > 0 &&
-      this.form.telephone.trim().length > 0 &&
-      this.form.dateNaissance.trim().length > 0 &&
-      (this.mode === 'edit' || this.form.password.trim().length > 0)
+      this.form.numeroAssurance.trim().length > 0
     );
   }
 
@@ -107,68 +133,84 @@ export class PatientsFormPageComponent {
 
   save() {
     this.submitted = true;
-    if (!this.isValid) return;
+    if (!this.form.nom || !this.form.prenom || !this.form.cin) return;
 
     if (this.isReadOnly) {
       this.cancel();
       return;
     }
 
-    const statut = this.form.statutValue === 'true';
-    const patch: Omit<PatientRow, 'id' | 'idUser' | 'numDossier' | 'poids'> = {
-      nom: this.form.nom.trim(),
-      prenom: this.form.prenom.trim(),
-      cin: this.form.cin.trim(),
-      email: this.form.email.trim(),
-      role: 'PATIENT',
+    const payload: PatientCreateDto = {
+      nom: this.form.nom,
+      prenom: this.form.prenom,
+      cin: this.form.cin,
+      email: this.form.email,
       sexe: this.form.sexe,
-      statut,
       dateNaissance: this.form.dateNaissance,
-      telephone: this.form.telephone.trim(),
-      adresse: this.form.adresse.trim(),
+      telephone: this.form.telephone,
+      adresse: this.form.adresse,
+      assurance: this.form.assurance,
+      numeroAssurance: this.form.numeroAssurance,
+      statut: this.form.statutValue === 'true',
     };
+
+    this.loading = true;
 
     if (this.mode === 'create') {
-      this.store.create(patch);
-      this.router.navigate(['/patients']);
-      return;
+      // 1. Register User in Auth Service
+      const registerData = {
+        nom: this.form.nom,
+        prenom: this.form.prenom,
+        cin: this.form.cin,
+        email: this.form.email,
+        password: 'ShifaTech2026',
+        passwordConfirmation: 'ShifaTech2026',
+        role: 'PATIENT',
+        sexe: this.form.sexe,
+        dateNaissance: this.form.dateNaissance,
+        telephone: this.form.telephone,
+        adresse: this.form.adresse
+      };
+
+      this.authService.register(registerData).pipe(
+        switchMap((authRes: any) => {
+          if (authRes.error) {
+            throw new Error(authRes.message || 'Erreur lors de la création du compte');
+          }
+          
+          const idUser = authRes.user?.idUser;
+          if (!idUser) {
+            throw new Error('ID Utilisateur non reçu après inscription');
+          }
+          
+          // 2. Create Patient in Patient Service
+          return this.patientApi.create({ ...payload, idUser } as any);
+        }),
+        catchError(err => {
+          console.error('[PATIENT FORM] Erreur:', err);
+          alert('Une erreur est survenue : ' + (err.message || 'Erreur inconnue'));
+          this.loading = false;
+          return of(null);
+        })
+      ).subscribe(res => {
+        this.loading = false;
+        if (res) {
+          this.router.navigate(['/patients']);
+        }
+      });
+
+    } else if (this.id != null) {
+      this.patientApi.update(this.id, payload).subscribe({
+        next: () => {
+          this.loading = false;
+          this.router.navigate(['/patients']);
+        },
+        error: (err) => {
+          console.error(err);
+          alert('Erreur lors de la modification');
+          this.loading = false;
+        }
+      });
     }
-
-    if (this.id == null) return;
-    const ok = this.store.update(this.id, patch);
-    if (!ok) return;
-
-    this.router.navigate(['/patients']);
-  }
-
-  private emptyForm() {
-    return {
-      nom: '',
-      prenom: '',
-      cin: '',
-      email: '',
-      password: '',
-      sexe: 'M' as Sexe,
-      statutValue: 'true' as const,
-      dateNaissance: '',
-      telephone: '',
-      adresse: '',
-    };
-  }
-
-  private formFromRow(row: PatientRow) {
-    const statutValue = (row.statut ? 'true' : 'false') as 'true' | 'false';
-    return {
-      nom: row.nom,
-      prenom: row.prenom,
-      cin: row.cin,
-      email: row.email,
-      password: '',
-      sexe: row.sexe,
-      statutValue,
-      dateNaissance: row.dateNaissance,
-      telephone: row.telephone,
-      adresse: row.adresse,
-    };
   }
 }

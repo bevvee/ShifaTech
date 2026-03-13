@@ -1,29 +1,53 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
-import { PatientRow, PatientsStore } from './patients.store';
+import { PatientsStore } from './patients.store';
+import { DossierMedicalStore } from '../dossier-medical/dossier-medical.store';
+import { PatientDto } from '../../core/models/patient.model';
 
 @Component({
   selector: 'app-patients',
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
     PageBreadcrumbComponent,
     ComponentCardComponent,
   ],
-  templateUrl: './patients.component.html',
-  styles: ``
+  templateUrl: './patients.component.html'
 })
-export class PatientsComponent {
-  searchTerm = '';
+export class PatientsComponent implements OnInit {
 
-  constructor(
-    private readonly router: Router,
-    private readonly store: PatientsStore,
-  ) {}
+  searchTerm = '';
+  patients: PatientDto[] = [];
+
+  private readonly router = inject(Router);
+  private readonly store = inject(PatientsStore);
+  private readonly dossierStore = inject(DossierMedicalStore);
+
+  ngOnInit(): void {
+    this.loadPatients();
+  }
+
+  loadPatients() {
+    this.store.getAll().subscribe({
+      next: (data) => this.patients = data,
+      error: (err) => console.error('Erreur chargement patients', err)
+    });
+  }
+
+  viewDossierByPatient(patientId: number) {
+    const dossier = this.dossierStore.getByPatientId(patientId);
+    if (dossier) {
+      this.router.navigate(['/dossier-medical', dossier.id]);
+    } else {
+      // If no dossier exists, navigate to create page with patient pre-selected
+      this.router.navigate(['/dossier-medical/new'], { queryParams: { patientId } });
+    }
+  }
 
   viewPatient(id: number) {
     this.router.navigate(['/patients', id]);
@@ -34,10 +58,12 @@ export class PatientsComponent {
   }
 
   deletePatient(id: number) {
-    this.store.delete(id);
+    this.store.delete(id).subscribe(() => {
+      this.loadPatients();
+    });
   }
 
-  getInitials(row: PatientRow): string {
+  getInitials(row: PatientDto): string {
     const nom = row.nom?.trim() ?? '';
     const prenom = row.prenom?.trim() ?? '';
     const first = nom.length > 0 ? nom[0] : '';
@@ -46,12 +72,12 @@ export class PatientsComponent {
     return initials || '?';
   }
 
-  get filteredPatients(): PatientRow[] {
-    const q = this.searchTerm.trim().toLowerCase();
-    const patients = this.store.patients;
-    if (!q) return patients;
 
-    return patients.filter((p) => {
+  get filteredPatients(): PatientDto[] {
+    const q = this.searchTerm.trim().toLowerCase();
+    if (!q) return this.patients;
+
+    return this.patients.filter((p) => {
       const haystack = [
         p.nom,
         p.prenom,
@@ -65,5 +91,4 @@ export class PatientsComponent {
       return haystack.includes(q);
     });
   }
-
 }

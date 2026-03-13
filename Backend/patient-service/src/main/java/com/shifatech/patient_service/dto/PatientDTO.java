@@ -21,6 +21,16 @@ public class PatientDTO {
     private Boolean statut;
     private LocalDateTime createdAt;
 
+    // Informations personnelles (aplaties pour le frontend)
+    private String nom;
+    private String prenom;
+    private String cin;
+    private String email;
+    private String sexe;
+    private String dateNaissance;
+    private String telephone;
+    private String adresse;
+
     // Informations de l'utilisateur (provenant du service Auth)
     private UserDTO userInfo;
 }
