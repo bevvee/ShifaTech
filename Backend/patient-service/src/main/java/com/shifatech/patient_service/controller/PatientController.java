@@ -92,11 +92,10 @@ public class PatientController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePatient(
             @PathVariable Long id,
-            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long headerUserId,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long headerUserId) {
         Long userId = resolveUserId(headerUserId);
         log.info("Requête de suppression du patient ID: {}", id);
-        patientService.deletePatient(id, userId, authHeader);
+        patientService.deletePatient(id, userId);
         return ResponseEntity.ok(ApiResponse.success(null, "Patient supprimé avec succès"));
     }
 }

@@ -98,25 +98,26 @@ public class AuthServiceClient {
     }
 
     /**
-     * Supprime un utilisateur (Soft Delete) dans auth-service.
+     * Enregistre un nouvel utilisateur dans auth-service.
      */
-    public void deleteUser(Long idUser, String authHeader) {
-        if (idUser == null) return;
+    public UserDTO registerUser(RegisterRequest request) {
         try {
-            String url = authServiceUrl + "/delete/" + idUser;
-            log.info("Appel Auth Service: DELETE {}", url);
+            String url = authServiceUrl + "/register";
+            log.info("Appel Auth Service: POST {}", url);
             
-            HttpHeaders headers = new HttpHeaders();
-            if (authHeader != null) {
-                headers.set("Authorization", authHeader);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<?, ?> body = response.getBody();
+                Object user = body.get("user");
+                if (user instanceof Map dataMap) {
+                    return mapToUserDTO(dataMap);
+                }
             }
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-            
-            restTemplate.exchange(url, HttpMethod.DELETE, entity, Map.class);
-            log.info("Utilisateur {} supprimé avec succès dans Auth Service", idUser);
         } catch (Exception e) {
-            log.error("Erreur lors de la suppression de l'utilisateur {} dans Auth Service : {}", idUser, e.getMessage());
+            log.error("Erreur lors de l'enregistrement de l'utilisateur : {}", e.getMessage());
         }
+        return null;
     }
 
     private UserDTO mapToUserDTO(Map<?, ?> map) {

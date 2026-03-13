@@ -160,8 +160,8 @@ public class PatientService {
         return mapToDTO(updatedPatient, authHeader);
     }
 
-    public void deletePatient(Long id, Long deletedBy, String authHeader) {
-        log.info("Suppression du patient ID: {}", id);
+    public void deletePatient(Long id, Long deletedBy) {
+        log.info("Suppression (soft delete) du patient ID: {}", id);
 
         Patient patient = patientRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
@@ -171,12 +171,6 @@ public class PatientService {
                     "Seuls les administrateurs peuvent supprimer un dossier patient.");
         }
 
-        // 1. Supprimer l'utilisateur dans Auth
-        if (patient.getIdUser() != null) {
-            authServiceClient.deleteUser(patient.getIdUser(), authHeader);
-        }
-
-        // 2. Soft delete du patient
         patient.setDeletedAt(LocalDateTime.now());
         patient.setDeletedBy(deletedBy);
         patient.setStatut(false);
