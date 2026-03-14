@@ -23,6 +23,10 @@ public class DoctorDTO {
     private String email;
     private String sexe;
     private Boolean statut;
+    private String cin;
+    private String telephone;
+    private String adresse;
+    private String dateNaissance;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

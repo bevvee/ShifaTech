@@ -193,6 +193,10 @@ public class DoctorService {
 				dto.setEmail((String) user.get("email"));
 				dto.setSexe((String) user.get("sexe"));
 				dto.setStatut((Boolean) user.get("statut"));
+				dto.setCin((String) user.get("cin"));
+				dto.setTelephone((String) user.get("telephone"));
+				dto.setAdresse((String) user.get("adresse"));
+				dto.setDateNaissance((String) user.get("dateNaissance"));
 			}
 		} catch (Exception e) {
 			log.error("Failed to fetch user info from auth-service for userId: " + doctor.getIdUser(), e);
