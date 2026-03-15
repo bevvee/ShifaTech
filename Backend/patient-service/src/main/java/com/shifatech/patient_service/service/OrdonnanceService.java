@@ -30,6 +30,9 @@ public class OrdonnanceService {
     private final JwtUtil jwtUtil;
 
     public OrdonnanceDTO createOrdonnance(CreateOrdonnanceRequest request, Long createdBy, String authHeader) {
+        if (!isDocteur()) {
+            throw new AccessDeniedException("Seul un médecin peut créer une ordonnance.");
+        }
         log.info("Création d'une ordonnance pour le patient ID: {}", request.getIdPatient());
 
         // Seuls les médecins ou admins peuvent créer des ordonnances

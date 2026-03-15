@@ -16,4 +16,14 @@ public class UpdatePatientRequest {
     private String numeroAssurance;
 
     private Boolean statut;
+
+    // Champs utilisateur à synchroniser
+    private String nom;
+    private String prenom;
+    private String email;
+    private String cin;
+    private String sexe;
+    private String dateNaissance;
+    private String telephone;
+    private String adresse;
 }

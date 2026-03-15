@@ -33,6 +33,9 @@ public class VisiteService {
         private final JwtUtil jwtUtil;
 
         public VisiteDTO createVisite(CreateVisiteRequest request, Long createdBy, String authHeader) {
+                if (!isInfirmier() && !isDocteur()) {
+                        throw new AccessDeniedException("Seul un infirmier ou un médecin peut créer une visite.");
+                }
                 log.info("Création d'une visite pour le dossier ID: {}", request.getIdDossier());
 
                 // Seuls les médecins ou admins peuvent créer des visites
@@ -115,8 +118,8 @@ public class VisiteService {
         }
 
         public VisiteDTO updateVisite(Long id, CreateVisiteRequest request, String authHeader) {
-                if (!isInfirmier()) {
-                        throw new AccessDeniedException("Seul un infirmier peut modifier une visite.");
+                if (!isInfirmier() && !isDocteur()) {
+                        throw new AccessDeniedException("Seul un infirmier ou un médecin peut modifier une visite.");
                 }
                 log.info("Mise à jour de la visite ID: {}", id);
                 Visite visite = visiteRepository.findById(id)
@@ -129,9 +132,9 @@ public class VisiteService {
         }
 
         public void deleteVisite(Long id) {
-                if (!isAdmin() && !isInfirmier()) {
+                if (!isInfirmier()) {
                         throw new AccessDeniedException(
-                                        "Seuls les infirmiers ou administrateurs peuvent supprimer une visite.");
+                                        "Seul un infirmier peut supprimer une visite.");
                 }
                 log.info("Suppression de la visite ID: {}", id);
                 Visite visite = visiteRepository.findById(id)

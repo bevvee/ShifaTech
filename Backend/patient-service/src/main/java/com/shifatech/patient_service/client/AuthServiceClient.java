@@ -1,6 +1,7 @@
 package com.shifatech.patient_service.client;
 
 import com.shifatech.patient_service.dto.RegisterRequest;
+import com.shifatech.patient_service.dto.UpdateUserRequest;
 import com.shifatech.patient_service.dto.UserDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -116,6 +117,36 @@ public class AuthServiceClient {
             }
         } catch (Exception e) {
             log.error("Erreur lors de l'enregistrement de l'utilisateur : {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Met à jour un utilisateur dans auth-service.
+     */
+    public UserDTO updateUser(Long userId, UpdateUserRequest request, String authHeader) {
+        if (userId == null) return null;
+        try {
+            String url = authServiceUrl + "/update/" + userId;
+            log.info("Appel Auth Service: PUT {}", url);
+
+            HttpHeaders headers = new HttpHeaders();
+            if (authHeader != null) {
+                headers.set("Authorization", authHeader);
+            }
+            HttpEntity<UpdateUserRequest> entity = new HttpEntity<>(request, headers);
+
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.PUT, entity, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<?, ?> body = response.getBody();
+                Object user = body.get("user");
+                if (user instanceof Map dataMap) {
+                    return mapToUserDTO(dataMap);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors de la mise à jour de l'utilisateur {} : {}", userId, e.getMessage());
         }
         return null;
     }

@@ -56,6 +56,10 @@ public class DossierMedicalService {
 
     public DossierMedicalDTO createDossier(Long idPatient, CreateDossierRequest request, Long createdBy,
             String authHeader) {
+        if (!isInfirmier() && !isDocteur()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Seul un infirmier ou un médecin peut créer un dossier médical.");
+        }
         log.info("Création du dossier médical pour le patient ID: {}", idPatient);
 
         Patient patient = patientRepository.findById(idPatient)
@@ -84,6 +88,10 @@ public class DossierMedicalService {
 
     public DossierMedicalDTO updateDossier(Long idPatient, UpdateDossierRequest request, Long updatedBy,
             String authHeader) {
+        if (!isInfirmier() && !isDocteur()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Seul un infirmier ou un médecin peut modifier un dossier médical.");
+        }
         log.info("Mise à jour du dossier médical pour le patient ID: {}", idPatient);
 
         DossierMedical dossier = dossierMedicalRepository
@@ -113,9 +121,9 @@ public class DossierMedicalService {
     }
 
     public void deleteDossier(Long idPatient) {
-        if (!isAdmin() && !isInfirmier()) {
+        if (!isInfirmier()) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Seuls les infirmiers ou administrateurs peuvent supprimer un dossier.");
+                    "Seul un infirmier peut supprimer un dossier médical.");
         }
         log.info("Suppression du dossier médical pour le patient ID: {}", idPatient);
         DossierMedical dossier = dossierMedicalRepository.findByIdPatient(idPatient)

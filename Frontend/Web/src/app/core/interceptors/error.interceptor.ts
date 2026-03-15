@@ -18,8 +18,17 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         router.navigate(['/unauthorized']);
       } else {
         // Show error toast for other errors
-        const message = error.error?.message || error.message || 'Une erreur inattendue est survenue';
-        toastService.error('Erreur API', message);
+        const errBody = error.error;
+        const message = errBody?.message || error.message || 'Une erreur inattendue est survenue';
+
+        // Si c'est une erreur de validation avec des détails par champ
+        if (errBody?.data && typeof errBody.data === 'object' && !Array.isArray(errBody.data)) {
+          Object.values(errBody.data).forEach((errMsg: any) => {
+            toastService.error('Erreur Validation', String(errMsg));
+          });
+        } else {
+          toastService.error('Erreur API', message);
+        }
       }
 
       console.error('API Error:', error);

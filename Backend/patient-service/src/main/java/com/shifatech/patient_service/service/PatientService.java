@@ -5,6 +5,7 @@ import com.shifatech.patient_service.dto.CreatePatientRequest;
 import com.shifatech.patient_service.dto.PatientDTO;
 import com.shifatech.patient_service.dto.RegisterRequest;
 import com.shifatech.patient_service.dto.UpdatePatientRequest;
+import com.shifatech.patient_service.dto.UpdateUserRequest;
 import com.shifatech.patient_service.dto.UserDTO;
 import com.shifatech.patient_service.entity.Patient;
 import com.shifatech.patient_service.exception.ResourceAlreadyExistsException;
@@ -153,6 +154,25 @@ public class PatientService {
             patient.setStatut(request.getStatut());
 
         patient.setUpdatedBy(updatedBy);
+
+        // Synchroniser avec Auth-Service si des champs utilisateur sont présents
+        if (patient.getIdUser() != null && (request.getNom() != null || request.getPrenom() != null || 
+            request.getEmail() != null || request.getTelephone() != null || request.getSexe() != null ||
+            request.getDateNaissance() != null || request.getAdresse() != null)) {
+            
+            log.info("Synchronisation des modifications avec Auth-Service pour idUser: {}", patient.getIdUser());
+            UpdateUserRequest authSyncRequest = UpdateUserRequest.builder()
+                .nom(request.getNom())
+                .prenom(request.getPrenom())
+                .email(request.getEmail())
+                .telephone(request.getTelephone())
+                .sexe(request.getSexe())
+                .dateNaissance(request.getDateNaissance())
+                .adresse(request.getAdresse())
+                .build();
+                
+            authServiceClient.updateUser(patient.getIdUser(), authSyncRequest, authHeader);
+        }
 
         Patient updatedPatient = patientRepository.save(patient);
         log.info("Patient mis à jour avec succès. ID: {}", updatedPatient.getIdPatient());
