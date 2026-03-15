@@ -15,6 +15,21 @@ import { AuthService } from '../../core/services/auth.service';
 import { Doctor } from '../../core/models/doctor.model';
 import { Sexe } from '../../core/models/sexe.enum';
 
+export interface DoctorForm {
+    nom: string;
+    prenom: string;
+    cin: string;
+    email: string;
+    password: string;
+    sexe: Sexe;
+    statutValue: 'true' | 'false';
+    dateNaissance: string;
+    telephone: string;
+    adresse: string;
+    numeroOrdre: string;
+    idSpecialite: string;
+}
+
 @Component({
     selector: 'app-docteurs-form-page',
     standalone: true,
@@ -56,6 +71,7 @@ export class DocteursFormPageComponent implements OnInit {
 
     specialiteOptions: Option[] = [];
 
+    /*
     form: {
         nom: string;
         prenom: string;
@@ -70,6 +86,9 @@ export class DocteursFormPageComponent implements OnInit {
         numeroOrdre: string;
         idSpecialite: string;
     } = this.emptyForm();
+    */
+
+    form: DoctorForm = this.emptyForm();
 
     ngOnInit() {
         this.loadSpecialities();
@@ -256,7 +275,7 @@ export class DocteursFormPageComponent implements OnInit {
         this.router.navigate(['/docteurs']);
     }
 
-    private emptyForm() {
+    private emptyForm(): DoctorForm {
         return {
             nom: '',
             prenom: '',

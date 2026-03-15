@@ -1,9 +1,10 @@
 package com.shifatech.patient_service.dto;
 
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.time.LocalDateTime;
 
 @Data
 public class CreateOrdonnanceRequest {
@@ -15,12 +16,15 @@ public class CreateOrdonnanceRequest {
 
     private Long idVisite;
 
-    @NotNull(message = "La liste des médicaments est obligatoire")
+    @NotBlank(message = "La liste des médicaments est obligatoire")
     private String medicaments;
 
     private String description;
     private String posologie;
     private String dureeTraitement;
     private String instructions;
-    private LocalDateTime dateValidite;
+
+    @NotNull(message = "La date de validité est obligatoire")
+    @FutureOrPresent(message = "La date de validité doit être aujourd'hui ou dans le futur")
+    private java.time.LocalDate dateValidite;
 }

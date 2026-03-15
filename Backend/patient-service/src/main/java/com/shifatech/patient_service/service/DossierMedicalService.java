@@ -27,10 +27,7 @@ public class DossierMedicalService {
     private final AuthServiceClient authServiceClient;
     private final JwtUtil jwtUtil;
 
-    /**
-     * Récupérer le dossier médical d'un patient
-     */
-    public DossierMedicalDTO getDossierMedicalByPatient(Long idPatient) {
+    public DossierMedicalDTO getDossierMedicalByPatient(Long idPatient, String authHeader) {
         log.info("Récupération du dossier médical pour le patient: {}", idPatient);
 
         DossierMedical dossier = dossierMedicalRepository.findByIdPatient(idPatient)
@@ -38,7 +35,7 @@ public class DossierMedicalService {
 
         checkReadAccess(idPatient);
 
-        return mapToDTO(dossier);
+        return mapToDTO(dossier, authHeader);
     }
 
     public boolean hasDossierMedical(Long idPatient) {
@@ -46,30 +43,23 @@ public class DossierMedicalService {
     }
 
     @Transactional(readOnly = true)
-    public java.util.List<DossierMedicalDTO> getAllDossiers() {
+    public java.util.List<DossierMedicalDTO> getAllDossiers(String authHeader) {
         if (!isAdmin() && !isDocteur() && !isInfirmier()) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Seul le personnel médical peut lister les dossiers.");
         }
         log.info("Récupération de tous les dossiers médicaux");
         return dossierMedicalRepository.findAll().stream()
-                .map(this::mapToDTO)
+                .map(d -> mapToDTO(d, authHeader))
                 .collect(java.util.stream.Collectors.toList());
     }
 
-    public DossierMedicalDTO createDossier(Long idPatient, CreateDossierRequest request, Long createdBy) {
+    public DossierMedicalDTO createDossier(Long idPatient, CreateDossierRequest request, Long createdBy,
+            String authHeader) {
         log.info("Création du dossier médical pour le patient ID: {}", idPatient);
 
         Patient patient = patientRepository.findById(idPatient)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", idPatient));
-
-        /*
-         * if (!isAdmin() && !patient.getIdUser().equals(createdBy)) {
-         * throw new
-         * AccessDeniedException("Seul un administrateur ou le patient lui-même peut créer ce dossier."
-         * );
-         * }
-         */
 
         if (dossierMedicalRepository.existsByIdPatient(idPatient)) {
             throw new ResourceAlreadyExistsException("DossierMedical", "idPatient", idPatient);
@@ -89,19 +79,12 @@ public class DossierMedicalService {
         dossier.setStatus(DossierMedical.StatusDossier.ACTIVE);
 
         DossierMedical savedDossier = dossierMedicalRepository.save(dossier);
-        return mapToDTO(savedDossier);
+        return mapToDTO(savedDossier, authHeader);
     }
 
-    public DossierMedicalDTO updateDossier(Long idPatient, UpdateDossierRequest request, Long updatedBy) {
+    public DossierMedicalDTO updateDossier(Long idPatient, UpdateDossierRequest request, Long updatedBy,
+            String authHeader) {
         log.info("Mise à jour du dossier médical pour le patient ID: {}", idPatient);
-
-        /*
-         * if (!isAdmin()) {
-         * throw new
-         * AccessDeniedException("Accès refusé. Seul un administrateur peut modifier le dossier médical."
-         * );
-         * }
-         */
 
         DossierMedical dossier = dossierMedicalRepository
                 .findByIdPatientAndStatus(idPatient, DossierMedical.StatusDossier.ACTIVE)
@@ -126,7 +109,7 @@ public class DossierMedicalService {
         dossier.setUpdatedBy(updatedBy);
 
         DossierMedical updatedDossier = dossierMedicalRepository.save(dossier);
-        return mapToDTO(updatedDossier);
+        return mapToDTO(updatedDossier, authHeader);
     }
 
     public void deleteDossier(Long idPatient) {
@@ -157,8 +140,7 @@ public class DossierMedicalService {
                 .getAuthentication();
         if (authentication == null)
             return false;
-        return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
     private boolean isDocteur() {
@@ -166,8 +148,7 @@ public class DossierMedicalService {
                 .getAuthentication();
         if (authentication == null)
             return false;
-        return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_DOCTEUR"));
+        return authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_DOCTEUR"));
     }
 
     private boolean isInfirmier() {
@@ -175,12 +156,13 @@ public class DossierMedicalService {
                 .getAuthentication();
         if (authentication == null)
             return false;
-        return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_INFIRMIER"));
+        return authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_INFIRMIER"));
     }
 
-    private DossierMedicalDTO mapToDTO(DossierMedical dossier) {
-        return DossierMedicalDTO.builder()
+    private DossierMedicalDTO mapToDTO(DossierMedical dossier, String authHeader) {
+        log.info("Mappage du Dossier ID: {} pour le Patient ID: {}", dossier.getIdDossier(), dossier.getIdPatient());
+
+        DossierMedicalDTO dto = DossierMedicalDTO.builder()
                 .idDossier(dossier.getIdDossier())
                 .idPatient(dossier.getIdPatient())
                 .status(dossier.getStatus())
@@ -195,5 +177,48 @@ public class DossierMedicalService {
                 .dateFermeture(dossier.getDateFermeture())
                 .dateCreation(dossier.getDateCreation())
                 .build();
+
+        // Récupérer les infos du patient (numDossier et Nom)
+        System.err.println("DEBUG: Recherche du patient pour idPatient=" + dossier.getIdPatient());
+
+        // Tentative 1: Par ID primaire
+        if (dossier.getIdPatient() != null) {
+            patientRepository.findById(dossier.getIdPatient()).ifPresentOrElse(patient -> {
+                System.err.println("DEBUG: Patient trouvé par ID ! NumDossier=" + patient.getNumDossier());
+                dto.setNumDossier(patient.getNumDossier());
+                mapPatientInfo(patient, dto, authHeader);
+            }, () -> {
+                System.err.println(
+                        "DEBUG: Patient NON TROUVÉ par ID " + dossier.getIdPatient() + ". Tentative par idUser...");
+                // Tentative 2: Par idUser (certains dossiers pourraient avoir stocké l'idUser
+                // par erreur)
+                patientRepository.findByIdUser(dossier.getIdPatient()).ifPresentOrElse(patient -> {
+                    System.err.println("DEBUG: Patient trouvé par idUser ! NumDossier=" + patient.getNumDossier());
+                    dto.setNumDossier(patient.getNumDossier());
+                    mapPatientInfo(patient, dto, authHeader);
+                }, () -> {
+                    System.err.println("DEBUG: Définitivement aucun patient trouvé pour ID " + dossier.getIdPatient());
+                });
+            });
+        }
+
+        return dto;
+    }
+
+    private void mapPatientInfo(Patient patient, DossierMedicalDTO dto, String authHeader) {
+        if (patient.getIdUser() != null) {
+            try {
+                System.err.println("DEBUG: Appel Auth Service pour idUser=" + patient.getIdUser());
+                var user = authServiceClient.getUserById(patient.getIdUser(), authHeader);
+                if (user != null) {
+                    dto.setNomPatient(user.getNom() + " " + user.getPrenom());
+                    System.err.println("DEBUG: Nom récupéré: " + dto.getNomPatient());
+                } else {
+                    System.err.println("DEBUG: Auth Service a retourné null pour idUser=" + patient.getIdUser());
+                }
+            } catch (Exception e) {
+                System.err.println("DEBUG: Erreur Auth Service: " + e.getMessage());
+            }
+        }
     }
 }

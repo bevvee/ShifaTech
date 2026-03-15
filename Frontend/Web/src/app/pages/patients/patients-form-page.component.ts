@@ -16,6 +16,7 @@ import {
   Sexe,
 } from '../../core/models/patient.model';
 import { catchError, of, switchMap } from 'rxjs';
+import { ToastService } from '../../shared/services/toast.service';
 
 type Mode = 'create' | 'edit' | 'view';
 
@@ -44,6 +45,7 @@ export class PatientsFormPageComponent {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly patientApi = inject(PatientApiService);
+  private readonly toastService = inject(ToastService);
 
   private id: number | null;
 
@@ -188,13 +190,14 @@ export class PatientsFormPageComponent {
         }),
         catchError(err => {
           console.error('[PATIENT FORM] Erreur:', err);
-          alert('Une erreur est survenue : ' + (err.message || 'Erreur inconnue'));
+          this.toastService.error('Erreur', err.message || 'Erreur lors de la création');
           this.loading = false;
           return of(null);
         })
       ).subscribe(res => {
         this.loading = false;
         if (res) {
+          this.toastService.success('Succès', 'Patient créé avec succès');
           this.router.navigate(['/patients']);
         }
       });
@@ -203,11 +206,12 @@ export class PatientsFormPageComponent {
       this.patientApi.update(this.id, payload).subscribe({
         next: () => {
           this.loading = false;
+          this.toastService.success('Succès', 'Patient mis à jour avec succès');
           this.router.navigate(['/patients']);
         },
         error: (err) => {
           console.error(err);
-          alert('Erreur lors de la modification');
+          this.toastService.error('Erreur', 'Erreur lors de la modification');
           this.loading = false;
         }
       });

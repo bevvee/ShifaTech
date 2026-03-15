@@ -29,6 +29,10 @@ public class DossierMedicalDTO {
     private LocalDateTime dateFermeture;
     private LocalDateTime dateCreation;
 
+    // Infos du patient pour l'affichage
+    private String nomPatient;
+    private String numDossier;
+
     // Infos du docteur (récupérées du service Auth)
     private String nomDocteur;
     private String prenomDocteur;

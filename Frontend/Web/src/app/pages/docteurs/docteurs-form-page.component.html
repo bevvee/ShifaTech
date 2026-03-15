@@ -38,7 +38,7 @@
                     @if (mode === 'create') { <span class="font-semibold text-error-500">*</span> }
                 </app-label>
                 <app-input-field id="mot_de_passe" name="mot_de_passe" type="password" placeholder="Mot de passe"
-                    [(value)]="form.password" [error]="submitted && mode === 'create' && !form.password?.trim()"
+                    [(value)]="form.password" [error]="submitted && mode === 'create' && !form.password.trim()"
                     [hint]="mode === 'edit' ? 'Laisser vide pour ne pas changer.' : ''" />
             </div>
 

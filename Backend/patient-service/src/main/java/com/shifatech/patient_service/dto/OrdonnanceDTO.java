@@ -22,6 +22,10 @@ public class OrdonnanceDTO {
     private String posologie;
     private String dureeTraitement;
     private String instructions;
-    private LocalDateTime dateValidite;
+    private java.time.LocalDate dateValidite;
     private Boolean statut;
+
+    // Infos pour l'affichage
+    private String nomPatient;
+    private String numDossier;
 }
