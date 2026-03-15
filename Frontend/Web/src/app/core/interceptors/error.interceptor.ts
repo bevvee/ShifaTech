@@ -1,26 +1,40 @@
-import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
+import { Injectable } from '@angular/core';
+import {
+  HttpInterceptor,
+  HttpRequest,
+  HttpHandler,
+  HttpErrorResponse
+} from '@angular/common/http';
+import { catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 
-export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-  const router = inject(Router);
+@Injectable()
+export class ErrorInterceptor implements HttpInterceptor {
 
-  return next(req).pipe(
-    catchError((error) => {
+  intercept(req: HttpRequest<any>, next: HttpHandler) {
 
-      if (error.status === 401) {
-        localStorage.clear();
-        router.navigate(['/login']);
-      }
+    return next.handle(req).pipe(
 
-      if (error.status === 403) {
-        router.navigate(['/unauthorized']);
-      }
+      catchError((error: HttpErrorResponse) => {
 
-      console.error('API Error:', error);
+        if (error.status === 401) {
 
-      return throwError(() => error);
-    })
-  );
-};
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+
+        }
+
+        if (error.status === 403) {
+
+          console.error('Access denied');
+
+        }
+
+        return throwError(() => error);
+
+      })
+
+    );
+
+  }
+}

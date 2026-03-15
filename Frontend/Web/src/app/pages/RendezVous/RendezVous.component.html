@@ -1,108 +1,52 @@
 <div>
-  <app-page-breadcrumb pageTitle="Rendez Vous" />
 
-  <div>
-    <app-component-card title="Rendez Vous">
-      <button
-        card-actions
-        type="button"
-        (click)="openModal()"
-        class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
-      >
-        Add Rendez Vous
-      </button>
+  <app-page-breadcrumb pageTitle="Rendez Vous"></app-page-breadcrumb>
 
-      <app-modal
-        [isOpen]="isOpen"
-        (close)="closeModal()"
-        className="max-w-175 p-6 lg:p-10"
-      >
-        <div class="flex flex-col px-2 overflow-y-auto custom-scrollbar">
-          <div>
-            <h5
-              class="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl"
-            >
-              {{ selectedRdv ? 'Edit Rendez Vous' : 'Add Rendez Vous' }}
-            </h5>
-          </div>
+  <app-component-card title="Rendez Vous">
 
-          <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <app-label>Patient</app-label>
-              <app-select
-                [options]="patientOptions"
-                placeholder="Select patient"
-                [value]="id_patient"
-                (valueChange)="id_patient = $event"
-                className="dark:bg-dark-900"
-              ></app-select>
-            </div>
+    <!-- Add button -->
+    <button
+      card-actions
+      routerLink="/rendez-vous/new"
+      class="inline-flex items-center justify-center rounded-lg bg-green-400 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-600"
+    >
+      Add Rendez Vous
+    </button>
 
-            <div>
-              <app-label>Docteur</app-label>
-              <app-select
-                [options]="docteurOptions"
-                placeholder="Select docteur"
-                [value]="id_docteur"
-                (valueChange)="id_docteur = $event"
-                className="dark:bg-dark-900"
-              ></app-select>
-            </div>
+    <!-- Table -->
+    <app-basic-table-three
+      [title]="'Liste des Rendez Vous'"
+      [rendezVousData]="rendezVous"
+      (view)="viewRdv($event)"
+      (edit)="editRdv($event)"
+      (delete)="deleteRdv($event)"
+    >
+    </app-basic-table-three>
+    
+    <!-- Loading -->
+    <div *ngIf="loading" class="flex flex-col items-center justify-center py-20 space-y-6">
 
-            <div>
-              <app-date-picker
-                id="rdv-date"
-                label="Date de Rendez vous"
-                placeholder="Select date"
-                [defaultDate]="date_rdv"
-                (dateChange)="onDateChange($event)"
-              />
-            </div>
+      <div class="relative flex items-center justify-center">
 
-            <div>
-              <app-time-picker
-                id="rdv-time"
-                label="Heure"
-                placeholder="Select time"
-                [defaultTime]="heure_rdv"
-                (timeChange)="onTimeChange($event)"
-              />
-            </div>
+        <span class="absolute h-24 w-24 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></span>
 
-            <div class="sm:col-span-2">
-              <app-label>Statut</app-label>
-              <app-select
-                [options]="statutOptions"
-                placeholder="Select statut"
-                [value]="statut"
-                (valueChange)="onStatutChange($event)"
-                className="dark:bg-dark-900"
-              ></app-select>
-            </div>
-          </div>
+        <img
+          src="images/logo/logo-icon.png"
+          alt="ShifaTech"
+          class="h-16 w-16 z-10 animate-pulse"
+        />
 
-          <div class="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
-            <button
-              (click)="closeModal()"
-              type="button"
-              class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 sm:w-auto"
-            >
-              Annuler
-            </button>
-            <button
-              (click)="handleAddOrUpdateEvent()"
-              type="button"
-              class="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-            >
-              {{ selectedRdv ? 'Modifer Rendez Vous' : 'Ajouter Rendez Vous' }}
-            </button>
-          </div>
-        </div>
-      </app-modal>
-      <app-basic-table-three
-        [title]="'Liste des Rendez Vous'"
-        [rendezVousData]="rendezVous"
-      />
-    </app-component-card>
-  </div>
+      </div>
+
+      <div class="flex items-center space-x-1 text-gray-500 dark:text-gray-400 text-sm">
+        <span>Chargement des rendez-vous</span>
+        <span class="animate-bounce">.</span>
+        <span class="animate-bounce [animation-delay:200ms]">.</span>
+        <span class="animate-bounce [animation-delay:400ms]">.</span>
+      </div>
+
+    </div>
+
+  </app-component-card>
+
 </div>

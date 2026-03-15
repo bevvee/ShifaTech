@@ -1,8 +1,5 @@
-import { Routes } from '@angular/router';
-import { Admin } from './pages/dashboard/Admin/admin.component';
-
-import { Infirmier } from './pages/dashboard/Infirmier/infirmier.component';
-import { Docteur } from './pages/dashboard/Docteur/docteur.component';
+import { Routes } from "@angular/router";
+import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { FormElementsComponent } from './pages/forms/form-elements/form-elements.component';
 import { BasicTablesComponent } from './pages/tables/basic-tables/basic-tables.component';
@@ -38,98 +35,132 @@ import { OrdonnancesComponent } from './pages/ordonnances/ordonnances.component'
 import { OrdonnancesFormPageComponent } from './pages/ordonnances/ordonnances-form-page.component';
 import { roleGuard, rootGuard } from './core/guards/auth.guard';
 import { Role } from './core/models/role.enum';
+import { RdvEditComponent } from "./pages/RendezVous/rdv-edit.component";
+import { RdvViewComponent } from "./pages/RendezVous/rdv-view.component";
+
 
 export const routes: Routes = [
   {
-    path: '',
-    pathMatch: 'full',
+    path: "",
+    pathMatch: "full",
     canActivate: [rootGuard],
-    children: []
+    children: [],
   },
   {
-    path: '',
+    path: "",
     component: AppLayoutComponent,
     children: [
       {
-        path: 'admin',
-        component: Admin,
-        title: 'Admin | ShifaTech',
+        path: 'dashboard',
+        component: DashboardComponent,
+        title: 'Dashboard | ShifaTech',
         canActivate: [roleGuard],
         data: {
-          roles: [Role.ADMIN]
-        }
+          roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER, Role.SECRETAIRE],
+        },
+      },
+      {
+        path: 'admin',
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
       },
       {
         path: 'docteur',
-        component: Docteur,
-        title: 'Docteur | ShifaTech',
-        canActivate: [roleGuard],
-        data: {
-          roles: [Role.DOCTEUR]
-        }
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
       },
       {
         path: 'infirmier',
-        component: Infirmier,
-        title: 'Infirmier | ShifaTech',
-        canActivate: [roleGuard],
-        data: { roles: [Role.INFIRMIER, Role.ADMIN] }
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
       },
       {
-        path: 'calendar',
+        path: "calendar",
         component: CalenderComponent,
-        title: 'Calender | ShifaTech',
+        title: "Calender | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.DOCTEUR, Role.INFIRMIER, Role.ADMIN] }
+        data: { roles: [Role.DOCTEUR, Role.INFIRMIER] },
       },
       {
-        path: 'rendez-vous',
+        path: "rendez-vous",
         component: RendezVousComponent,
-        title: 'Liste des Rendez Vous | ShifaTech',
         canActivate: [roleGuard],
-        data: { roles: [Role.DOCTEUR, Role.INFIRMIER, Role.ADMIN] }
+        data: { roles: [Role.DOCTEUR, Role.INFIRMIER] },
       },
       {
-        path: 'docteurs',
+        path: "rendez-vous/:id",
+        component: RdvViewComponent,
+        canActivate: [roleGuard],
+        data: {
+          mode: "view",
+          roles: [Role.DOCTEUR, Role.INFIRMIER],
+        },
+      },
+      {
+        path: "rendez-vous/:id/edit",
+        component: RdvEditComponent,
+        canActivate: [roleGuard],
+        data: {
+          mode: "edit",
+          roles: [Role.DOCTEUR,Role.INFIRMIER],
+        },
+      },
+      {
+        path: "rendez-vous/new",
+        component: RdvEditComponent,
+        canActivate: [roleGuard],
+        data: {
+          mode: "create",
+          roles: [Role.INFIRMIER],
+        },
+      },
+      {
+        path: "docteurs",
         component: DocteursComponent,
-        title: 'Liste des Docteurs | ShifaTech',
+        title: "Liste des Docteurs | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.DOCTEUR] }
+        data: { roles: [Role.ADMIN] },
       },
       {
-        path: 'docteurs/new',
+        path: "docteurs/new",
         component: DocteursComponent,
-        title: 'Ajouter un Docteur | ShifaTech',
+        title: "Ajouter un Docteur | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.DOCTEUR] }
+        data: { roles: [Role.ADMIN] },
       },
       {
-        path: 'patients',
+        path: "patients",
         component: PatientsComponent,
-        title: 'Liste des Patients | ShifaTech',
+        title: "Liste des Patients | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: { roles: [Role.ADMIN, Role.INFIRMIER] },
       },
       {
-        path: 'patients/new',
+        path: "patients/new",
         component: PatientsFormPageComponent,
-        title: 'Ajouter un Patient | ShifaTech',
+        title: "Ajouter un Patient | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: { roles: [Role.ADMIN, Role.INFIRMIER] },
       },
       {
-        path: 'patients/:id',
+        path: "patients/:id",
         component: PatientsFormPageComponent,
-        title: 'Détails Patient | ShifaTech',
+        title: "Détails Patient | ShifaTech",
         canActivate: [roleGuard],
-        data: { mode: 'view', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: {
+          mode: "view",
+          roles: [Role.ADMIN, Role.INFIRMIER],
+        },
       },
       {
-        path: 'patients/:id/edit',
+        path: "patients/:id/edit",
         component: PatientsFormPageComponent,
-        title: 'Modifier Patient | ShifaTech',
+        title: "Modifier Patient | ShifaTech",
         canActivate: [roleGuard],
-        data: { mode: 'edit', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: {
+          mode: "edit",
+          roles: [Role.ADMIN, Role.INFIRMIER],
+        },
       },
       // Dossier Medical
       {
@@ -219,144 +250,159 @@ export const routes: Routes = [
         data: { mode: 'edit', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
       },
       {
-        path: 'infirmiers',
+        path: "infirmiers",
         component: InfirmiersComponent,
-        title: 'Liste des Infirmiers | ShifaTech',
+        title: "Liste des Infirmiers | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN] }
+        data: { roles: [Role.ADMIN] },
       },
       {
-        path: 'infirmiers/new',
+        path: "infirmiers/new",
         component: InfirmiersComponent,
-        title: 'Ajouter un Infirmier | ShifaTech',
+        title: "Ajouter un Infirmier | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN] }
+        data: { roles: [Role.ADMIN] },
       },
       {
-        path: 'services',
+        path: "services",
         component: ServicesComponent,
-        title: 'Liste des Services | ShifaTech',
+        title: "Liste des Services | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN] }
+        data: { roles: [Role.ADMIN] },
       },
       {
-        path: 'services/new',
+        path: "services/new",
         component: ServicesComponent,
-        title: 'Ajouter un Service | ShifaTech',
+        title: "Ajouter un Service | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN] }
+        data: { roles: [Role.ADMIN] },
       },
       {
-        path: 'specialisations',
+        path: "specialisations",
         component: SpecialisationsComponent,
-        title: 'Liste des Spécialisations | ShifaTech',
+        title: "Liste des Spécialisations | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN] }
+        data: { roles: [Role.ADMIN] },
       },
       {
-        path: 'specialisations/new',
+        path: "specialisations/new",
         component: SpecialisationsComponent,
-        title: 'Ajouter une Spécialisation | ShifaTech',
+        title: "Ajouter une Spécialisation | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN] }
+        data: { roles: [Role.ADMIN] },
       },
       {
-        path: 'profile',
+        path: "profile",
         component: ProfileComponent,
-        title: 'Profile | ShifaTech'
+        title: "Profile | ShifaTech",
       },
       {
-        path: 'form-elements',
+        path: "form-elements",
         component: FormElementsComponent,
-        title: 'Angular Form Elements Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Form Elements Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
       {
-        path: 'basic-tables',
+        path: "basic-tables",
         component: BasicTablesComponent,
-        title: 'Angular Basic Tables Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Basic Tables Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
       {
-        path: 'blank',
+        path: "blank",
         component: BlankComponent,
-        title: 'Angular Blank Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Blank Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
       // support tickets
       {
-        path: 'invoice',
+        path: "invoice",
         component: InvoicesComponent,
-        title: 'Angular Invoice Details Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Invoice Details Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
       {
-        path: 'line-chart',
+        path: "line-chart",
         component: LineChartComponent,
-        title: 'Angular Line Chart Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Line Chart Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
       {
-        path: 'bar-chart',
+        path: "bar-chart",
         component: BarChartComponent,
-        title: 'Angular Bar Chart Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Bar Chart Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
       {
-        path: 'alerts',
+        path: "alerts",
         component: AlertsComponent,
-        title: 'Angular Alerts Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Alerts Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
       {
-        path: 'avatars',
+        path: "avatars",
         component: AvatarElementComponent,
-        title: 'Angular Avatars Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Avatars Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
       {
-        path: 'badge',
+        path: "badge",
         component: BadgesComponent,
-        title: 'Angular Badges Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Badges Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
       {
-        path: 'buttons',
+        path: "buttons",
         component: ButtonsComponent,
-        title: 'Angular Buttons Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Buttons Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
       {
-        path: 'images',
+        path: "images",
         component: ImagesComponent,
-        title: 'Angular Images Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Images Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
       {
-        path: 'videos',
+        path: "videos",
         component: VideosComponent,
-        title: 'Angular Videos Dashboard | TailAdmin - Angular Admin Dashboard Template'
+        title:
+          "Angular Videos Dashboard | TailAdmin - Angular Admin Dashboard Template",
       },
-    ]
+    ],
   },
   {
-    path: 'signin',
+    path: "signin",
     component: SignInComponent,
-    title: 'Angular Sign In Dashboard | TailAdmin - Angular Admin Dashboard Template'
+    title:
+      "Angular Sign In Dashboard | TailAdmin - Angular Admin Dashboard Template",
   },
   {
-    path: 'signup',
+    path: "signup",
     component: SignUpComponent,
-    title: 'Angular Sign Up Dashboard | TailAdmin - Angular Admin Dashboard Template'
+    title:
+      "Angular Sign Up Dashboard | TailAdmin - Angular Admin Dashboard Template",
   },
   {
-    path: 'forgot-password',
+    path: "forgot-password",
     component: ForgotPasswordComponent,
-    title: 'Mot de Passe Oublié | ShifaTech',
+    title: "Mot de Passe Oublié | ShifaTech",
   },
   {
-    path: 'reset-password',
+    path: "reset-password",
     component: ResetPasswordComponent,
-    title: 'Réinitialiser Mot de Passe | ShifaTech',
+    title: "Réinitialiser Mot de Passe | ShifaTech",
   },
   {
-    path: 'unauthorized',
+    path: "unauthorized",
     component: NotFoundComponent,
-    title: 'Unauthorized | ShifaTech',
+    title: "Unauthorized | ShifaTech",
   },
   // error pages
   {
-    path: '**',
+    path: "**",
     component: NotFoundComponent,
-    title: 'Angular NotFound Dashboard | TailAdmin - Angular Admin Dashboard Template'
+    title:
+      "Angular NotFound Dashboard | TailAdmin - Angular Admin Dashboard Template",
   },
 ];

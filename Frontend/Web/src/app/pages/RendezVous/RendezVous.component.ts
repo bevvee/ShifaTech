@@ -1,170 +1,129 @@
-import { Component, inject } from '@angular/core';
-import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
-import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
-import { BasicTableThreeComponent } from '../../shared/components/tables/basic-table-three/basic-table-three.component';
-import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
+import { Component, OnInit } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { RouterModule } from "@angular/router";
+import { ActivatedRoute } from "@angular/router";
+import { RdvService } from "../../core/services/rdv.service";
+import { RdvCreateDto } from "../../core/models/rdv.model";
+import { Router } from "@angular/router";
+import { PageBreadcrumbComponent } from "../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
+import { ComponentCardComponent } from "../../shared/components/common/component-card/component-card.component";
 import {
-  Option,
-  SelectComponent,
-} from '../../shared/components/form/select/select.component';
-import { LabelComponent } from '../../shared/components/form/label/label.component';
-import { DatePickerComponent } from '../../shared/components/form/date-picker/date-picker.component';
-import { TimePickerComponent } from '../../shared/components/form/time-picker/time-picker.component';
-
-import { RdvService } from '../../core/services/rdv.service';
-import { RdvCreateDto, RdvDto } from '../../core/models/rdv.model';
-
-type RendezVousStatus = 'Confirmé' | 'En attente' | 'Annulé';
-
-type RendezVous = {
-  id: string;
-  patient: string;
-  medecin: string;
-  date: string;
-  heure: string;
-  status: RendezVousStatus;
-};
+  BasicTableThreeComponent,
+  RendezVousRow,
+} from "../../shared/components/tables/basic-table-three/basic-table-three.component";
 
 @Component({
-  selector: 'app-rendez-vous',
+  selector: "app-rendezvous",
   standalone: true,
+  templateUrl: "./RendezVous.component.html",
   imports: [
+    CommonModule,
+    RouterModule,
     PageBreadcrumbComponent,
     ComponentCardComponent,
     BasicTableThreeComponent,
-    ModalComponent,
-    SelectComponent,
-    LabelComponent,
-    DatePickerComponent,
-    TimePickerComponent,
   ],
-  templateUrl: './RendezVous.component.html',
 })
-export class RendezVousComponent {
-
-  private rdvService = inject(RdvService);
-
-  // Modal state
-  selectedRdv: RendezVous | null = null;
-  isOpen = false;
-
+export class RendezVousComponent implements OnInit {
+  rendezVous: RendezVousRow[] = [];
   loading = false;
-  errorMsg = '';
+  formatDate(date: string): string {
+    const d = new Date(date);
 
-  // Form fields
-  id_patient = '';
-  id_docteur = '';
-  date_rdv = '';
-  heure_rdv = '';
-  statut: RendezVousStatus | '' = '';
+    return d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+  formatTime(time: string): string {
+    const d = new Date(time);
 
-  patientOptions: Option[] = [
-    { value: '1', label: 'Patient oussama' },
-    { value: '2', label: 'Patient C' },
-    { value: '3', label: 'Patient E' },
-  ];
+    return d.toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
 
-  docteurOptions: Option[] = [
-    { value: '1', label: 'Dr. B' },
-    { value: '2', label: 'Dr. D' },
-    { value: '3', label: 'Dr. F' },
-  ];
+  constructor(
+    private rdvService: RdvService,
+    private router: Router,
+    private route: ActivatedRoute,
+  ) {}
 
-  statutOptions: Option[] = [
-    { value: 'Confirmé', label: 'Confirmé' },
-    { value: 'En attente', label: 'En attente' },
-    { value: 'Annulé', label: 'Annulé' },
-  ];
+  mode: "list" | "view" | "edit" | "create" = "list";
+  ngOnInit() {
+    const routeMode = this.route.snapshot.data["mode"];
 
-  rendezVous: RendezVous[] = [];
-
-  trackById = (_index: number, item: RendezVous) => item.id;
-
-  openModal(rdv?: RendezVous) {
-    this.isOpen = true;
-    this.selectedRdv = rdv ?? null;
-
-    if (!rdv) {
-      this.resetModalFields();
-      return;
+    if (routeMode) {
+      this.mode = routeMode;
     }
 
-    this.date_rdv = rdv.date;
-    this.heure_rdv = rdv.heure;
-    this.statut = rdv.status;
-  }
-
-  resetModalFields() {
-    this.selectedRdv = null;
-    this.id_patient = '';
-    this.id_docteur = '';
-    this.date_rdv = '';
-    this.heure_rdv = '';
-    this.statut = '';
-    this.errorMsg = '';
-  }
-
-handleAddOrUpdateEvent() {
-
-  if (!this.id_patient || !this.id_docteur || !this.date_rdv || !this.heure_rdv) {
-    this.errorMsg = 'Tous les champs sont obligatoires';
-    return;
-  }
-
-  const dto = {
-    id_patient: Number(this.id_patient),
-    id_docteur: Number(this.id_docteur),
-    date_rdv: this.date_rdv,
-    heure_rdv: this.heure_rdv + ':00',
-    statut: 'PENDING',
-    created_at: new Date().toISOString(),
-    created_by: 1
-  };
-
-  this.loading = true;
-
-  this.rdvService.create(dto).subscribe({
-    next: (res) => {
-      this.loading = false;
-      this.closeModal();
-    },
-    error: (err) => {
-      console.error(err);
-      this.loading = false;
-      this.errorMsg = 'Erreur backend';
-    }
-  });
-}
-
-  onDateChange(event: { dateStr?: string } | null | undefined) {
-    this.date_rdv = event?.dateStr ?? '';
-  }
-
-  onTimeChange(value: string) {
-    this.heure_rdv = value;
-  }
-
-  onStatutChange(value: string) {
-    if (value === 'Confirmé' || value === 'En attente' || value === 'Annulé') {
-      this.statut = value;
+    if (this.mode === "list") {
+      this.loadRdvs();
     }
   }
 
-  private getOptionLabel(options: Option[], value: string): string | undefined {
-    return options.find(option => option.value === value)?.label;
+  loadRdvs() {
+    this.loading = true;
+
+    this.rdvService.getAll().subscribe({
+      next: (response: any) => {
+        console.log("RDV API response:", response);
+
+        const rdvs: RdvCreateDto[] = response?.member ?? [];
+
+        this.rendezVous = rdvs.map((rdv) => ({
+          id: String(rdv.id ?? 0),
+          patient: `Patient ${rdv.id_patient}`,
+          medecin: `Dr ${rdv.id_docteur}`,
+          date: this.formatDate(rdv.date_rdv),
+          heure: `${this.formatTime(rdv.heure_debut)}H - ${this.formatTime(rdv.heure_fin)}H`,
+          statut: this.mapStatus(rdv.statut ?? "EN_ATTENTE"),
+        }));
+
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.loading = false;
+      },
+    });
   }
 
-  private mapStatusToBackend(status: RendezVousStatus | ''): string {
-    switch (status) {
-      case 'Confirmé': return 'CONFIRMED';
-      case 'Annulé': return 'CANCELLED';
-      case 'En attente': return 'PENDING';
-      default: return 'PENDING';
+  mapStatus(status: string): "Confirmé" | "En attente" | "Annulé" | "Terminé" {
+    const s = (status || "").trim().toUpperCase();
+
+    if (s === "CONFIRME") {
+      return "Confirmé";
     }
+
+    if (s === "ANNULE") {
+      return "Annulé";
+    }
+
+    if (s === "TERMINE") {
+      return "Terminé";
+    }
+
+    return "En attente";
   }
 
-  closeModal() {
-    this.isOpen = false;
-    this.resetModalFields();
+  viewRdv(rdv: any) {
+    this.router.navigate(["/rendez-vous", rdv.id]);
+  }
+
+  editRdv(rdv: any) {
+    this.router.navigate(["/rendez-vous", rdv.id, "edit"]);
+  }
+
+  deleteRdv(rdv: any) {
+    if (!confirm("Supprimer ce rendez-vous ?")) return;
+
+    this.rdvService.deleteById(rdv.id).subscribe({
+      next: () => this.loadRdvs(),
+
+      error: (err) => console.error(err),
+    });
   }
 }

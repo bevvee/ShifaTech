@@ -1,0 +1,51 @@
+<app-page-breadcrumb pageTitle="Détails Rendez Vous" />
+
+<div>
+  <app-component-card title="Détails Rendez Vous">
+    <ng-container *ngIf="rdv">
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div>
+          <app-label>Patient</app-label>
+          <div class="flex items-center gap-3">
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-sm font-semibold text-white"
+            >
+              {{ patientInitials }}
+            </div>
+            <div class="text-sm text-gray-800 dark:text-white/90">
+              {{ patientLabel }}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <app-label>Docteur</app-label>
+          <div class="flex items-center gap-3">
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-sm font-semibold text-white"
+            >
+              {{ doctorInitials }}
+            </div>
+            <div class="text-sm text-gray-800 dark:text-white/90">
+              {{ doctorLabel }}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <app-label>Date</app-label>
+          <div class="text-sm text-gray-800 dark:text-white/90">
+            {{ rdvSlotLabel }}
+          </div>
+        </div>
+
+        <div>
+          <app-label>Status</app-label>
+          <div class="text-sm text-gray-800 dark:text-white/90">
+            {{ rdv.status ?? rdv.statut }}
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </app-component-card>
+</div>

@@ -52,7 +52,7 @@ use Doctrine\ORM\Mapping as ORM;
             input: false,
         ),
         new Delete(
-            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_SECRETAIRE')",
+            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_SECRETAIRE') or is_granted('ROLE_INFIRMIER')",
             processor: SoftDeleteProcessor::class
         )
     ],

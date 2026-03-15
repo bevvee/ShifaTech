@@ -1,23 +1,32 @@
 import { Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
 import { ApiService } from './api.service';
-import { RdvCreateDto, RdvDto } from '../models/rdv.model';
+import { environment } from '../../../environments/environment';
+import { RdvCreateDto } from '../models/rdv.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RdvService extends ApiService {
 
-    private base = environment.api.rdv;
+  private base = environment.api.rdv;
 
-  create(dto: RdvCreateDto) {
-    return this.post<RdvDto>(`${this.base}`, dto);
-  }
   getAll() {
-    return this.get(`${this.base}`);
+    return this.get<any>(`${this.base}`);
   }
 
-	deleteById(id: number) {
-		return super.delete(`${this.base}/${id}`);
-	}
+  getById(id: number) {
+    return this.get<RdvCreateDto>(`${this.base}/${id}`);
+  }
+
+  create(data: RdvCreateDto) {
+    return this.post<RdvCreateDto>(`${this.base}`, data);
+  }
+
+  update(id: number, data: RdvCreateDto) {
+    return this.put<RdvCreateDto>(`${this.base}/${id}`, data);
+  }
+
+  deleteById(id: number) {
+    return super.delete(`${this.base}/${id}`);
+  }
 }
