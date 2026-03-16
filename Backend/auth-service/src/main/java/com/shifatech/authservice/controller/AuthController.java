@@ -48,7 +48,7 @@ public class AuthController {
 
     // Update user
     @PutMapping("/update/{userId}")
-    public ResponseEntity<ApiResponse> updateUser(@PathVariable Long userId, @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<ApiResponse> updateUser(@PathVariable Long userId, @RequestBody @Valid UpdateUserRequest request) {
 
         ApiResponse response = authService.updateUser(userId, request);
         HttpStatus status = response.isError() ? HttpStatus.BAD_REQUEST : HttpStatus.OK;

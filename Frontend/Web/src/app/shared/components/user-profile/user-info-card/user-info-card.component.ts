@@ -40,8 +40,13 @@ export class UserInfoCardComponent {
   isOpen = false;
   openModal() {
     this.editedUser = { ...this.user };
+    this.editedUser.motDePasse = '';
+    this.editedUser.motDePasseConfirmation = '';
     if (this.editedUser.dateNaissance) {
       this.editedUser.dateNaissance = this.editedUser.dateNaissance.substring(0, 10);
+    }
+    if (this.editedUser.statut !== undefined && this.editedUser.statut !== null) {
+      this.editedUser.statut = String(this.editedUser.statut);
     }
     this.isOpen = true;
   }
@@ -52,6 +57,10 @@ export class UserInfoCardComponent {
   sexeOptions = [
     { label: 'Homme', value: 'M' },
     { label: 'Femme', value: 'F' }
+  ];
+  statutOptions = [
+    { label: 'Active', value: 'true' },
+    { label: 'Inactive', value: 'false' }
   ];
 
   handleSave() {
@@ -69,8 +78,22 @@ export class UserInfoCardComponent {
       adresse: this.editedUser.adresse,
       sexe: this.editedUser.sexe,
       role: this.editedUser.role,
-      dateNaissance: this.editedUser.dateNaissance
+      statut: this.editedUser.statut === 'true' || this.editedUser.statut === true,
+      dateNaissance: this.editedUser.dateNaissance,
+      cin: this.editedUser.cin,
+      motDePasse: this.editedUser.motDePasse,
+      motDePasseConfirmation: this.editedUser.motDePasseConfirmation
     };
+
+    if (!payload.nom || !payload.prenom || !payload.email || !payload.telephone || !payload.cin) {
+      this.toast.error('Erreur', 'Veuillez remplir tous les champs obligatoires (Nom, Prenom, Email, CIN, Telephone)');
+      return;
+    }
+
+    if (payload.motDePasse && payload.motDePasse !== payload.motDePasseConfirmation) {
+      this.toast.error('Erreur', 'Le mot de passe et la confirmation ne correspondent pas');
+      return;
+    }
 
     this.authService.updateUser(userId, payload).subscribe({
       next: (res: any) => {
@@ -82,10 +105,12 @@ export class UserInfoCardComponent {
           this.isOpen = false;
           this.modal.closeModal();
         } else {
+          this.toast.error('Erreur', res.message || 'La mise à jour a échoué');
           console.error('Update failed:', res.message);
         }
       },
       error: (err: any) => {
+        this.toast.error('Erreur', err.error?.message || 'Erreur lors de la mise à jour du profil');
         console.error('Error updating profile:', err);
       }
     });

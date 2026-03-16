@@ -119,19 +119,19 @@
             </h5>
             <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
               <div class="col-span-2 lg:col-span-1">
-                <app-label>Prenom</app-label>
+                <app-label>Prenom <span class="text-red-500">*</span></app-label>
                 <app-input-field type="text" [(value)]="editedUser.prenom" />
               </div>
               <div class="col-span-2 lg:col-span-1">
-                <app-label>Nom</app-label>
+                <app-label>Nom <span class="text-red-500">*</span></app-label>
                 <app-input-field type="text" [(value)]="editedUser.nom" />
               </div>
               <div class="col-span-2 lg:col-span-1">
-                <app-label>Email Address</app-label>
+                <app-label>Email Address <span class="text-red-500">*</span></app-label>
                 <app-input-field type="text" [(value)]="editedUser.email" />
               </div>
               <div class="col-span-2 lg:col-span-1">
-                <app-label>Phone</app-label>
+                <app-label>Phone <span class="text-red-500">*</span></app-label>
                 <app-input-field type="text" [(value)]="editedUser.telephone" />
               </div>
               <div class="col-span-2 relative">
@@ -146,16 +146,28 @@
                 </div>
               </div>
               <div class="col-span-2 lg:col-span-1">
-                <app-label>CIN</app-label>
+                <app-label>CIN <span class="text-red-500">*</span></app-label>
                 <app-input-field type="text" [(value)]="editedUser.cin" />
               </div>
               <div class="col-span-2 lg:col-span-1">
                 <app-label>Sexe</app-label>
                 <app-select [options]="sexeOptions" [(value)]="editedUser.sexe" [hasSearch]="false" placeholder="Sélectionnez" />
               </div>
+              <div class="col-span-2 lg:col-span-1">
+                <app-label>Statut</app-label>
+                <app-select [options]="statutOptions" [(value)]="editedUser.statut" [hasSearch]="false" placeholder="Sélectionnez" />
+              </div>
               <div class="col-span-2">
                 <app-label>Address</app-label>
                 <app-input-field type="text" [(value)]="editedUser.adresse" />
+              </div>
+              <div class="col-span-2 lg:col-span-1">
+                <app-label>Nouveau mot de passe</app-label>
+                <app-input-field type="password" [(value)]="editedUser.motDePasse" />
+              </div>
+              <div class="col-span-2 lg:col-span-1">
+                <app-label>Confirmer le mot de passe</app-label>
+                <app-input-field type="password" [(value)]="editedUser.motDePasseConfirmation" />
               </div>
             </div>
           </div>

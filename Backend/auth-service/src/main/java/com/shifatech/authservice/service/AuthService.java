@@ -141,11 +141,23 @@ public class AuthService {
             if (request.getNom() != null) user.setNom(request.getNom());
             if (request.getPrenom() != null) user.setPrenom(request.getPrenom());
             if (request.getEmail() != null) user.setEmail(request.getEmail());
-            if (request.getMotDePasse() != null) user.setMotDePasse(passwordEncoder.encode(request.getMotDePasse()));
+            if (request.getCin() != null) user.setCin(request.getCin());
+            
+            if (request.getMotDePasse() != null && !request.getMotDePasse().isEmpty()) {
+                if (!request.getMotDePasse().matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d).{8,}$")) {
+                    return new ApiResponse(true, "Le mot de passe doit contenir au moins 8 caractères, inclure une majuscule, une minuscule et un chiffre");
+                }
+                if (!request.getMotDePasse().equals(request.getMotDePasseConfirmation())) {
+                    return new ApiResponse(true, "Le mot de passe et la confirmation ne correspondent pas");
+                }
+                user.setMotDePasse(passwordEncoder.encode(request.getMotDePasse()));
+            }
+
             if (request.getTelephone() != null) user.setTelephone(request.getTelephone());
             if (request.getAdresse() != null) user.setAdresse(request.getAdresse());
             if (request.getSexe() != null) user.setSexe(SexeEnum.valueOf(request.getSexe()));
             if (request.getDateNaissance() != null) user.setDateNaissance(request.getDateNaissance());
+            if (request.getStatut() != null) user.setStatut(request.getStatut());
 
             // Set audit fields
             user.setUpdatedAt(LocalDateTime.now());
