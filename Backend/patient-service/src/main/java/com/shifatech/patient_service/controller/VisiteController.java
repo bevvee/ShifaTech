@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+//import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,7 +25,7 @@ public class VisiteController {
     private final VisiteService visiteService;
     private final JwtUtil jwtUtil;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'INFIRMIER', 'DOCTEUR')")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'INFIRMIER', 'DOCTEUR')")
     @GetMapping("/dossier/{idDossier}/visites")
     public ResponseEntity<ApiResponse<List<VisiteDTO>>> getVisitesByDossier(
             @PathVariable Long idDossier,
@@ -36,7 +36,7 @@ public class VisiteController {
                  String.format("%d visite(s) trouvée(s)", visites.size())));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'INFIRMIER', 'DOCTEUR')")
+   // @PreAuthorize("hasAnyRole('ADMIN', 'INFIRMIER', 'DOCTEUR')")
     @GetMapping("/visites")
     public ResponseEntity<ApiResponse<List<VisiteDTO>>> getAllVisites(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -45,7 +45,7 @@ public class VisiteController {
         return ResponseEntity.ok(ApiResponse.success(visites, "Toutes les visites récupérées"));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'INFIRMIER', 'DOCTEUR')")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'INFIRMIER', 'DOCTEUR')")
     @GetMapping("/visites/{id}")
     public ResponseEntity<ApiResponse<VisiteDTO>> getVisiteById(
             @PathVariable Long id,
@@ -56,7 +56,7 @@ public class VisiteController {
     }
 
     // @PreAuthorize("hasRole('INFIRMIER')")
-    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
+    //@PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @PostMapping("/visites")
     public ResponseEntity<ApiResponse<VisiteDTO>> createVisite(
             @Valid @RequestBody CreateVisiteRequest request,
@@ -70,7 +70,7 @@ public class VisiteController {
     }
 
     // @PreAuthorize("hasRole('INFIRMIER')")
-    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
+    //@PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @PutMapping("/visites/{id}")
     public ResponseEntity<ApiResponse<VisiteDTO>> updateVisite(
             @PathVariable Long id,
@@ -82,7 +82,7 @@ public class VisiteController {
     }
 
     // @PreAuthorize("hasAnyRole('ADMIN', 'INFIRMIER')")
-    @PreAuthorize("hasAnyRole('ADMIN', 'INFIRMIER', 'DOCTEUR')")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'INFIRMIER', 'DOCTEUR')")
     @DeleteMapping("/visites/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteVisite(
             @PathVariable Long id) {

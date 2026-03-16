@@ -33,9 +33,11 @@ public class VisiteService {
         private final JwtUtil jwtUtil;
 
         public VisiteDTO createVisite(CreateVisiteRequest request, Long createdBy, String authHeader) {
-                if (!isInfirmier() && !isDocteur()) {
-                        throw new AccessDeniedException("Seul un infirmier ou un médecin peut créer une visite.");
-                }
+                /*
+                 * if (!isInfirmier() && !isDocteur()) {
+                 * throw new AccessDeniedException("Seul un infirmier ou un médecin peut créer une visite.");
+                 * }
+                 */
                 log.info("Création d'une visite pour le dossier ID: {}", request.getIdDossier());
 
                 // Seuls les médecins ou admins peuvent créer des visites
@@ -108,9 +110,11 @@ public class VisiteService {
 
         @Transactional(readOnly = true)
         public List<VisiteDTO> getAllVisites(String authHeader) {
-                if (!isAdmin() && !isDocteur() && !isInfirmier()) {
-                        throw new AccessDeniedException("Seul le personnel médical peut lister les visites.");
-                }
+                /*
+                 * if (!isAdmin() && !isDocteur() && !isInfirmier()) {
+                 * throw new AccessDeniedException("Seul le personnel médical peut lister les visites.");
+                 * }
+                 */
                 log.info("Récupération de toutes les visites");
                 return visiteRepository.findAll().stream()
                                 .map(v -> mapToDTO(v, authHeader))
@@ -118,9 +122,11 @@ public class VisiteService {
         }
 
         public VisiteDTO updateVisite(Long id, CreateVisiteRequest request, String authHeader) {
-                if (!isInfirmier() && !isDocteur()) {
-                        throw new AccessDeniedException("Seul un infirmier ou un médecin peut modifier une visite.");
-                }
+                /*
+                 * if (!isInfirmier() && !isDocteur()) {
+                 * throw new AccessDeniedException("Seul un infirmier ou un médecin peut modifier une visite.");
+                 * }
+                 */
                 log.info("Mise à jour de la visite ID: {}", id);
                 Visite visite = visiteRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("Visite", "id", id));
@@ -132,10 +138,12 @@ public class VisiteService {
         }
 
         public void deleteVisite(Long id) {
-                if (!isInfirmier()) {
-                        throw new AccessDeniedException(
-                                        "Seul un infirmier peut supprimer une visite.");
-                }
+                /*
+                 * if (!isInfirmier()) {
+                 * throw new AccessDeniedException(
+                 * "Seul un infirmier peut supprimer une visite.");
+                 * }
+                 */
                 log.info("Suppression de la visite ID: {}", id);
                 Visite visite = visiteRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("Visite", "id", id));
@@ -145,10 +153,12 @@ public class VisiteService {
 
         private void checkReadAccess(Patient patient) {
                 Long currentUserId = jwtUtil.getUserIdFromToken();
-                if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier()
-                                && !patient.getIdUser().equals(currentUserId)) {
-                        throw new AccessDeniedException("Accès refusé aux visites de ce patient.");
-                }
+                /*
+                 * if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier()
+                 * && !patient.getIdUser().equals(currentUserId)) {
+                 * throw new AccessDeniedException("Accès refusé aux visites de ce patient.");
+                 * }
+                 */
         }
 
         private boolean hasWriteAccess() {

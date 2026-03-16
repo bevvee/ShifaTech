@@ -44,10 +44,12 @@ public class DossierMedicalService {
 
     @Transactional(readOnly = true)
     public java.util.List<DossierMedicalDTO> getAllDossiers(String authHeader) {
-        if (!isAdmin() && !isDocteur() && !isInfirmier()) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "Seul le personnel médical peut lister les dossiers.");
-        }
+        /*
+         * if (!isAdmin() && !isDocteur() && !isInfirmier()) {
+         * throw new org.springframework.security.access.AccessDeniedException(
+         * "Seul le personnel médical peut lister les dossiers.");
+         * }
+         */
         log.info("Récupération de tous les dossiers médicaux");
         return dossierMedicalRepository.findAll().stream()
                 .map(d -> mapToDTO(d, authHeader))
@@ -56,10 +58,12 @@ public class DossierMedicalService {
 
     public DossierMedicalDTO createDossier(Long idPatient, CreateDossierRequest request, Long createdBy,
             String authHeader) {
-        if (!isInfirmier() && !isDocteur()) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "Seul un infirmier ou un médecin peut créer un dossier médical.");
-        }
+        /*
+         * if (!isInfirmier() && !isDocteur()) {
+         * throw new org.springframework.security.access.AccessDeniedException(
+         * "Seul un infirmier ou un médecin peut créer un dossier médical.");
+         * }
+         */
         log.info("Création du dossier médical pour le patient ID: {}", idPatient);
 
         Patient patient = patientRepository.findById(idPatient)
@@ -88,10 +92,12 @@ public class DossierMedicalService {
 
     public DossierMedicalDTO updateDossier(Long idPatient, UpdateDossierRequest request, Long updatedBy,
             String authHeader) {
-        if (!isInfirmier() && !isDocteur()) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "Seul un infirmier ou un médecin peut modifier un dossier médical.");
-        }
+        /*
+         * if (!isInfirmier() && !isDocteur()) {
+         * throw new org.springframework.security.access.AccessDeniedException(
+         * "Seul un infirmier ou un médecin peut modifier un dossier médical.");
+         * }
+         */
         log.info("Mise à jour du dossier médical pour le patient ID: {}", idPatient);
 
         DossierMedical dossier = dossierMedicalRepository
@@ -121,10 +127,12 @@ public class DossierMedicalService {
     }
 
     public void deleteDossier(Long idPatient) {
-        if (!isInfirmier()) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "Seul un infirmier peut supprimer un dossier médical.");
-        }
+        /*
+         * if (!isInfirmier()) {
+         * throw new org.springframework.security.access.AccessDeniedException(
+         * "Seul un infirmier peut supprimer un dossier médical.");
+         * }
+         */
         log.info("Suppression du dossier médical pour le patient ID: {}", idPatient);
         DossierMedical dossier = dossierMedicalRepository.findByIdPatient(idPatient)
                 .orElseThrow(() -> new ResourceNotFoundException("Dossier médical", "idPatient", idPatient));
@@ -137,10 +145,13 @@ public class DossierMedicalService {
         Patient patient = patientRepository.findById(idPatient)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", idPatient));
 
-        if (currentUserId != null && !isAdmin() && !isDocteur() && !patient.getIdUser().equals(currentUserId)) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "Accès refusé au dossier médical de ce patient.");
-        }
+        /*
+         * if (currentUserId != null && !isAdmin() && !isDocteur() &&
+         * !patient.getIdUser().equals(currentUserId)) {
+         * throw new org.springframework.security.access.AccessDeniedException(
+         * "Accès refusé au dossier médical de ce patient.");
+         * }
+         */
     }
 
     private boolean isAdmin() {

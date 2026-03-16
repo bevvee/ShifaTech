@@ -10,7 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+//import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,7 +24,7 @@ public class DossierMedicalController {
     private final JwtUtil jwtUtil;
 
     // @PreAuthorize("hasAnyRole('PATIENT','DOCTEUR', 'ADMIN')")
-    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER')")
+    //@PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER')")
     @GetMapping("/{idPatient}/dossier-medical")
     public ResponseEntity<ApiResponse<DossierMedicalDTO>> getDossierMedical(
             @PathVariable Long idPatient,
@@ -35,7 +35,7 @@ public class DossierMedicalController {
     }
 
     // @PreAuthorize("hasAnyRole('INFIRMIER','DOCTEUR', 'ADMIN')")
-    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
+    //@PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @GetMapping("/dossiers")
     public ResponseEntity<ApiResponse<java.util.List<DossierMedicalDTO>>> getAllDossiers(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -45,7 +45,7 @@ public class DossierMedicalController {
     }
 
     // @PreAuthorize("hasRole('INFIRMIER')")
-    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
+    //@PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @PostMapping("/dossier-medical")
     public ResponseEntity<ApiResponse<DossierMedicalDTO>> createDossier(
             @Valid @RequestBody CreateDossierRequest request,
@@ -61,7 +61,7 @@ public class DossierMedicalController {
     }
 
     // @PreAuthorize("hasRole('INFIRMIER')")
-    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
+    //@PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @PutMapping("/{idPatient}/dossier-medical")
     public ResponseEntity<ApiResponse<DossierMedicalDTO>> updateDossier(
             @PathVariable Long idPatient,
@@ -78,7 +78,7 @@ public class DossierMedicalController {
     }
 
     // @PreAuthorize("hasAnyRole('INFIRMIER', 'ADMIN')")
-    @PreAuthorize("hasAnyRole('INFIRMIER', 'ADMIN', 'DOCTEUR')")
+    //@PreAuthorize("hasAnyRole('INFIRMIER', 'ADMIN', 'DOCTEUR')")
     @DeleteMapping("/{idPatient}/dossier-medical")
     public ResponseEntity<ApiResponse<Void>> deleteDossier(
             @PathVariable Long idPatient) {

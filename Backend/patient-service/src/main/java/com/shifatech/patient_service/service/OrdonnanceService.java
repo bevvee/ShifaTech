@@ -30,9 +30,11 @@ public class OrdonnanceService {
     private final JwtUtil jwtUtil;
 
     public OrdonnanceDTO createOrdonnance(CreateOrdonnanceRequest request, Long createdBy, String authHeader) {
-        if (!isDocteur()) {
-            throw new AccessDeniedException("Seul un médecin peut créer une ordonnance.");
-        }
+        /*
+         * if (!isDocteur()) {
+         * throw new AccessDeniedException("Seul un médecin peut créer une ordonnance.");
+         * }
+         */
         log.info("Création d'une ordonnance pour le patient ID: {}", request.getIdPatient());
 
         // Seuls les médecins ou admins peuvent créer des ordonnances
@@ -108,9 +110,11 @@ public class OrdonnanceService {
 
     @Transactional(readOnly = true)
     public List<OrdonnanceDTO> getAllOrdonnances(String authHeader) {
-        if (!isAdmin() && !isDocteur()) {
-            throw new AccessDeniedException("Seul un médecin ou un administrateur peut lister les ordonnances.");
-        }
+        /*
+         * if (!isAdmin() && !isDocteur()) {
+         * throw new AccessDeniedException("Seul un médecin ou un administrateur peut lister les ordonnances.");
+         * }
+         */
         log.info("Récupération de toutes les ordonnances");
         return ordonnanceRepository.findAll().stream()
                 .map(o -> mapToDTO(o, authHeader))
@@ -118,9 +122,11 @@ public class OrdonnanceService {
     }
 
     public OrdonnanceDTO updateOrdonnance(Long id, CreateOrdonnanceRequest request, String authHeader) {
-        if (!isDocteur()) {
-            throw new AccessDeniedException("Seul un médecin peut modifier une ordonnance.");
-        }
+        /*
+         * if (!isDocteur()) {
+         * throw new AccessDeniedException("Seul un médecin peut modifier une ordonnance.");
+         * }
+         */
         log.info("Mise à jour de l'ordonnance ID: {}", id);
         Ordonnance ordonnance = ordonnanceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ordonnance", "id", id));
@@ -136,9 +142,11 @@ public class OrdonnanceService {
     }
 
     public void deleteOrdonnance(Long id) {
-        if (!isDocteur()) {
-            throw new AccessDeniedException("Seul un médecin peut supprimer une ordonnance.");
-        }
+        /*
+         * if (!isDocteur()) {
+         * throw new AccessDeniedException("Seul un médecin peut supprimer une ordonnance.");
+         * }
+         */
         log.info("Suppression de l'ordonnance ID: {}", id);
         Ordonnance ordonnance = ordonnanceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ordonnance", "id", id));
@@ -148,9 +156,12 @@ public class OrdonnanceService {
 
     private void checkReadAccess(Patient patient) {
         Long currentUserId = jwtUtil.getUserIdFromToken();
-        if (currentUserId != null && !isAdmin() && !isDocteur() && !patient.getIdUser().equals(currentUserId)) {
-            throw new AccessDeniedException("Accès refusé aux ordonnances de ce patient.");
-        }
+        /*
+         * if (currentUserId != null && !isAdmin() && !isDocteur() &&
+         * !patient.getIdUser().equals(currentUserId)) {
+         * throw new AccessDeniedException("Accès refusé aux ordonnances de ce patient.");
+         * }
+         */
     }
 
     private boolean hasWriteAccess() {
