@@ -24,35 +24,35 @@ use Doctrine\ORM\Mapping as ORM;
 #[ApiResource(
     operations: [
         new Get(
-            security: "is_granted('ROLE_ADMIN') or
+          /*  security: "is_granted('ROLE_ADMIN') or
              object.getIdPatient() == user.getUserIdentifier() or
-             object.getIdDocteur() == user.getUserIdentifier() or
+             is_granted('ROLE_DOCTOR') or
             is_granted('ROLE_INFIRMIER') or
-            is_granted('ROLE_SECRETAIRE')"
+            is_granted('ROLE_SECRETAIRE')"*/
         ),
         new GetCollection(
-            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_DOCTOR') or is_granted('ROLE_PATIENT') or
-        is_granted('ROLE_INFIRMIER') or is_granted('ROLE_SECRETAIRE')"
+            /*security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_DOCTOR') or is_granted('ROLE_PATIENT') or
+        is_granted('ROLE_INFIRMIER') or is_granted('ROLE_SECRETAIRE')"*/
         ),
         new Post(
-            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_PATIENT') or
-        is_granted('ROLE_INFIRMIER') or is_granted('ROLE_SECRETAIRE')",
+            /*security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_PATIENT') or
+        is_granted('ROLE_INFIRMIER') or is_granted('ROLE_SECRETAIRE')",*/
             processor: RendezVousProcessor::class
         ),
         new Patch(
-            security: "is_granted('ROLE_ADMIN') or object.getIdDocteur() == user.getUserIdentifier() or is_granted('ROLE_SECRETAIRE')",
+/*            security: "is_granted('ROLE_ADMIN') or object.getIdDocteur() == user.getUserIdentifier() or is_granted('ROLE_SECRETAIRE')",*/
             processor: RendezVousUpdateProcessor::class
         ),
         // ✅ Cancel appointment
         new Patch(
             uriTemplate: '/rendez_vouses/{id}/annuler',
-            security: "is_granted('ROLE_ADMIN') or object.getIdPatient() == user.getUserIdentifier() or is_granted('ROLE_INFIRMIER') or
-        is_granted('ROLE_SECRETAIRE')",
+            /*security: "is_granted('ROLE_ADMIN') or object.getIdPatient() == user.getUserIdentifier() or is_granted('ROLE_INFIRMIER') or
+        is_granted('ROLE_SECRETAIRE')",*/
             processor: CancelRendezVousProcessor::class,
             input: false,
         ),
         new Delete(
-            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_SECRETAIRE') or is_granted('ROLE_INFIRMIER')",
+/*            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_SECRETAIRE') or is_granted('ROLE_INFIRMIER')",*/
             processor: SoftDeleteProcessor::class
         )
     ],

@@ -17,6 +17,7 @@ import { SpecialityService } from '../../core/services/speciality.service';
 import { Doctor } from '../../core/models/doctor.model';
 import { Speciality } from '../../core/models/speciality.model';
 import { Sexe } from '../../core/models/sexe.enum';
+import { AlertService } from '../../core/services/alert.service';
 
 
 @Component({
@@ -48,7 +49,8 @@ export class DocteursComponent {
   constructor(
     private readonly router: Router,
     private readonly doctorService: DoctorService,
-    private readonly specialityService: SpecialityService
+    private readonly specialityService: SpecialityService,
+    private readonly alerts: AlertService,
   ) { }
 
   loadDoctors() {
@@ -237,12 +239,17 @@ export class DocteursComponent {
   }
 
   deleteDoctor(id: number) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce docteur ?')) {
-      this.doctorService.deleteDoctor(id).subscribe({
-        next: () => this.loadDoctors(),
-        error: (err: any) => console.error('Error deleting doctor', err)
-      });
-    }
+    void this.confirmAndDeleteDoctor(id);
+  }
+
+  private async confirmAndDeleteDoctor(id: number) {
+    const ok = await this.alerts.confirmDelete('ce docteur');
+    if (!ok) return;
+
+    this.doctorService.deleteDoctor(id).subscribe({
+      next: () => this.loadDoctors(),
+      error: (err: any) => console.error('Error deleting doctor', err)
+    });
   }
 
   private emptyForm() {

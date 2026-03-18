@@ -5,7 +5,18 @@
     <div *ngIf="(role$ | async) === Role.ADMIN">
       <app-monthly-sales-chart />
     </div>
+
   </div>
 
-  <div class="col-span-12 xl:col-span-5"></div>
+  <div class="col-span-12 space-y-6 xl:col-span-5">
+    <app-upcoming-appointments />
+  </div>
+
+  <div *ngIf="(role$ | async) === Role.DOCTEUR" class="col-span-12">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-3">
+      <app-availability />
+      <app-appointment-statistics />
+      <app-top-patients />
+    </div>
+  </div>
 </div>

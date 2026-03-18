@@ -11,6 +11,7 @@ import { InputFieldComponent } from '../../shared/components/form/input/input-fi
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { Speciality } from '../../core/models/speciality.model';
 import { SpecialityService } from '../../core/services/speciality.service';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-specialisations',
@@ -35,6 +36,7 @@ export class SpecialisationsComponent {
 
   private readonly subscription = new Subscription();
   private readonly specialityService = inject(SpecialityService);
+  private readonly alerts = inject(AlertService);
   private readonly router = inject(Router);
 
   isModalOpen = false;
@@ -103,12 +105,17 @@ export class SpecialisationsComponent {
   }
 
   deleteSpeciality(id: number) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette spécialité ?')) {
-      this.specialityService.deleteSpeciality(id).subscribe({
-        next: () => this.loadSpecialities(),
-        error: (err: any) => console.error('Error deleting speciality', err)
-      });
-    }
+    void this.confirmAndDeleteSpeciality(id);
+  }
+
+  private async confirmAndDeleteSpeciality(id: number) {
+    const ok = await this.alerts.confirmDelete('cette spécialité');
+    if (!ok) return;
+
+    this.specialityService.deleteSpeciality(id).subscribe({
+      next: () => this.loadSpecialities(),
+      error: (err: any) => console.error('Error deleting speciality', err)
+    });
   }
 
   get isValid(): boolean {

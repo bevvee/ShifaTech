@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
+import { AlertService } from '../../core/services/alert.service';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
@@ -106,7 +107,10 @@ export class InfirmiersComponent {
     adresse: string;
   } = this.emptyForm();
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly alerts: AlertService,
+  ) {}
 
   ngOnInit() {
     this.handleUrl(this.router.url);
@@ -160,6 +164,13 @@ export class InfirmiersComponent {
   }
 
   deleteInfirmier(id: number) {
+    void this.confirmAndDeleteInfirmier(id);
+  }
+
+  private async confirmAndDeleteInfirmier(id: number) {
+    const ok = await this.alerts.confirmDelete('cet infirmier');
+    if (!ok) return;
+
     this.infirmiers = this.infirmiers.filter((i) => i.id !== id);
     if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages;

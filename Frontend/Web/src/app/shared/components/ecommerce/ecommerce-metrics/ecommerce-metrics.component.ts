@@ -166,6 +166,12 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
         value: 0,
         icon: this.icons.groupIcon,
       },
+      {
+        key: 'visites',
+        label: 'Total Visites',
+        value: this.visiteStore.getAll().length,
+        icon: this.icons.boxIconLine,
+      },
     ];
 
     this.rdvService

@@ -73,4 +73,27 @@ class DoctorServiceClient
 
         return $prenom.' '.$nom;
     }
+    public function getDoctor(int $doctorId): array
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $jwt = $request?->headers->get('Authorization');
+
+        $response = $this->httpClient->request(
+            'GET',
+            sprintf('http://doctor-service:8080/%d', $doctorId),
+            [
+                'headers' => [
+                    'Authorization' => $jwt
+                ]
+            ]
+        );
+
+        if ($response->getStatusCode() !== 200) {
+            return [];
+        }
+
+        $data = $response->toArray(false);
+
+        return $data['data'] ?? $data;
+    }
 }

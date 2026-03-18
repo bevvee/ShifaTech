@@ -21,6 +21,7 @@ import { ForgotPasswordComponent } from './pages/auth-pages/forgot-password/forg
 import { ResetPasswordComponent } from './pages/auth-pages/reset-password/reset-password.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { RendezVousComponent } from './pages/RendezVous/RendezVous.component';
+import { PlanningComponent } from './pages/planning/planning.component';
 import { PatientsComponent } from './pages/patients/patients.component';
 import { PatientsFormPageComponent } from './pages/patients/patients-form-page.component';
 import { DocteursComponent } from './pages/docteurs/docteurs.component';
@@ -37,6 +38,7 @@ import { roleGuard, rootGuard } from './core/guards/auth.guard';
 import { Role } from './core/models/role.enum';
 import { RdvEditComponent } from "./pages/RendezVous/rdv-edit.component";
 import { RdvViewComponent } from "./pages/RendezVous/rdv-view.component";
+import { CalendarDayPatientsComponent } from "./pages/calender/day-patients/calendar-day-patients.component";
 
 
 export const routes: Routes = [
@@ -82,6 +84,13 @@ export const routes: Routes = [
         data: { roles: [Role.DOCTEUR, Role.INFIRMIER] },
       },
       {
+        path: "calendar/patients/:date",
+        component: CalendarDayPatientsComponent,
+        title: "Patients du Jour | ShifaTech",
+        canActivate: [roleGuard],
+        data: { roles: [Role.DOCTEUR] },
+      },
+      {
         path: "rendez-vous",
         component: RendezVousComponent,
         canActivate: [roleGuard],
@@ -113,6 +122,13 @@ export const routes: Routes = [
           mode: "create",
           roles: [Role.INFIRMIER],
         },
+      },
+      {
+        path: "planning",
+        component: PlanningComponent,
+        title: "Planning | ShifaTech",
+        canActivate: [roleGuard],
+        data: { roles: [Role.DOCTEUR] },
       },
       {
         path: "docteurs",

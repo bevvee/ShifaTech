@@ -1,12 +1,18 @@
-import { CommonModule } from '@angular/common';
-import { Component, ElementRef, QueryList, ViewChildren, ChangeDetectorRef } from '@angular/core';
-import { SidebarService } from '../../services/sidebar.service';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { SafeHtmlPipe } from '../../pipe/safe-html.pipe';
-import { combineLatest, Subscription } from 'rxjs';
-import { Role } from '../../../core/models/role.enum';
-import { Store } from '@ngrx/store';
-import { selectUserRole } from '../../../core/store/auth/auth.selectors';
+import { CommonModule } from "@angular/common";
+import {
+  Component,
+  ElementRef,
+  QueryList,
+  ViewChildren,
+  ChangeDetectorRef,
+} from "@angular/core";
+import { SidebarService } from "../../services/sidebar.service";
+import { NavigationEnd, Router, RouterModule } from "@angular/router";
+import { SafeHtmlPipe } from "../../pipe/safe-html.pipe";
+import { combineLatest, Subscription } from "rxjs";
+import { Role } from "../../../core/models/role.enum";
+import { Store } from "@ngrx/store";
+import { selectUserRole } from "../../../core/store/auth/auth.selectors";
 
 type NavItem = {
   name: string;
@@ -24,16 +30,11 @@ type NavItem = {
 };
 
 @Component({
-  selector: 'app-sidebar',
-  imports: [
-    CommonModule,
-    RouterModule,
-    SafeHtmlPipe
-  ],
-  templateUrl: './app-sidebar.component.html',
+  selector: "app-sidebar",
+  imports: [CommonModule, RouterModule, SafeHtmlPipe],
+  templateUrl: "./app-sidebar.component.html",
 })
 export class AppSidebarComponent {
-
   currentRole: Role | null = null;
   filteredNavItems: NavItem[] = [];
   filteredOthersItems: NavItem[] = [];
@@ -42,7 +43,7 @@ export class AppSidebarComponent {
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.5 3.25C4.25736 3.25 3.25 4.25736 3.25 5.5V8.99998C3.25 10.2426 4.25736 11.25 5.5 11.25H9C10.2426 11.25 11.25 10.2426 11.25 8.99998V5.5C11.25 4.25736 10.2426 3.25 9 3.25H5.5ZM4.75 5.5C4.75 5.08579 5.08579 4.75 5.5 4.75H9C9.41421 4.75 9.75 5.08579 9.75 5.5V8.99998C9.75 9.41419 9.41421 9.74998 9 9.74998H5.5C5.08579 9.74998 4.75 9.41419 4.75 8.99998V5.5ZM5.5 12.75C4.25736 12.75 3.25 13.7574 3.25 15V18.5C3.25 19.7426 4.25736 20.75 5.5 20.75H9C10.2426 20.75 11.25 19.7427 11.25 18.5V15C11.25 13.7574 10.2426 12.75 9 12.75H5.5ZM4.75 15C4.75 14.5858 5.08579 14.25 5.5 14.25H9C9.41421 14.25 9.75 14.5858 9.75 15V18.5C9.75 18.9142 9.41421 19.25 9 19.25H5.5C5.08579 19.25 4.75 18.9142 4.75 18.5V15ZM12.75 5.5C12.75 4.25736 13.7574 3.25 15 3.25H18.5C19.7426 3.25 20.75 4.25736 20.75 5.5V8.99998C20.75 10.2426 19.7426 11.25 18.5 11.25H15C13.7574 11.25 12.75 10.2426 12.75 8.99998V5.5ZM15 4.75C14.5858 4.75 14.25 5.08579 14.25 5.5V8.99998C14.25 9.41419 14.5858 9.74998 15 9.74998H18.5C18.9142 9.74998 19.25 9.41419 19.25 8.99998V5.5C19.25 5.08579 18.9142 4.75 18.5 4.75H15ZM15 12.75C13.7574 12.75 12.75 13.7574 12.75 15V18.5C12.75 19.7426 13.7574 20.75 15 20.75H18.5C19.7426 20.75 20.75 19.7427 20.75 18.5V15C20.75 13.7574 19.7426 12.75 18.5 12.75H15ZM14.25 15C14.25 14.5858 14.5858 14.25 15 14.25H18.5C18.9142 14.25 19.25 14.5858 19.25 15V18.5C19.25 18.9142 18.9142 19.25 18.5 19.25H15C14.5858 19.25 14.25 18.9142 14.25 18.5V15Z" fill="currentColor"></path></svg>`,
       name: "Dashboard",
-      path: '/dashboard',
+      path: "/dashboard",
       roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER, Role.SECRETAIRE],
     },
     /*     {
@@ -52,11 +53,21 @@ export class AppSidebarComponent {
         }, */
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 2C7.41421 2 7.75 2.33579 7.75 2.75V3.5H16.25V2.75C16.25 2.33579 16.5858 2 17 2C17.4142 2 17.75 2.33579 17.75 2.75V3.5H18.5C19.7426 3.5 20.75 4.50736 20.75 5.75V18.25C20.75 19.4926 19.7426 20.5 18.5 20.5H5.5C4.25736 20.5 3.25 19.4926 3.25 18.25V5.75C3.25 4.50736 4.25736 3.5 5.5 3.5H6.25V2.75C6.25 2.33579 6.58579 2 7 2ZM4.75 8.5V18.25C4.75 18.6642 5.08579 19 5.5 19H18.5C18.9142 19 19.25 18.6642 19.25 18.25V8.5H4.75ZM5.5 5C5.08579 5 4.75 5.33579 4.75 5.75V7H19.25V5.75C19.25 5.33579 18.9142 5 18.5 5H17H7H5.5ZM7.25 11C7.25 10.5858 7.58579 10.25 8 10.25H16C16.4142 10.25 16.75 10.5858 16.75 11C16.75 11.4142 16.4142 11.75 16 11.75H8C7.58579 11.75 7.25 11.4142 7.25 11ZM7.25 14.5C7.25 14.0858 7.58579 13.75 8 13.75H13C13.4142 13.75 13.75 14.0858 13.75 14.5C13.75 14.9142 13.4142 15.25 13 15.25H8C7.58579 15.25 7.25 14.9142 7.25 14.5Z" fill="currentColor"/></svg>`,
-      name: 'Rendez Vous',
+      name: "Rendez Vous",
       subItems: [
-        { name: "Liste de Rendez Vous", path: "/rendez-vous" , roles:[Role.SECRETAIRE] },
-        { name: "Calendar", path: "/calendar" },
+        {
+          name: "Liste de Rendez Vous",
+          roles: [Role.SECRETAIRE,Role.INFIRMIER,Role.DOCTEUR],
+          path: "/rendez-vous",
+        },
+        { name: "Calendar", path: "/calendar",roles: [Role.DOCTEUR]},
       ],
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 2C7.41421 2 7.75 2.33579 7.75 2.75V3.5H16.25V2.75C16.25 2.33579 16.5858 2 17 2C17.4142 2 17.75 2.33579 17.75 2.75V3.5H18.5C19.7426 3.5 20.75 4.50736 20.75 5.75V18.25C20.75 19.4926 19.7426 20.5 18.5 20.5H5.5C4.25736 20.5 3.25 19.4926 3.25 18.25V5.75C3.25 4.50736 4.25736 3.5 5.5 3.5H6.25V2.75C6.25 2.33579 6.58579 2 7 2ZM4.75 8.5V18.25C4.75 18.6642 5.08579 19 5.5 19H18.5C18.9142 19 19.25 18.6642 19.25 18.25V8.5H4.75ZM5.5 5C5.08579 5 4.75 5.33579 4.75 5.75V7H19.25V5.75C19.25 5.33579 18.9142 5 18.5 5H17H7H5.5Z" fill="currentColor"/></svg>`,
+      name: "Planning",
+      path: "/planning",
+      roles: [Role.DOCTEUR],
     },
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -68,12 +79,12 @@ export class AppSidebarComponent {
       roles: [Role.ADMIN],
       subItems: [
         {
-          name: 'Liste des Docteurs',
-          path: '/docteurs',
+          name: "Liste des Docteurs",
+          path: "/docteurs",
         },
         {
-          name: 'Ajouter Docteur',
-          path: '/docteurs/new',
+          name: "Ajouter Docteur",
+          path: "/docteurs/new",
         },
       ],
     },
@@ -83,15 +94,15 @@ export class AppSidebarComponent {
   <path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`,
       name: "Patients",
-      roles: [Role.INFIRMIER],
+      roles: [Role.INFIRMIER, Role.SECRETAIRE],
       subItems: [
         {
-          name: 'Liste des Patients',
-          path: '/patients',
+          name: "Liste des Patients",
+          path: "/patients",
         },
         {
-          name: 'Ajouter Patient',
-          path: '/patients/new',
+          name: "Ajouter Patient",
+          path: "/patients/new",
         },
       ],
     },
@@ -100,10 +111,10 @@ export class AppSidebarComponent {
   <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`,
       name: "Dossier Médical",
-      roles: [Role.DOCTEUR, Role.INFIRMIER],
+      roles: [Role.INFIRMIER, Role.SECRETAIRE,Role.DOCTEUR],
       subItems: [
-        { name: 'Liste des Dossiers', path: '/dossier-medical' },
-        { name: 'Nouveau Dossier', path: '/dossier-medical/new' },
+        { name: "Liste des Dossiers", path: "/dossier-medical" },
+        { name: "Nouveau Dossier", path: "/dossier-medical/new" },
       ],
     },
     {
@@ -112,10 +123,10 @@ export class AppSidebarComponent {
   <path d="M12 12v6m-3-3h6M6 7h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`,
       name: "Visites",
-      roles: [Role.DOCTEUR, Role.INFIRMIER],
+      roles: [Role.INFIRMIER, Role.SECRETAIRE],
       subItems: [
-        { name: 'Historique Visites', path: '/visites' },
-        { name: 'Nouvelle Visite', path: '/visites/new' },
+        { name: "Historique Visites", path: "/visites" },
+        { name: "Nouvelle Visite", path: "/visites/new" },
       ],
     },
     {
@@ -124,10 +135,10 @@ export class AppSidebarComponent {
   <path d="M12 7v6m-3-3h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
 </svg>`,
       name: "Ordonnances",
-      roles: [Role.DOCTEUR, Role.INFIRMIER],
+      roles: [Role.DOCTEUR, Role.INFIRMIER, Role.SECRETAIRE],
       subItems: [
-        { name: 'Liste Ordonnances', path: '/ordonnances' },
-        { name: 'Nouvelle Ordonnance', path: '/ordonnances/new' },
+        { name: "Liste Ordonnances", path: "/ordonnances" },
+        { name: "Nouvelle Ordonnance", path: "/ordonnances/new" },
       ],
     },
     {
@@ -141,12 +152,12 @@ export class AppSidebarComponent {
       roles: [Role.ADMIN],
       subItems: [
         {
-          name: 'Liste des Infirmiers',
-          path: '/infirmiers',
+          name: "Liste des Infirmiers",
+          path: "/infirmiers",
         },
         {
-          name: 'Ajouter Infirmier',
-          path: '/infirmiers/new',
+          name: "Ajouter Infirmier",
+          path: "/infirmiers/new",
         },
       ],
     },
@@ -162,12 +173,12 @@ export class AppSidebarComponent {
       roles: [Role.ADMIN],
       subItems: [
         {
-          name: 'Liste des Services',
-          path: '/services',
+          name: "Liste des Services",
+          path: "/services",
         },
         {
-          name: 'Ajouter Service',
-          path: '/services/new',
+          name: "Ajouter Service",
+          path: "/services/new",
         },
       ],
     },
@@ -180,12 +191,12 @@ export class AppSidebarComponent {
       roles: [Role.ADMIN],
       subItems: [
         {
-          name: 'Liste des Spécialisations',
-          path: '/specialisations',
+          name: "Liste des Spécialisations",
+          path: "/specialisations",
         },
         {
-          name: 'Ajouter Spécialisation',
-          path: '/specialisations/new',
+          name: "Ajouter Spécialisation",
+          path: "/specialisations/new",
         },
       ],
     },
@@ -251,7 +262,7 @@ export class AppSidebarComponent {
 
   openSubmenu: string | null | number = null;
   subMenuHeights: { [key: string]: number } = {};
-  @ViewChildren('subMenu') subMenuRefs!: QueryList<ElementRef>;
+  @ViewChildren("subMenu") subMenuRefs!: QueryList<ElementRef>;
 
   readonly isExpanded$;
   readonly isMobileOpen$;
@@ -263,7 +274,7 @@ export class AppSidebarComponent {
     public sidebarService: SidebarService,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private store: Store
+    private store: Store,
   ) {
     this.isExpanded$ = this.sidebarService.isExpanded$;
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
@@ -271,40 +282,45 @@ export class AppSidebarComponent {
   }
   private filterMenuByRole(items: NavItem[]): NavItem[] {
     return items
-      .filter(item => !item.roles || (this.currentRole && item.roles.includes(this.currentRole)))
-      .map(item => {
+      .filter(
+        (item) =>
+          !item.roles ||
+          (this.currentRole && item.roles.includes(this.currentRole)),
+      )
+      .map((item) => {
         if (item.subItems) {
-          const filteredSubItems = item.subItems.filter(sub =>
-            !sub.roles || (this.currentRole && sub.roles.includes(this.currentRole))
+          const filteredSubItems = item.subItems.filter(
+            (sub) =>
+              !sub.roles ||
+              (this.currentRole && sub.roles.includes(this.currentRole)),
           );
 
           return {
             ...item,
-            subItems: filteredSubItems.length ? filteredSubItems : undefined
+            subItems: filteredSubItems.length ? filteredSubItems : undefined,
           };
         }
         return item;
       })
-      .filter(item => item.subItems || item.path);
+      .filter((item) => item.subItems || item.path);
   }
 
   ngOnInit() {
-
     this.subscription.add(
-      this.store.select(selectUserRole).subscribe(role => {
+      this.store.select(selectUserRole).subscribe((role) => {
         this.currentRole = role;
         this.filteredNavItems = this.filterMenuByRole(this.navItems);
         // this.filteredOthersItems = this.filterMenuByRole(this.othersItems);
         this.cdr.detectChanges();
-      })
+      }),
     );
 
     this.subscription.add(
-      this.router.events.subscribe(event => {
+      this.router.events.subscribe((event) => {
         if (event instanceof NavigationEnd) {
           this.setActiveMenuFromRoute(this.router.url);
         }
-      })
+      }),
     );
 
     this.setActiveMenuFromRoute(this.router.url);
@@ -339,23 +355,25 @@ export class AppSidebarComponent {
   }
 
   onSidebarMouseEnter() {
-    this.isExpanded$.subscribe(expanded => {
-      if (!expanded) {
-        this.sidebarService.setHovered(true);
-      }
-    }).unsubscribe();
+    this.isExpanded$
+      .subscribe((expanded) => {
+        if (!expanded) {
+          this.sidebarService.setHovered(true);
+        }
+      })
+      .unsubscribe();
   }
 
   private setActiveMenuFromRoute(currentUrl: string) {
     const menuGroups = [
-      { items: this.navItems, prefix: 'main' },
+      { items: this.navItems, prefix: "main" },
       // { items: this.othersItems, prefix: 'others' },
     ];
 
-    menuGroups.forEach(group => {
+    menuGroups.forEach((group) => {
       group.items.forEach((nav, i) => {
         if (nav.subItems) {
-          nav.subItems.forEach(subItem => {
+          nav.subItems.forEach((subItem) => {
             if (currentUrl === subItem.path) {
               const key = `${group.prefix}-${i}`;
               this.openSubmenu = key;
@@ -375,12 +393,12 @@ export class AppSidebarComponent {
   }
 
   onSubmenuClick() {
-    this.isMobileOpen$.subscribe(isMobile => {
-      if (isMobile) {
-        this.sidebarService.setMobileOpen(false);
-      }
-    }).unsubscribe();
+    this.isMobileOpen$
+      .subscribe((isMobile) => {
+        if (isMobile) {
+          this.sidebarService.setMobileOpen(false);
+        }
+      })
+      .unsubscribe();
   }
-
-
 }

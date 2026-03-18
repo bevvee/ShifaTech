@@ -4,19 +4,135 @@
 
   <app-component-card title="Rendez Vous">
 
-    <!-- Add button -->
-    <button
-      card-actions
-      routerLink="/rendez-vous/new"
-      class="inline-flex items-center justify-center rounded-lg bg-green-400 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-600"
+    <span
+      card-title-addon
+      class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-white/10 dark:text-white/80"
     >
-      Add Rendez Vous
-    </button>
+      <span class="text-blue-600 px-3">Total : </span> {{ totalItems }}
+    </span>
+
+    <div card-actions class="relative inline-flex items-center gap-2">
+      
+      <!-- Filter dropdown trigger -->
+      <button
+        type="button"
+        (click)="toggleFilter()"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-gray-200 dark:hover:bg-white/6"
+        [attr.aria-expanded]="filterOpen"
+        aria-label="Filter"
+        title="Filter"
+      >
+        <!-- Funnel icon -->
+        <svg
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M3 5H21L14 13V19L10 21V13L3 5Z"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+
+      <!-- Dropdown panel -->
+      <div
+        *ngIf="filterOpen"
+        class="absolute right-0 top-12 z-20 w-72 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900"
+      >
+        <div class="space-y-3">
+          <!-- Doctor filter (for infirmier/secretaire/admin) -->
+          <div *ngIf="currentRole !== Role.DOCTEUR">
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Doctor</label>
+            <select
+              class="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200"
+              [(ngModel)]="selectedDoctorUserId"
+            >
+              <option value="">All doctors</option>
+              <option *ngFor="let d of doctorsForFilter" [value]="d.idUser">
+                Dr {{ d.prenom }} {{ d.nom }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Date (for all) -->
+          <div>
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Date</label>
+            <input
+              type="date"
+              class="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200"
+              [(ngModel)]="selectedDate"
+            />
+          </div>
+
+          <!-- Statut (for all) -->
+          <div>
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Statut</label>
+            <select
+              class="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200"
+              [(ngModel)]="selectedStatut"
+            >
+              <option value="">All status</option>
+              <option value="CONFIRME">Confirmé</option>
+              <option value="EN_ATTENTE">En attente</option>
+              <option value="ANNULE">Annulé</option>
+              <option value="TERMINE">Terminé</option>
+            </select>
+          </div>
+
+          <!-- Heure (for infirmier/secretaire/admin) -->
+          <div *ngIf="currentRole !== Role.DOCTEUR">
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Heure (début)</label>
+            <input
+              type="time"
+              class="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200"
+              [(ngModel)]="selectedHeure"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Filter by start time (HH:mm).
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-4 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            (click)="clearFilters()"
+            class="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-gray-200 dark:hover:bg-white/6"
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            (click)="applyFilters()"
+            class="h-9 rounded-lg bg-brand-500 px-3 text-sm font-medium text-white hover:bg-brand-600"
+          >
+            Apply
+          </button>
+        </div>
+      </div>
+      <!-- Add button -->
+      <button *ngIf="currentRole !== Role.DOCTEUR"
+        routerLink="/rendez-vous/new"
+        class="inline-flex items-center justify-center rounded-lg bg-green-400 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-600"
+      >
+        Add Rendez Vous
+      </button>
+    </div>
 
     <!-- Table -->
     <app-basic-table-three
       [title]="'Liste des Rendez Vous'"
       [rendezVousData]="rendezVous"
+      [serverSidePagination]="true"
+      [currentPage]="page"
+      [itemsPerPage]="itemsPerPage"
+      [totalItems]="totalItems"
+      (pageChange)="onPageChange($event)"
+      (itemsPerPageChange)="onItemsPerPageChange($event)"
       (view)="viewRdv($event)"
       (edit)="editRdv($event)"
       (delete)="deleteRdv($event)"

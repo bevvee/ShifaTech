@@ -4,8 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
+import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
 import { OrdonnanceStore } from './ordonnances.store';
-import { OrdonnanceDto } from '../../core/models/ordonnance.model';
+import { OrdonnanceDto, OrdonnanceStatut } from '../../core/models/ordonnance.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-ordonnances',
@@ -15,6 +17,7 @@ import { OrdonnanceDto } from '../../core/models/ordonnance.model';
     FormsModule,
     PageBreadcrumbComponent,
     ComponentCardComponent,
+    BadgeComponent,
   ],
   templateUrl: './ordonnances.component.html'
 })
@@ -25,6 +28,7 @@ export class OrdonnancesComponent implements OnInit {
 
   private readonly router = inject(Router);
   private readonly store = inject(OrdonnanceStore);
+  private readonly alerts = inject(AlertService);
 
   ngOnInit(): void {
     this.loadOrdonnances();
@@ -32,6 +36,10 @@ export class OrdonnancesComponent implements OnInit {
 
   loadOrdonnances() {
     this.ordonnances = this.store.getAll();
+  }
+
+  createOrdonnance() {
+    this.router.navigate(['/ordonnances/new']);
   }
 
   viewOrdonnance(id: number) {
@@ -43,8 +51,20 @@ export class OrdonnancesComponent implements OnInit {
   }
 
   deleteOrdonnance(id: number) {
+    void this.confirmAndDeleteOrdonnance(id);
+  }
+
+  private async confirmAndDeleteOrdonnance(id: number) {
+    const ok = await this.alerts.confirmDelete('cette ordonnance');
+    if (!ok) return;
     this.store.delete(id);
     this.loadOrdonnances();
+  }
+
+  getStatusBadgeColor(status: OrdonnanceStatut): 'success' | 'warning' | 'error' {
+    if (status === 'ACTIVE') return 'success';
+    if (status === 'EXPIRED') return 'warning';
+    return 'error';
   }
 
   get filteredOrdonnances(): OrdonnanceDto[] {

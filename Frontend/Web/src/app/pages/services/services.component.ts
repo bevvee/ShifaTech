@@ -1,3 +1,4 @@
+import { AlertService } from '../../core/services/alert.service';
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -61,7 +62,10 @@ export class ServicesComponent {
     description: string;
   } = this.emptyForm();
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly alerts: AlertService,
+  ) {}
 
   ngOnInit() {
     this.handleUrl(this.router.url);
@@ -107,6 +111,12 @@ export class ServicesComponent {
   }
 
   deleteService(id: number) {
+    void this.confirmAndDeleteService(id);
+  }
+
+  private async confirmAndDeleteService(id: number) {
+    const ok = await this.alerts.confirmDelete('ce service');
+    if (!ok) return;
     this.services = this.services.filter((s) => s.id !== id);
     if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages;

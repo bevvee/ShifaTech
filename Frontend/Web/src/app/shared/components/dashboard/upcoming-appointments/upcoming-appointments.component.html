@@ -1,0 +1,86 @@
+<div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/3 md:p-6">
+  <!-- Header -->
+  <div class="mb-6 flex items-center justify-between">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Upcoming Appointments</h3>
+    <button
+      type="button"
+      class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-dark dark:text-gray-300 dark:hover:bg-white/5"
+    >
+      Today <span class="ml-1">▼</span>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex items-center justify-center py-8">
+    <p class="text-gray-500 dark:text-gray-400">Loading appointments...</p>
+  </div>
+
+  <!-- Current turn -->
+  <div *ngIf="!isLoading && currentAppointment" class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-dark">
+    <div class="mb-5 flex items-center gap-3">
+      <div class="h-12 w-12 overflow-hidden rounded-full bg-gray-100 dark:bg-white/5">
+        <div class="flex h-full w-full items-center justify-center">
+          <span class="text-base font-semibold text-gray-700 dark:text-gray-300">
+            {{ currentAppointment.patientName ? currentAppointment.patientName.charAt(0) : '?' }}
+          </span>
+        </div>
+      </div>
+      <div class="min-w-0">
+        <p class="truncate text-base font-semibold text-gray-900 dark:text-white">{{ currentAppointment.patientName }}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ currentAppointment.patientId }}</p>
+      </div>
+    </div>
+
+    <p class="mb-2 text-base font-semibold text-gray-900 dark:text-white">{{ currentAppointment.appointmentType }}</p>
+
+    <p class="mb-5 text-sm text-gray-600 dark:text-gray-400">
+      <span class="mr-2 inline-block">📅</span>
+      {{ currentAppointment.dateLabel }}
+      <span class="mx-2 inline-block">🕒</span>
+      {{ currentAppointment.timeLabel }}
+    </p>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-500">Department</p>
+        <p class="mt-1 text-sm text-gray-700 dark:text-gray-300">{{ currentAppointment.department }}</p>
+      </div>
+      <div>
+        <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-500">Type</p>
+        <p class="mt-1 text-sm text-gray-700 dark:text-gray-300">{{ currentAppointment.consultationType }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Remaining patients -->
+  <div *ngIf="!isLoading && remainingAppointments.length > 0" class="mt-6 space-y-4">
+    <div class="border-t border-gray-200 pt-4 dark:border-gray-800">
+      <p class="text-sm font-semibold text-gray-900 dark:text-white">Next patients</p>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ todayLabel }}</p>
+    </div>
+
+    <div *ngFor="let appt of remainingAppointments" class="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-dark">
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-500/20">
+          <span class="text-sm font-semibold text-brand-600 dark:text-brand-400">
+            {{ appt.patientName ? appt.patientName.charAt(0) : '?' }}
+          </span>
+        </div>
+        <div class="min-w-0">
+          <p class="truncate font-medium text-gray-900 dark:text-white">{{ appt.patientName }}</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">{{ appt.patientId }}</p>
+        </div>
+      </div>
+
+      <div class="shrink-0 text-right">
+        <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ appt.timeLabel }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">{{ appt.appointmentType }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && !currentAppointment && remainingAppointments.length === 0" class="flex items-center justify-center py-8">
+    <p class="text-gray-500 dark:text-gray-400">No upcoming appointments</p>
+  </div>
+</div>

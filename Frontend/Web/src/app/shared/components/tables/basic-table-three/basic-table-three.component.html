@@ -1,5 +1,5 @@
 <div
-  class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-white/[0.03]"
+  class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-white/3"
 >
   <div class="max-w-full overflow-x-auto">
     <table class="min-w-full">
@@ -115,5 +115,43 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <div
+    *ngIf="totalPages > 1 || serverSidePagination"
+    class="flex flex-col gap-3 border-t border-gray-200 px-5 py-3 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between"
+  >
+    <div class="text-sm text-gray-500 dark:text-gray-400">
+      Page {{ currentPage }} / {{ totalPages }} • Total {{ totalItemsLabel }}
+    </div>
+
+    <div class="flex items-center gap-2">
+      <label class="text-sm text-gray-500 dark:text-gray-400">Items:</label>
+      <select
+        class="h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200"
+        [value]="itemsPerPage"
+        (change)="onItemsPerPageSelect(($any($event.target).value))"
+      >
+        <option [value]="10">10</option>
+        <option [value]="20">20</option>
+        <option [value]="50">50</option>
+      </select>
+
+      <button
+        class="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-white/10 dark:bg-white/3 dark:text-gray-200 dark:hover:bg-white/6"
+        (click)="goToPage(currentPage - 1)"
+        [disabled]="currentPage <= 1"
+      >
+        Prev
+      </button>
+
+      <button
+        class="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-white/10 dark:bg-white/3 dark:text-gray-200 dark:hover:bg-white/6"
+        (click)="goToPage(currentPage + 1)"
+        [disabled]="currentPage >= totalPages"
+      >
+        Next
+      </button>
+    </div>
   </div>
 </div>
