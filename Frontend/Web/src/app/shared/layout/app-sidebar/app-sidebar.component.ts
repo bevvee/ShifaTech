@@ -94,7 +94,7 @@ export class AppSidebarComponent {
   <path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`,
       name: "Patients",
-      roles: [Role.INFIRMIER, Role.SECRETAIRE],
+      roles: [Role.SECRETAIRE],
       subItems: [
         {
           name: "Liste des Patients",

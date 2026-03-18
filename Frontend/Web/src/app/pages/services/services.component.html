@@ -55,20 +55,33 @@
 										<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ s.label }}</td>
 										<td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">{{ s.description }}</td>
 										<td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
-											<div class="relative inline-block">
-												<app-table-dropdown>
-													<div dropdown-button>
-														<button class="text-gray-500 dark:text-gray-400" type="button">
-															<svg class="fill-current" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-																<path fill-rule="evenodd" clip-rule="evenodd" d="M5.99902 10.245C6.96552 10.245 7.74902 11.0285 7.74902 11.995V12.005C7.74902 12.9715 6.96552 13.755 5.99902 13.755C5.03253 13.755 4.24902 12.9715 4.24902 12.005V11.995C4.24902 11.0285 5.03253 10.245 5.99902 10.245ZM17.999 10.245C18.9655 10.245 19.749 11.0285 19.749 11.995V12.005C19.749 12.9715 18.9655 13.755 17.999 13.755C17.0325 13.755 16.249 12.9715 16.249 12.005V11.995C16.249 11.0285 17.0325 10.245 17.999 10.245ZM13.749 11.995C13.749 11.0285 12.9655 10.245 11.999 10.245C11.0325 10.245 10.249 11.0285 10.249 11.995V12.005C10.249 12.9715 11.0325 13.755 11.999 13.755C12.9655 13.755 13.749 12.9715 13.749 12.005V11.995Z" fill=""/>
-															</svg>
-														</button>
-													</div>
-													<div dropdown-content>
-														<button type="button" (click)="openEditModal(s)" class="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300">Modifier</button>
-														<button type="button" (click)="deleteService(s.id)" class="text-xs flex w-full rounded-lg px-3 py-2 text-left font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300">Supprimer</button>
-													</div>
-												</app-table-dropdown>
+											<div class="flex items-center gap-2">
+												<button
+													type="button"
+													(click)="openEditModal(s)"
+													class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-green-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-green-400 dark:hover:bg-white/6"
+													aria-label="Modifier"
+												>
+													<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+														<path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+													</svg>
+												</button>
+
+												<button
+													type="button"
+													(click)="deleteService(s.id)"
+													class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-red-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-red-400 dark:hover:bg-white/6"
+													aria-label="Supprimer"
+												>
+													<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+														<path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M10 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+													</svg>
+												</button>
 											</div>
 										</td>
 									</tr>
