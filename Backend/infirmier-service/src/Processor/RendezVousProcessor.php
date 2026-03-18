@@ -20,7 +20,6 @@ class RendezVousProcessor implements ProcessorInterface
         array $uriVariables = [],
         array $context = []
     ) {
-        dump('RendezVousProcessor appelé!!!!');
         $method = $operation->getMethod();
         $id = $uriVariables['id'] ?? null;
 
@@ -36,7 +35,9 @@ class RendezVousProcessor implements ProcessorInterface
         }
 
         if ($method === 'PATCH' && $id) {
-            $body = array_filter((array) $data, fn($value) => $value !== null);
+            $request = $this->requestStack->getCurrentRequest();
+            $rawData = json_decode($request->getContent(), true) ?? [];
+
             return $this->httpClient->request(
                 'PATCH',
                 'http://rdv-service:9000/api/rendez_vouses/' . $id,
@@ -44,7 +45,7 @@ class RendezVousProcessor implements ProcessorInterface
                     'headers' => array_merge($headers, [
                         'Content-Type' => 'application/merge-patch+json'
                     ]),
-                    'body' => json_encode($body)
+                    'body' => json_encode($rawData)
                 ]
             )->toArray();
         }

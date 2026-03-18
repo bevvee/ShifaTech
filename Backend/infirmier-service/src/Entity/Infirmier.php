@@ -19,9 +19,6 @@ class Infirmier implements UserInterface
     #[ORM\Column]
     private ?int $id_utilisateur = null;
 
-    #[ORM\Column]
-    private ?int $id_service = null;
-
     #[ORM\ManyToOne(targetEntity: InfirmierSpecialite::class, inversedBy: 'infirmiers')]
     #[ORM\JoinColumn(name: 'id_specialite', referencedColumnName: 'id_specialite', nullable: false)]
     private ?InfirmierSpecialite $id_specialite = null;
@@ -39,18 +36,6 @@ class Infirmier implements UserInterface
     public function setIdUtilisateur(?int $id_utilisateur): static
     {
         $this->id_utilisateur = $id_utilisateur;
-
-        return $this;
-    }
-
-    public function getIdService(): ?int
-    {
-        return $this->id_service;
-    }
-
-    public function setIdService(?int $id_service): static
-    {
-        $this->id_service = $id_service;
 
         return $this;
     }

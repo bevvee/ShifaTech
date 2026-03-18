@@ -53,8 +53,7 @@
 									<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">Date Naissance</th>
 									<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">Téléphone</th>
 									<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">Adresse</th>
-									<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">id_service</th>
-									<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">id_specialite</th>
+									<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">Spécialité</th>
 									<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400"><span class="sr-only">Action</span></th>
 								</tr>
 							</thead>
@@ -72,8 +71,7 @@
 										<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ inf.dateNaissance }}</td>
 										<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ inf.telephone }}</td>
 										<td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">{{ inf.adresse }}</td>
-										<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ inf.idService }}</td>
-										<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ inf.idSpecialite }}</td>
+										<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ getSpecialiteLabel(inf.id_specialite) }}</td>
 										<td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
 											<div class="relative inline-block">
 												<app-table-dropdown>
@@ -129,82 +127,4 @@
 		</div>
 	</app-component-card>
 
-	<app-modal [isOpen]="isModalOpen" (close)="closeModal()" className="max-w-225 p-6 lg:p-10">
-		<div>
-			<h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-				@if (mode === 'create') { Ajouter un infirmier } @else { Modifier un infirmier }
-			</h4>
-			<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
-				Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
-			</p>
-
-			<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-				<div>
-					<app-label for="nom">Nom <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="nom" name="nom" placeholder="Nom" [(value)]="form.nom" [error]="submitted && !form.nom.trim()" />
-				</div>
-				<div>
-					<app-label for="prenom">Prénom <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="prenom" name="prenom" placeholder="Prénom" [(value)]="form.prenom" [error]="submitted && !form.prenom.trim()" />
-				</div>
-
-				<div>
-					<app-label for="cin">CIN <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="cin" name="cin" placeholder="CIN" [(value)]="form.cin" [error]="submitted && !form.cin.trim()" />
-				</div>
-				<div>
-					<app-label for="email">Email <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="email" name="email" type="email" placeholder="email@..." [(value)]="form.email" [error]="submitted && !form.email.trim()" />
-				</div>
-
-				<div>
-					<app-label for="mot_de_passe">
-						Mot de passe
-						@if (mode === 'create') { <span class="font-semibold text-error-500">*</span> }
-					</app-label>
-					<app-input-field
-						id="mot_de_passe"
-						name="mot_de_passe"
-						type="password"
-						placeholder="Mot de passe"
-						[(value)]="form.password"
-						[error]="submitted && mode === 'create' && !form.password.trim()"
-						[hint]="mode === 'edit' ? 'Laisser vide pour ne pas changer.' : ''"
-					/>
-				</div>
-
-				<div>
-					<app-label>Sexe</app-label>
-					<app-select [options]="sexeOptions" [(value)]="form.sexe" [hasSearch]="false" />
-				</div>
-
-				<div>
-					<app-label>Statut</app-label>
-					<app-select [options]="statutOptions" [(value)]="form.statutValue" [hasSearch]="false" />
-				</div>
-
-				<div>
-					<app-label for="date_naissance">Date de naissance <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="date_naissance" name="date_naissance" type="date" [(value)]="form.dateNaissance" [error]="submitted && !form.dateNaissance.trim()" />
-				</div>
-
-				<div>
-					<app-label for="telephone">Téléphone <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="telephone" name="telephone" placeholder="Téléphone" [(value)]="form.telephone" [error]="submitted && !form.telephone.trim()" />
-				</div>
-
-				<div class="sm:col-span-2">
-					<app-label for="adresse">Adresse</app-label>
-					<app-text-area id="adresse" name="adresse" placeholder="Adresse" [(value)]="form.adresse" [rows]="3" />
-				</div>
-			</div>
-
-			<div class="mt-8 flex items-center justify-end gap-3">
-				<app-button size="sm" variant="outline" (btnClick)="closeModal()">Annuler</app-button>
-				<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">
-					Enregistrer
-				</app-button>
-			</div>
-		</div>
-	</app-modal>
 </div>

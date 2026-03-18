@@ -38,6 +38,7 @@ import { OrdonnancesComponent } from './pages/ordonnances/ordonnances.component'
 import { OrdonnancesFormPageComponent } from './pages/ordonnances/ordonnances-form-page.component';
 import { roleGuard, rootGuard } from './core/guards/auth.guard';
 import { Role } from './core/models/role.enum';
+import { InfirmiersFormPageComponent } from './pages/infirmiers/infirmiers-form-page.component';
 
 export const routes: Routes = [
   {
@@ -69,8 +70,8 @@ export const routes: Routes = [
         }
       },
       {
-        path: 'infirmier',
-        component: Infirmier,
+        path: 'infirmiers',
+        component: InfirmiersComponent,
         title: 'Infirmier | ShifaTech',
         canActivate: [roleGuard],
         data: { roles: [Role.INFIRMIER, Role.ADMIN] }
@@ -227,10 +228,17 @@ export const routes: Routes = [
       },
       {
         path: 'infirmiers/new',
-        component: InfirmiersComponent,
+        component: InfirmiersFormPageComponent,
         title: 'Ajouter un Infirmier | ShifaTech',
         canActivate: [roleGuard],
         data: { roles: [Role.ADMIN] }
+      },
+      {
+        path: 'infirmiers/:id/edit',
+        component: InfirmiersFormPageComponent,
+        title: 'Modifier un Infirmier | ShifaTech',
+        canActivate: [roleGuard],
+        data: { mode: 'edit', roles: [Role.ADMIN] }
       },
       {
         path: 'services',

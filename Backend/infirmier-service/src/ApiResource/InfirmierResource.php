@@ -48,6 +48,14 @@ class InfirmierResource
     #[ApiProperty(identifier: true)]
     public ?int $id = null;
     public ?int $id_utilisateur = null;
-    public ?int $id_service = null;
     public ?string $id_specialite = null;
+    public ?string $nom = null;
+    public ?string $prenom = null;
+    public ?string $cin = null;
+    public ?string $email = null;
+    public ?string $sexe = null;
+    public ?bool $statut = null;
+    public ?string $dateNaissance = null;
+    public ?string $telephone = null;
+    public ?string $adresse = null;
 }

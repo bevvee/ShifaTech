@@ -31,6 +31,9 @@ class JwtUserProvider implements PayloadAwareUserProviderInterface
         if ($role === 'ADMIN') {
             return new AdminUser($userId);
         }
+        if ($role === 'SECRETAIRE') {
+            return new SecretaireUser($userId);
+        }
 
         $infirmier = $this->infirmierRepository->findOneBy(['id_utilisateur' => $userId]);
         error_log('infirmier trouvé: ' . ($infirmier ? 'OUI id='.$infirmier->getId() : 'NON'));
