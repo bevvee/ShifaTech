@@ -115,7 +115,7 @@
         </div>
       </div>
       <!-- Add button -->
-      <button *ngIf="currentRole !== Role.DOCTEUR"
+      <button *ngIf="currentRole !== Role.DOCTEUR && currentRole !== Role.INFIRMIER"
         routerLink="/rendez-vous/new"
         class="inline-flex items-center justify-center rounded-lg bg-green-400 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-600"
       >
@@ -128,6 +128,7 @@
       [title]="'Liste des Rendez Vous'"
       [rendezVousData]="rendezVous"
       [serverSidePagination]="true"
+      [currentRole]="currentRole"
       [currentPage]="page"
       [itemsPerPage]="itemsPerPage"
       [totalItems]="totalItems"

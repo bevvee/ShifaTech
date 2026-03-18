@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { BadgeComponent } from '../../ui/badge/badge.component';
 import { Output, EventEmitter } from '@angular/core';
+import { Role } from '../../../../core/models/role.enum';
 
 export type RendezVousRow = {
   id: string;
@@ -31,12 +32,21 @@ export class BasicTableThreeComponent {
   @Input() currentPage = 1;
   @Input() itemsPerPage = 10;
 
+  @Input() currentRole: Role | string | null = null;
+
+  protected readonly Role = Role;
+
   @Output() pageChange = new EventEmitter<number>();
   @Output() itemsPerPageChange = new EventEmitter<number>();
 
   @Output() view = new EventEmitter<RendezVousRow>();
 @Output() edit = new EventEmitter<RendezVousRow>();
 @Output() delete = new EventEmitter<RendezVousRow>();
+
+  get canEditOrDelete(): boolean {
+    const role = String(this.currentRole ?? '').toUpperCase();
+    return role !== Role.DOCTEUR && role !== Role.INFIRMIER;
+  }
 
   get totalPages(): number {
     const total = this.serverSidePagination
