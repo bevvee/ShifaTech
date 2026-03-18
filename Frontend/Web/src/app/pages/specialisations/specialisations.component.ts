@@ -12,6 +12,9 @@ import { LabelComponent } from '../../shared/components/form/label/label.compone
 import { Speciality } from '../../core/models/speciality.model';
 import { SpecialityService } from '../../core/services/speciality.service';
 import { AlertService } from '../../core/services/alert.service';
+import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
+import { ServiceRow } from '../../core/models/service.model';
+import { ServicesCatalogService } from '../../core/services/services-catalog.service';
 
 @Component({
   selector: 'app-specialisations',
@@ -25,6 +28,7 @@ import { AlertService } from '../../core/services/alert.service';
     ModalComponent,
     InputFieldComponent,
     LabelComponent,
+    SelectComponent,
   ],
   templateUrl: './specialisations.component.html',
   styles: ``
@@ -34,21 +38,28 @@ export class SpecialisationsComponent {
   specialisations: Speciality[] = [];
   searchTerm = '';
 
+  services: ServiceRow[] = [];
+  serviceOptions: Option[] = [];
+
   private readonly subscription = new Subscription();
   private readonly specialityService = inject(SpecialityService);
   private readonly alerts = inject(AlertService);
   private readonly router = inject(Router);
+  private readonly servicesCatalog = inject(ServicesCatalogService);
 
   isModalOpen = false;
   mode: 'create' | 'edit' = 'create';
   submitted = false;
   editingId: number | null = null;
+  isCreatePage = false;
 
   form: {
     label: string;
+    serviceIdValue: string;
   } = this.emptyForm();
 
   ngOnInit() {
+    this.loadServices();
     this.loadSpecialities();
     this.handleUrl(this.router.url);
     this.subscription.add(
@@ -67,6 +78,19 @@ export class SpecialisationsComponent {
       next: (data) => this.specialisations = data,
       error: (err: any) => console.error('Error loading specialities', err)
     });
+  }
+
+  loadServices() {
+    this.services = this.servicesCatalog.getAll();
+    this.serviceOptions = this.services.map((s) => ({
+      value: String(s.id),
+      label: s.label,
+    }));
+  }
+
+  getServiceLabel(id: number | null | undefined): string {
+    if (!id) return '';
+    return this.services.find((s) => s.id === id)?.label ?? `#${id}`;
   }
 
   get filteredSpecialities(): Speciality[] {
@@ -93,6 +117,7 @@ export class SpecialisationsComponent {
     this.submitted = false;
     this.form = {
       label: row.label,
+      serviceIdValue: row.idService != null ? String(row.idService) : '',
     };
     this.isModalOpen = true;
   }
@@ -119,15 +144,25 @@ export class SpecialisationsComponent {
   }
 
   get isValid(): boolean {
-    return !!this.form.label && this.form.label.trim().length > 0;
+    const idService = Number(this.form.serviceIdValue);
+    return (
+      !!this.form.label &&
+      this.form.label.trim().length > 0 &&
+      Number.isFinite(idService) &&
+      idService > 0
+    );
   }
 
   save() {
     this.submitted = true;
     if (!this.isValid) return;
 
+    const idService = Number(this.form.serviceIdValue);
+    if (!Number.isFinite(idService) || idService <= 0) return;
+
     const payload: Partial<Speciality> = {
       label: this.form.label.trim(),
+      idService,
     };
 
     if (this.mode === 'create') {
@@ -155,12 +190,19 @@ export class SpecialisationsComponent {
   private emptyForm() {
     return {
       label: '',
+      serviceIdValue: '',
     };
   }
 
   private handleUrl(url: string) {
-    if (url === '/specialisations/new') {
-      this.openCreateModal();
+    this.isCreatePage = url === '/specialisations/new';
+
+    if (this.isCreatePage) {
+      this.mode = 'create';
+      this.editingId = null;
+      this.submitted = false;
+      this.form = this.emptyForm();
+      this.isModalOpen = false;
     }
   }
 

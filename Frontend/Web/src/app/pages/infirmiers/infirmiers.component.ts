@@ -13,7 +13,6 @@ import { TextAreaComponent } from '../../shared/components/form/input/text-area.
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
 import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
-import { TableDropdownComponent } from '../../shared/components/common/table-dropdown/table-dropdown.component';
 
 type Sexe = 'M' | 'F';
 
@@ -48,7 +47,6 @@ type InfirmierRow = {
     LabelComponent,
     BadgeComponent,
     SelectComponent,
-    TableDropdownComponent,
   ],
   templateUrl: './infirmiers.component.html',
   styles: ``
@@ -80,6 +78,7 @@ export class InfirmiersComponent {
   mode: 'create' | 'edit' = 'create';
   submitted = false;
   editingId: number | null = null;
+  isCreatePage = false;
 
   currentPage = 1;
   itemsPerPage = 5;
@@ -267,8 +266,14 @@ export class InfirmiersComponent {
   }
 
   private handleUrl(url: string) {
-    if (url === '/infirmiers/new') {
-      this.openCreateModal();
+    this.isCreatePage = url === '/infirmiers/new';
+
+    if (this.isCreatePage) {
+      this.mode = 'create';
+      this.editingId = null;
+      this.submitted = false;
+      this.form = this.emptyForm();
+      this.isModalOpen = false;
     }
   }
 

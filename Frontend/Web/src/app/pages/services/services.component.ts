@@ -11,13 +11,8 @@ import { ModalComponent } from '../../shared/components/ui/modal/modal.component
 import { InputFieldComponent } from '../../shared/components/form/input/input-field.component';
 import { TextAreaComponent } from '../../shared/components/form/input/text-area.component';
 import { LabelComponent } from '../../shared/components/form/label/label.component';
-import { TableDropdownComponent } from '../../shared/components/common/table-dropdown/table-dropdown.component';
-
-type ServiceRow = {
-  id: number;
-  label: string;
-  description: string;
-};
+import { ServiceRow } from '../../core/models/service.model';
+import { ServicesCatalogService } from '../../core/services/services-catalog.service';
 
 @Component({
   selector: 'app-services',
@@ -31,28 +26,22 @@ type ServiceRow = {
     InputFieldComponent,
     TextAreaComponent,
     LabelComponent,
-    TableDropdownComponent,
   ],
   templateUrl: './services.component.html',
   styles: ``
 })
 export class ServicesComponent {
 
-  services: ServiceRow[] = [
-    {
-      id: 1,
-      label: 'Consultation',
-      description: 'Consultation médicale générale.',
-    },
-  ];
+  services: ServiceRow[] = [];
 
-  private nextId = 2;
+  private nextId = 1;
   private readonly subscription = new Subscription();
 
   isModalOpen = false;
   mode: 'create' | 'edit' = 'create';
   submitted = false;
   editingId: number | null = null;
+  isCreatePage = false;
 
   currentPage = 1;
   itemsPerPage = 5;
@@ -65,9 +54,13 @@ export class ServicesComponent {
   constructor(
     private readonly router: Router,
     private readonly alerts: AlertService,
+    private readonly servicesCatalog: ServicesCatalogService,
   ) {}
 
   ngOnInit() {
+    this.services = this.servicesCatalog.getAll();
+    this.nextId = this.servicesCatalog.nextId(this.services);
+
     this.handleUrl(this.router.url);
     this.subscription.add(
       this.router.events
@@ -118,6 +111,7 @@ export class ServicesComponent {
     const ok = await this.alerts.confirmDelete('ce service');
     if (!ok) return;
     this.services = this.services.filter((s) => s.id !== id);
+    this.servicesCatalog.saveAll(this.services);
     if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages;
     }
@@ -153,6 +147,7 @@ export class ServicesComponent {
 
     if (this.mode === 'create') {
       this.services = [{ id: this.nextId++, ...payload }, ...this.services];
+      this.servicesCatalog.saveAll(this.services);
       this.currentPage = 1;
       this.closeModal();
       return;
@@ -161,6 +156,7 @@ export class ServicesComponent {
     const id = this.editingId;
     if (id == null) return;
     this.services = this.services.map((s) => (s.id === id ? { id, ...payload } : s));
+    this.servicesCatalog.saveAll(this.services);
     this.closeModal();
   }
 
@@ -172,8 +168,14 @@ export class ServicesComponent {
   }
 
   private handleUrl(url: string) {
-    if (url === '/services/new') {
-      this.openCreateModal();
+    this.isCreatePage = url === '/services/new';
+
+    if (this.isCreatePage) {
+      this.mode = 'create';
+      this.editingId = null;
+      this.submitted = false;
+      this.form = this.emptyForm();
+      this.isModalOpen = false;
     }
   }
 

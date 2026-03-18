@@ -94,6 +94,7 @@ export class DocteursComponent {
   mode: 'create' | 'edit' = 'create';
   submitted = false;
   editingId: number | null = null;
+  isCreatePage = false;
 
   sexeOptions: Option[] = [
     { value: Sexe.H, label: 'Masculin' },
@@ -270,8 +271,14 @@ export class DocteursComponent {
   }
 
   private handleUrl(url: string) {
-    if (url === '/docteurs/new') {
-      this.openCreateModal();
+    this.isCreatePage = url === '/docteurs/new';
+
+    if (this.isCreatePage) {
+      this.mode = 'create';
+      this.editingId = null;
+      this.submitted = false;
+      this.form = this.emptyForm();
+      this.isModalOpen = false;
     }
   }
 }

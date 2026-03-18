@@ -33,6 +33,7 @@ public class SpecialityService {
     public DoctorSpecialityDTO createSpeciality(DoctorSpecialityDTO dto) {
         DoctorSpeciality speciality = new DoctorSpeciality();
         speciality.setLabel(dto.getLabel());
+        speciality.setIdService(dto.getIdService());
         return mapToDTO(specialityRepository.save(speciality));
     }
 
@@ -43,6 +44,10 @@ public class SpecialityService {
 
         if (dto.getLabel() != null) {
             speciality.setLabel(dto.getLabel());
+        }
+
+        if (dto.getIdService() != null) {
+            speciality.setIdService(dto.getIdService());
         }
 
         return mapToDTO(specialityRepository.save(speciality));
@@ -60,6 +65,7 @@ public class SpecialityService {
         return new DoctorSpecialityDTO(
                 speciality.getIdSpecialite(),
                 speciality.getLabel(),
+                speciality.getIdService(),
                 speciality.getCreatedAt());
     }
 }

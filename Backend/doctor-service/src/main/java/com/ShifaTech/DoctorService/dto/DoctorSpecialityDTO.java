@@ -12,5 +12,6 @@ import java.time.LocalDateTime;
 public class DoctorSpecialityDTO {
     private Long idSpecialite;
     private String label;
+    private Long idService;
     private LocalDateTime createdAt;
 }
