@@ -22,4 +22,3 @@ public class ConsultationDTO {
     private String nomDocteur;
     private String prenomDocteur;
 }
-

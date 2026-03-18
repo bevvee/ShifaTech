@@ -49,7 +49,7 @@ public class Ordonnance {
     private String instructions;
 
     @Column(name = "date_validite")
-    private LocalDateTime dateValidite;
+    private java.time.LocalDate dateValidite;
 
     @Column(name = "statut")
     private Boolean statut = true; // Valide/Expiré

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
@@ -11,6 +11,7 @@ import { Option, SelectComponent } from '../../shared/components/form/select/sel
 import { VisiteStore } from './visites.store';
 import { DossierMedicalStore } from '../dossier-medical/dossier-medical.store';
 import { VisiteStatus } from '../../core/models/visite.model';
+import { ToastService } from '../../shared/services/toast.service';
 
 type Mode = 'create' | 'edit' | 'view';
 
@@ -29,7 +30,7 @@ type Mode = 'create' | 'edit' | 'view';
   ],
   templateUrl: './visites-form-page.component.html'
 })
-export class VisitesFormPageComponent {
+export class VisitesFormPageComponent implements OnInit {
   mode: Mode;
   submitted = false;
 
@@ -37,13 +38,17 @@ export class VisitesFormPageComponent {
   private readonly router = inject(Router);
   private readonly store = inject(VisiteStore);
   private readonly dossiersStore = inject(DossierMedicalStore);
+  private readonly toastService = inject(ToastService);
 
   private id: number | null;
 
+  /*
   dossierOptions: Option[] = this.dossiersStore.getAll().map(d => ({
     value: String(d.id),
     label: `${d.nomPatient} (${d.numDossier})`
   }));
+  */
+  dossierOptions: Option[] = [];
 
   statusOptions: Option[] = [
     { value: 'OPEN', label: 'Ouverte' },
@@ -64,6 +69,7 @@ export class VisitesFormPageComponent {
     const idParam = this.route.snapshot.paramMap.get('id');
     this.id = idParam ? Number(idParam) : null;
 
+    /*
     if (this.mode !== 'create' && this.id != null) {
       const existing = this.store.getById(this.id);
       if (!existing) {
@@ -83,8 +89,44 @@ export class VisitesFormPageComponent {
         this.form.idDossier = qDossierId;
       }
     }
+    */
   }
 
+  ngOnInit() {
+    this.loadDossiers();
+
+    if (this.mode !== 'create' && this.id != null) {
+      this.store.getById(this.id).subscribe(existing => {
+        if (!existing) {
+          this.router.navigate(['/visites']);
+          return;
+        }
+        this.form = {
+          idDossier: String(existing.idDossier),
+          idDoctor: existing.idDoctor,
+          status: existing.status,
+          planTraitement: existing.planTraitement,
+          observations: existing.observations,
+        };
+      });
+    } else if (this.mode === 'create') {
+      const qDossierId = this.route.snapshot.queryParamMap.get('dossierId');
+      if (qDossierId) {
+        this.form.idDossier = qDossierId;
+      }
+    }
+  }
+
+  loadDossiers() {
+    this.dossiersStore.getAll().subscribe(list => {
+      this.dossierOptions = list.map(d => ({
+        value: String(d.id),
+        label: `${d.nomPatient} (${d.numDossier})`
+      }));
+    });
+  }
+
+  /*
   generateOrdonnance() {
     const existing = this.store.getById(this.id!);
     if (existing) {
@@ -95,6 +137,22 @@ export class VisitesFormPageComponent {
         } 
       });
     }
+  }
+  */
+
+  generateOrdonnance() {
+    this.store.getById(this.id!).subscribe(existing => {
+      if (existing) {
+        this.dossiersStore.getById(existing.idDossier).subscribe(dossier => {
+          this.router.navigate(['/ordonnances/new'], { 
+            queryParams: { 
+              patientId: dossier?.idPatient,
+              visiteId: this.id
+            } 
+          });
+        });
+      }
+    });
   }
 
   get title(): string {
@@ -125,6 +183,7 @@ export class VisitesFormPageComponent {
       idDossier: Number(this.form.idDossier)
     };
 
+    /*
     if (this.mode === 'create') {
       this.store.create(payload);
     } else if (this.id != null) {
@@ -132,5 +191,24 @@ export class VisitesFormPageComponent {
     }
 
     this.router.navigate(['/visites']);
+    */
+
+    if (this.mode === 'create') {
+      this.store.create(payload).subscribe({
+        next: () => {
+          this.toastService.success('Succès', 'Visite enregistrée avec succès');
+          this.router.navigate(['/visites']);
+        },
+        error: () => this.toastService.error('Erreur', 'Erreur lors de l\'enregistrement')
+      });
+    } else if (this.id != null) {
+      this.store.update(this.id, payload).subscribe({
+        next: () => {
+          this.toastService.success('Succès', 'Visite mise à jour avec succès');
+          this.router.navigate(['/visites']);
+        },
+        error: () => this.toastService.error('Erreur', 'Erreur lors de la mise à jour')
+      });
+    }
   }
 }

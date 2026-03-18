@@ -27,6 +27,7 @@ import { RendezVousComponent } from './pages/RendezVous/RendezVous.component';
 import { PatientsComponent } from './pages/patients/patients.component';
 import { PatientsFormPageComponent } from './pages/patients/patients-form-page.component';
 import { DocteursComponent } from './pages/docteurs/docteurs.component';
+import { DocteursFormPageComponent } from './pages/docteurs/docteurs-form-page.component';
 import { InfirmiersComponent } from './pages/infirmiers/infirmiers.component';
 import { ServicesComponent } from './pages/services/services.component';
 import { SpecialisationsComponent } from './pages/specialisations/specialisations.component';
@@ -99,8 +100,15 @@ export const routes: Routes = [
       },
       {
         path: 'docteurs/new',
-        component: DocteursComponent,
+        component: DocteursFormPageComponent,
         title: 'Ajouter un Docteur | ShifaTech',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.DOCTEUR] }
+      },
+      {
+        path: 'docteurs/:id/edit',
+        component: DocteursFormPageComponent,
+        title: 'Modifier un Docteur | ShifaTech',
         canActivate: [roleGuard],
         data: { roles: [Role.ADMIN, Role.DOCTEUR] }
       },

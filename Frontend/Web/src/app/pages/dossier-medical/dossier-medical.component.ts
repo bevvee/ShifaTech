@@ -30,8 +30,17 @@ export class DossierMedicalComponent implements OnInit {
     this.loadDossiers();
   }
 
+  /*
   loadDossiers() {
     this.dossiers = this.store.getAll();
+  }
+  */
+
+  loadDossiers() {
+    this.store.getAll().subscribe({
+      next: (data) => this.dossiers = data,
+      error: (err) => console.error('Erreur chargement dossiers', err)
+    });
   }
 
   viewDossier(id: number) {
@@ -42,9 +51,20 @@ export class DossierMedicalComponent implements OnInit {
     this.router.navigate(['/dossier-medical', id, 'edit']);
   }
 
+  /*
   deleteDossier(id: number) {
     this.store.delete(id);
     this.loadDossiers();
+  }
+  */
+
+  deleteDossier(id: number) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')) {
+      this.store.delete(id).subscribe({
+        next: () => this.loadDossiers(),
+        error: (err) => console.error('Erreur suppression dossier', err)
+      });
+    }
   }
 
   get filteredDossiers(): DossierMedicalDto[] {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
@@ -16,6 +16,7 @@ import { OrdonnanceStore } from '../ordonnances/ordonnances.store';
 import { DossierStatus, GroupeSanguin, DossierMedicalDto } from '../../core/models/dossier-medical.model';
 import { VisiteDto } from '../../core/models/visite.model';
 import { OrdonnanceDto } from '../../core/models/ordonnance.model';
+import { ToastService } from '../../shared/services/toast.service';
 
 type Mode = 'create' | 'edit' | 'view';
 
@@ -36,7 +37,7 @@ type Mode = 'create' | 'edit' | 'view';
   ],
   templateUrl: './dossier-medical-form-page.component.html'
 })
-export class DossierMedicalFormPageComponent {
+export class DossierMedicalFormPageComponent implements OnInit {
   mode: Mode;
   submitted = false;
 
@@ -46,6 +47,7 @@ export class DossierMedicalFormPageComponent {
   private readonly patientsStore = inject(PatientsStore);
   private readonly visitesStore = inject(VisiteStore);
   private readonly ordonnancesStore = inject(OrdonnanceStore);
+  private readonly toastService = inject(ToastService);
 
   private id: number | null;
   
@@ -91,6 +93,7 @@ export class DossierMedicalFormPageComponent {
       this.form.idPatient = qPatientId;
     }
 
+    /*
     if (this.mode !== 'create' && this.id != null) {
       const existing = this.store.getById(this.id);
       if (!existing) {
@@ -114,8 +117,53 @@ export class DossierMedicalFormPageComponent {
       this.linkedVisites = this.visitesStore.getByDossierId(this.id);
       this.linkedOrdonnances = this.ordonnancesStore.getByPatientId(existing.idPatient);
     }
+    */
 
     this.loadPatients();
+  }
+
+  ngOnInit() {
+    if (this.mode !== 'create' && this.id != null) {
+      this.store.getById(this.id).subscribe({
+        next: (existing) => {
+          if (!existing) {
+            this.router.navigate(['/dossier-medical']);
+            return;
+          }
+          this.form = {
+            idPatient: String(existing.idPatient),
+            status: existing.status,
+            poids: existing.poids,
+            taille: existing.taille,
+            groupeSanguin: existing.groupeSanguin,
+            antecedentsMedicaux: existing.antecedentsMedicaux,
+            allergies: existing.allergies,
+            pathologiesChroniques: existing.pathologiesChroniques,
+            diagnostic: existing.diagnostic,
+            notes: existing.notes,
+          };
+
+          // Load History (Mocks for now)
+          /*
+          this.linkedVisites = this.visitesStore.getByDossierId(this.id!);
+          */
+          this.visitesStore.getByDossierId(this.id!).subscribe(list => {
+            this.linkedVisites = list;
+          });
+          
+          /*
+          this.linkedOrdonnances = this.ordonnancesStore.getByPatientId(existing.idPatient);
+          */
+          this.ordonnancesStore.getByPatientId(existing.idPatient).subscribe(list => {
+            this.linkedOrdonnances = list;
+          });
+        },
+        error: (err) => {
+          console.error('Erreur chargement dossier', err);
+          this.router.navigate(['/dossier-medical']);
+        }
+      });
+    }
   }
 
   loadPatients() {
@@ -164,12 +212,31 @@ export class DossierMedicalFormPageComponent {
       idPatient: Number(this.form.idPatient)
     };
 
+    /*
     if (this.mode === 'create') {
       this.store.create(payload);
     } else if (this.id != null) {
       this.store.update(this.id, payload);
     }
-
     this.router.navigate(['/dossier-medical']);
+    */
+
+    if (this.mode === 'create') {
+      this.store.create(payload).subscribe({
+        next: () => {
+          this.toastService.success('Succès', 'Dossier créé avec succès');
+          this.router.navigate(['/dossier-medical']);
+        },
+        error: () => this.toastService.error('Erreur', 'Erreur lors de la création')
+      });
+    } else if (this.id != null) {
+      this.store.update(this.id, payload).subscribe({
+        next: () => {
+          this.toastService.success('Succès', 'Dossier mis à jour avec succès');
+          this.router.navigate(['/dossier-medical']);
+        },
+        error: () => this.toastService.error('Erreur', 'Erreur lors de la mise à jour')
+      });
+    }
   }
 }

@@ -21,4 +21,8 @@ public class VisiteDTO {
     private String planTraitement;
     private String observations;
     private LocalDateTime dateFermeture;
+
+    // Infos pour l'affichage
+    private String nomPatient;
+    private String numDossier;
 }

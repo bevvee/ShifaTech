@@ -30,8 +30,17 @@ export class VisitesComponent implements OnInit {
     this.loadVisites();
   }
 
+  /*
   loadVisites() {
     this.visites = this.store.getAll();
+  }
+  */
+
+  loadVisites() {
+    this.store.getAll().subscribe({
+      next: (data) => this.visites = data,
+      error: (err) => console.error('Erreur chargement visites', err)
+    });
   }
 
   viewVisite(id: number) {
@@ -42,9 +51,29 @@ export class VisitesComponent implements OnInit {
     this.router.navigate(['/visites', id, 'edit']);
   }
 
+  /*
   deleteVisite(id: number) {
     this.store.delete(id);
     this.loadVisites();
+  }
+  */
+
+  /*
+  deleteVisite(id: number) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette visite ?')) {
+      // Note: delete dans le store n'est pas encore async mais on anticipe
+      this.store.delete(id);
+      this.loadVisites();
+    }
+  }
+  */
+
+  deleteVisite(id: number) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette visite ?')) {
+      this.store.delete(id).subscribe(() => {
+        this.loadVisites();
+      });
+    }
   }
 
   get filteredVisites(): VisiteDto[] {

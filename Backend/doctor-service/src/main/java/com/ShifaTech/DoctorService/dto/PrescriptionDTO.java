@@ -18,4 +18,3 @@ public class PrescriptionDTO {
     private Date dateValidite;
     private Boolean statut;
 }
-

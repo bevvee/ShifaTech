@@ -39,6 +39,7 @@ export class PatientsComponent implements OnInit {
     });
   }
 
+  /*
   viewDossierByPatient(patientId: number) {
     const dossier = this.dossierStore.getByPatientId(patientId);
     if (dossier) {
@@ -47,6 +48,24 @@ export class PatientsComponent implements OnInit {
       // If no dossier exists, navigate to create page with patient pre-selected
       this.router.navigate(['/dossier-medical/new'], { queryParams: { patientId } });
     }
+  }
+  */
+
+  viewDossierByPatient(patientId: number) {
+    this.dossierStore.getByPatientId(patientId).subscribe({
+      next: (dossier) => {
+        if (dossier) {
+          this.router.navigate(['/dossier-medical', dossier.id]);
+        } else {
+          this.router.navigate(['/dossier-medical/new'], { queryParams: { patientId } });
+        }
+      },
+      error: (err) => {
+        console.error('Erreur récupération dossier', err);
+        // En cas d'erreur (ex: 404), on propose d'en créer un
+        this.router.navigate(['/dossier-medical/new'], { queryParams: { patientId } });
+      }
+    });
   }
 
   viewPatient(id: number) {

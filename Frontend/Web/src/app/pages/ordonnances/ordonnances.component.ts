@@ -30,8 +30,17 @@ export class OrdonnancesComponent implements OnInit {
     this.loadOrdonnances();
   }
 
+  /*
   loadOrdonnances() {
     this.ordonnances = this.store.getAll();
+  }
+  */
+
+  loadOrdonnances() {
+    this.store.getAll().subscribe({
+      next: (data) => this.ordonnances = data,
+      error: (err) => console.error('Erreur chargement ordonnances', err)
+    });
   }
 
   viewOrdonnance(id: number) {
@@ -42,9 +51,29 @@ export class OrdonnancesComponent implements OnInit {
     this.router.navigate(['/ordonnances', id, 'edit']);
   }
 
+  /*
   deleteOrdonnance(id: number) {
     this.store.delete(id);
     this.loadOrdonnances();
+  }
+  */
+
+  /*
+  deleteOrdonnance(id: number) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette ordonnance ?')) {
+      // Note: delete n'est pas encore async mais on anticipe
+      this.store.delete(id);
+      this.loadOrdonnances();
+    }
+  }
+  */
+
+  deleteOrdonnance(id: number) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette ordonnance ?')) {
+      this.store.delete(id).subscribe(() => {
+        this.loadOrdonnances();
+      });
+    }
   }
 
   get filteredOrdonnances(): OrdonnanceDto[] {

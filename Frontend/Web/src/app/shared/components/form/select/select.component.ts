@@ -34,7 +34,7 @@ export class SelectComponent implements OnInit, OnChanges {
 
 	@Input() disabled = false;
 	@Input() hasSearch = true;
-	@Input() searchLimit = 5;
+	@Input() searchLimit = 50;
 	@Input() searchPlaceholder = 'Search...';
 
   @Output() valueChange = new EventEmitter<string>();
