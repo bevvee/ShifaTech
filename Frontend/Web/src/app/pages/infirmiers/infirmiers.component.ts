@@ -1,37 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NavigationEnd, Router } from '@angular/router';
-import { filter, Subscription } from 'rxjs';
+import { Router } from '@angular/router';
 import { AlertService } from '../../core/services/alert.service';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
-import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
-import { InputFieldComponent } from '../../shared/components/form/input/input-field.component';
-import { TextAreaComponent } from '../../shared/components/form/input/text-area.component';
-import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
-import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
-
-type Sexe = 'M' | 'F';
-
-type InfirmierRow = {
-  id: number;
-  nom: string;
-  prenom: string;
-  cin: string;
-  email: string;
-  role: 'INFIRMIER';
-  sexe: Sexe;
-  statut: boolean;
-  dateNaissance: string;
-  telephone: string;
-  adresse: string;
-
-  idService: number;
-  idSpecialite: number;
-};
+import { InfirmierRow } from '../../core/models/infirmier.model';
+import { InfirmiersCatalogService } from '../../core/services/infirmiers-catalog.service';
 
 @Component({
   selector: 'app-infirmiers',
@@ -41,125 +18,44 @@ type InfirmierRow = {
     PageBreadcrumbComponent,
     ComponentCardComponent,
     ButtonComponent,
-    ModalComponent,
-    InputFieldComponent,
-    TextAreaComponent,
-    LabelComponent,
     BadgeComponent,
-    SelectComponent,
   ],
   templateUrl: './infirmiers.component.html',
   styles: ``
 })
 export class InfirmiersComponent {
-
-  infirmiers: InfirmierRow[] = [
-    {
-      id: 1,
-      nom: 'Haddad',
-      prenom: 'Imane',
-      cin: 'IN123456',
-      email: 'imane.haddad@shifatech.test',
-      role: 'INFIRMIER',
-      sexe: 'F',
-      statut: true,
-      dateNaissance: '1995-03-19',
-      telephone: '+212644444444',
-      adresse: 'Fès',
-      idService: 1,
-      idSpecialite: 1,
-    },
-  ];
-
-  private nextId = 2;
-  private readonly subscription = new Subscription();
-
-  isModalOpen = false;
-  mode: 'create' | 'edit' = 'create';
-  submitted = false;
-  editingId: number | null = null;
-  isCreatePage = false;
+  infirmiers: InfirmierRow[] = [];
 
   currentPage = 1;
   itemsPerPage = 5;
 
-  sexeOptions: Option[] = [
-    { value: 'M', label: 'M' },
-    { value: 'F', label: 'F' },
-  ];
-
-  statutOptions: Option[] = [
-    { value: 'true', label: 'Actif' },
-    { value: 'false', label: 'Inactif' },
-  ];
-
-  form: {
-    nom: string;
-    prenom: string;
-    cin: string;
-    email: string;
-    password: string;
-    sexe: Sexe;
-    statutValue: 'true' | 'false';
-    dateNaissance: string;
-    telephone: string;
-    adresse: string;
-  } = this.emptyForm();
-
   constructor(
     private readonly router: Router,
     private readonly alerts: AlertService,
+    private readonly infirmiersCatalog: InfirmiersCatalogService,
   ) {}
 
   ngOnInit() {
-    this.handleUrl(this.router.url);
-    this.subscription.add(
-      this.router.events
-        .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-        .subscribe(() => this.handleUrl(this.router.url)),
-    );
+    this.reload();
   }
 
-  ngOnDestroy() {
-    this.subscription.unsubscribe();
+  private reload() {
+    this.infirmiers = this.infirmiersCatalog.getAll();
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
+    }
   }
 
   goToCreate() {
     this.router.navigate(['/infirmiers/new']);
   }
 
-  openCreateModal() {
-    this.mode = 'create';
-    this.editingId = null;
-    this.submitted = false;
-    this.form = this.emptyForm();
-    this.isModalOpen = true;
+  goToView(row: InfirmierRow) {
+    this.router.navigate(['/infirmiers', row.id]);
   }
 
-  openEditModal(row: InfirmierRow) {
-    this.mode = 'edit';
-    this.editingId = row.id;
-    this.submitted = false;
-    this.form = {
-      nom: row.nom,
-      prenom: row.prenom,
-      cin: row.cin,
-      email: row.email,
-      password: '',
-      sexe: row.sexe,
-      statutValue: row.statut ? 'true' : 'false',
-      dateNaissance: row.dateNaissance,
-      telephone: row.telephone,
-      adresse: row.adresse,
-    };
-    this.isModalOpen = true;
-  }
-
-  closeModal() {
-    this.isModalOpen = false;
-    if (this.router.url === '/infirmiers/new') {
-      this.router.navigate(['/infirmiers']);
-    }
+  goToEdit(row: InfirmierRow) {
+    this.router.navigate(['/infirmiers', row.id, 'edit']);
   }
 
   deleteInfirmier(id: number) {
@@ -170,7 +66,9 @@ export class InfirmiersComponent {
     const ok = await this.alerts.confirmDelete('cet infirmier');
     if (!ok) return;
 
-    this.infirmiers = this.infirmiers.filter((i) => i.id !== id);
+    const updated = this.infirmiers.filter((i) => i.id !== id);
+    this.infirmiers = updated;
+    this.infirmiersCatalog.saveAll(updated);
     if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages;
     }
@@ -188,92 +86,6 @@ export class InfirmiersComponent {
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-    }
-  }
-
-  get isValid(): boolean {
-    return (
-      this.form.nom.trim().length > 0 &&
-      this.form.prenom.trim().length > 0 &&
-      this.form.cin.trim().length > 0 &&
-      this.form.email.trim().length > 0 &&
-      this.form.telephone.trim().length > 0 &&
-      this.form.dateNaissance.trim().length > 0 &&
-      (this.mode === 'edit' || this.form.password.trim().length > 0)
-    );
-  }
-
-  save() {
-    this.submitted = true;
-    if (!this.isValid) return;
-
-    const statut = this.form.statutValue === 'true';
-    const payloadBase: Omit<InfirmierRow, 'id' | 'idService' | 'idSpecialite'> = {
-      nom: this.form.nom.trim(),
-      prenom: this.form.prenom.trim(),
-      cin: this.form.cin.trim(),
-      email: this.form.email.trim(),
-      role: 'INFIRMIER',
-      sexe: this.form.sexe,
-      statut,
-      dateNaissance: this.form.dateNaissance,
-      telephone: this.form.telephone.trim(),
-      adresse: this.form.adresse.trim(),
-    };
-
-    if (this.mode === 'create') {
-      const id = this.nextId++;
-      const payload: InfirmierRow = {
-        id,
-        ...payloadBase,
-        idService: 1,
-        idSpecialite: 1,
-      };
-      this.infirmiers = [payload, ...this.infirmiers];
-      this.currentPage = 1;
-      this.closeModal();
-      return;
-    }
-
-    const id = this.editingId;
-    if (id == null) return;
-
-    const existing = this.infirmiers.find((i) => i.id === id);
-    if (!existing) return;
-
-    const updated: InfirmierRow = {
-      ...existing,
-      ...payloadBase,
-    };
-
-    this.infirmiers = this.infirmiers.map((i) => (i.id === id ? updated : i));
-    this.closeModal();
-  }
-
-  private emptyForm() {
-    return {
-      nom: '',
-      prenom: '',
-      cin: '',
-      email: '',
-      password: '',
-      sexe: 'M' as Sexe,
-      statutValue: 'true' as const,
-      dateNaissance: '',
-      telephone: '',
-      adresse: '',
-    };
-  }
-
-  private handleUrl(url: string) {
-    this.isCreatePage = url === '/infirmiers/new';
-
-    if (this.isCreatePage) {
-      this.mode = 'create';
-      this.editingId = null;
-      this.submitted = false;
-      this.form = this.emptyForm();
-      this.isModalOpen = false;
     }
   }
 

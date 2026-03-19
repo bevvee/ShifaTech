@@ -1,42 +1,7 @@
 <div class="px-2 pb-4">
 	<app-page-breadcrumb pageTitle="Spécialités" />
 
-	@if (isCreatePage) {
-		<app-component-card title="Ajouter une spécialité">
-			<div class="flex items-center justify-between mb-4">
-				<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
-					Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
-				</p>
-			</div>
-
-			<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-				<div>
-					<app-label for="label">Nom <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field
-						id="label"
-						name="label"
-						placeholder="Nom"
-						[(value)]="form.label"
-						[error]="submitted && !form.label.trim()"
-					/>
-				</div>
-				<div>
-					<app-label>Service <span class="font-semibold text-error-500">*</span></app-label>
-					<app-select
-						[options]="serviceOptions"
-						placeholder="Choisir un service"
-						[(value)]="form.serviceIdValue"
-					/>
-				</div>
-			</div>
-
-			<div class="mt-8 flex items-center justify-end gap-3">
-				<app-button size="sm" variant="outline" (btnClick)="closeModal()">Annuler</app-button>
-				<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
-			</div>
-		</app-component-card>
-	} @else {
-		<app-component-card title="Liste des Spécialités">
+	<app-component-card title="Liste des Spécialités">
 			<div card-actions class="flex items-center gap-3">
 				<div class="relative">
 					<input
@@ -46,7 +11,20 @@
 						class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm focus:border-primary-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
 					/>
 				</div>
-				<app-button size="sm" (btnClick)="goToCreate()">+ Ajouter Spécialité</app-button>
+				<div class="min-w-56">
+					<select
+						class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm focus:border-primary-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+						[(ngModel)]="createTypeValue"
+						(ngModelChange)="onCreateTypeChange($event)"
+					>
+						<option [ngValue]="''" disabled>
+							+ Ajouter Spécialité
+						</option>
+						@for (opt of createOptions; track opt.value) {
+							<option [ngValue]="opt.value">{{ opt.label }}</option>
+						}
+					</select>
+				</div>
 			</div>
 
 			<span card-title-addon class="text-sm text-primary-600 font-medium">
@@ -54,9 +32,47 @@
 			</span>
 
 			@if (filteredSpecialities.length === 0) {
-				<div class="px-6 pb-6 text-center text-sm text-gray-500 dark:text-gray-400">Aucune spécialité.</div>
+				<div class="mt-4 flex items-center gap-2">
+					<app-button
+						size="sm"
+						[variant]="owner === 'doctor' ? 'primary' : 'outline'"
+						(btnClick)="setOwner('doctor')"
+					>
+						Spécialités Docteur
+					</app-button>
+					<app-button
+						size="sm"
+						[variant]="owner === 'infirmier' ? 'primary' : 'outline'"
+						(btnClick)="setOwner('infirmier')"
+					>
+						Spécialités Infirmier
+					</app-button>
+				</div>
+				<div class="px-6 pb-6 pt-6 text-center text-sm text-gray-500 dark:text-gray-400">Aucune spécialité.</div>
 			} @else {
 				<div class="rounded-2xl border border-gray-200 bg-white pt-4 dark:border-white/5 dark:bg-white/3">
+					<div class="flex items-center justify-between gap-3 px-5 pb-4 sm:px-6">
+						<div class="flex items-center gap-2">
+							<app-button
+								size="sm"
+								[variant]="owner === 'doctor' ? 'primary' : 'outline'"
+								(btnClick)="setOwner('doctor')"
+							>
+								Spécialités Docteur
+							</app-button>
+							<app-button
+								size="sm"
+								[variant]="owner === 'infirmier' ? 'primary' : 'outline'"
+								(btnClick)="setOwner('infirmier')"
+							>
+								Spécialités Infirmier
+							</app-button>
+						</div>
+						<span class="text-sm text-gray-500 dark:text-gray-400">
+							{{ owner === 'doctor' ? 'Liste des spécialités docteur' : 'Liste des spécialités infirmier' }}
+						</span>
+					</div>
+
 					<div class="overflow-hidden">
 						<div class="max-w-full px-5 overflow-x-auto sm:px-6">
 							<table class="min-w-full">
@@ -80,7 +96,19 @@
 												<div class="flex items-center gap-2">
 													<button
 														type="button"
-														(click)="openEditModal(spec)"
+														(click)="goToView(spec)"
+														class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-primary-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-primary-400 dark:hover:bg-white/6"
+														aria-label="Voir"
+													>
+														<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+															<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+															<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														</svg>
+													</button>
+
+													<button
+														type="button"
+														(click)="goToEdit(spec)"
 														class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-green-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-green-400 dark:hover:bg-white/6"
 														aria-label="Modifier"
 													>
@@ -114,43 +142,5 @@
 					</div>
 				</div>
 			}
-		</app-component-card>
-
-		<app-modal [isOpen]="isModalOpen" (close)="closeModal()" className="max-w-225 p-6 lg:p-10">
-			<div>
-				<h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-					@if (mode === 'create') { Ajouter une spécialité } @else { Modifier une spécialité }
-				</h4>
-				<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
-					Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
-				</p>
-
-				<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<div>
-						<app-label for="label">Nom <span class="font-semibold text-error-500">*</span></app-label>
-						<app-input-field
-							id="label"
-							name="label"
-							placeholder="Nom"
-							[(value)]="form.label"
-							[error]="submitted && !form.label.trim()"
-						/>
-					</div>
-					<div>
-						<app-label>Service <span class="font-semibold text-error-500">*</span></app-label>
-						<app-select
-							[options]="serviceOptions"
-							placeholder="Choisir un service"
-							[(value)]="form.serviceIdValue"
-						/>
-					</div>
-				</div>
-
-				<div class="mt-8 flex items-center justify-end gap-3">
-					<app-button size="sm" variant="outline" (btnClick)="closeModal()">Annuler</app-button>
-					<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
-				</div>
-			</div>
-		</app-modal>
-	}
+	</app-component-card>
 </div>

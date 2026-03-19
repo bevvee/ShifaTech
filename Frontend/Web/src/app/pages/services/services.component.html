@@ -1,32 +1,7 @@
 <div class="px-2 pb-4">
 	<app-page-breadcrumb pageTitle="Services" />
 
-	@if (isCreatePage) {
-		<app-component-card title="Ajouter un service">
-			<div class="flex items-center justify-between mb-4">
-				<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
-					Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
-				</p>
-			</div>
-
-			<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-				<div>
-					<app-label for="label">Nom <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="label" name="label" placeholder="Nom" [(value)]="form.label" [error]="submitted && !form.label.trim()" />
-				</div>
-				<div class="sm:col-span-2">
-					<app-label for="description">Description <span class="font-semibold text-error-500">*</span></app-label>
-					<app-text-area id="description" name="description" placeholder="Description" [(value)]="form.description" [rows]="3" />
-				</div>
-			</div>
-
-			<div class="mt-8 flex items-center justify-end gap-3">
-				<app-button size="sm" variant="outline" (btnClick)="closeModal()">Annuler</app-button>
-				<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
-			</div>
-		</app-component-card>
-	} @else {
-		<app-component-card title="Liste des Services">
+	<app-component-card title="Liste des Services">
 			<div card-actions class="flex items-center gap-3">
 				<app-button size="sm" variant="outline">Filters</app-button>
 				<app-button size="sm" (btnClick)="goToCreate()">+ Ajouter Service</app-button>
@@ -79,7 +54,19 @@
 												<div class="flex items-center gap-2">
 													<button
 														type="button"
-														(click)="openEditModal(service)"
+														(click)="goToView(service)"
+														class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-primary-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-primary-400 dark:hover:bg-white/6"
+														aria-label="Voir"
+													>
+														<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+															<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+															<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														</svg>
+													</button>
+
+													<button
+														type="button"
+														(click)="goToEdit(service)"
 														class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-green-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-green-400 dark:hover:bg-white/6"
 														aria-label="Modifier"
 													>
@@ -143,33 +130,5 @@
 					</div>
 				}
 			</div>
-		</app-component-card>
-
-		<app-modal [isOpen]="isModalOpen" (close)="closeModal()" className="max-w-225 p-6 lg:p-10">
-			<div>
-				<h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-					@if (mode === 'create') { Ajouter un service } @else { Modifier un service }
-				</h4>
-				<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
-					Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
-				</p>
-
-				<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<div>
-						<app-label for="label">Nom <span class="font-semibold text-error-500">*</span></app-label>
-						<app-input-field id="label" name="label" placeholder="Nom" [(value)]="form.label" [error]="submitted && !form.label.trim()" />
-					</div>
-					<div class="sm:col-span-2">
-						<app-label for="description">Description <span class="font-semibold text-error-500">*</span></app-label>
-						<app-text-area id="description" name="description" placeholder="Description" [(value)]="form.description" [rows]="3" />
-					</div>
-				</div>
-
-				<div class="mt-8 flex items-center justify-end gap-3">
-					<app-button size="sm" variant="outline" (btnClick)="closeModal()">Annuler</app-button>
-					<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
-				</div>
-			</div>
-		</app-modal>
-	}
+	</app-component-card>
 </div>

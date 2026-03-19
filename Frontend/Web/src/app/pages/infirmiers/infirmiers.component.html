@@ -1,78 +1,7 @@
 <div class="px-2 pb-4">
 	<app-page-breadcrumb pageTitle="Infirmiers" />
 
-	@if (isCreatePage) {
-		<app-component-card title="Ajouter un infirmier">
-			<div class="flex items-center justify-between mb-4">
-				<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
-					Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
-				</p>
-			</div>
-
-			<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-				<div>
-					<app-label for="nom">Nom <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="nom" name="nom" placeholder="Nom" [(value)]="form.nom" [error]="submitted && !form.nom.trim()" />
-				</div>
-				<div>
-					<app-label for="prenom">Prénom <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="prenom" name="prenom" placeholder="Prénom" [(value)]="form.prenom" [error]="submitted && !form.prenom.trim()" />
-				</div>
-
-				<div>
-					<app-label for="cin">CIN <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="cin" name="cin" placeholder="CIN" [(value)]="form.cin" [error]="submitted && !form.cin.trim()" />
-				</div>
-				<div>
-					<app-label for="email">Email <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="email" name="email" type="email" placeholder="email@..." [(value)]="form.email" [error]="submitted && !form.email.trim()" />
-				</div>
-
-				<div>
-					<app-label for="mot_de_passe">Mot de passe <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field
-						id="mot_de_passe"
-						name="mot_de_passe"
-						type="password"
-						placeholder="Mot de passe"
-						[(value)]="form.password"
-						[error]="submitted && !form.password.trim()"
-					/>
-				</div>
-
-				<div>
-					<app-label>Sexe</app-label>
-					<app-select [options]="sexeOptions" [(value)]="form.sexe" [hasSearch]="false" />
-				</div>
-
-				<div>
-					<app-label>Statut</app-label>
-					<app-select [options]="statutOptions" [(value)]="form.statutValue" [hasSearch]="false" />
-				</div>
-
-				<div>
-					<app-label for="date_naissance">Date de naissance <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="date_naissance" name="date_naissance" type="date" [(value)]="form.dateNaissance" [error]="submitted && !form.dateNaissance.trim()" />
-				</div>
-
-				<div>
-					<app-label for="telephone">Téléphone <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="telephone" name="telephone" placeholder="Téléphone" [(value)]="form.telephone" [error]="submitted && !form.telephone.trim()" />
-				</div>
-
-				<div class="sm:col-span-2">
-					<app-label for="adresse">Adresse</app-label>
-					<app-text-area id="adresse" name="adresse" placeholder="Adresse" [(value)]="form.adresse" [rows]="3" />
-				</div>
-			</div>
-
-			<div class="mt-8 flex items-center justify-end gap-3">
-				<app-button size="sm" variant="outline" (btnClick)="closeModal()">Annuler</app-button>
-				<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
-			</div>
-		</app-component-card>
-	} @else {
-		<app-component-card title="Liste Infirmiers">
+	<app-component-card title="Liste Infirmiers">
 			<div card-actions class="flex items-center gap-3">
 				<app-button size="sm" variant="outline">Filters</app-button>
 				<app-button size="sm" (btnClick)="goToCreate()">+ Ajouter Infirmier</app-button>
@@ -145,7 +74,19 @@
 												<div class="flex items-center gap-2">
 													<button
 														type="button"
-														(click)="openEditModal(inf)"
+														(click)="goToView(inf)"
+														class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-primary-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-primary-400 dark:hover:bg-white/6"
+														aria-label="Voir"
+													>
+														<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+															<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+															<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														</svg>
+													</button>
+
+													<button
+														type="button"
+														(click)="goToEdit(inf)"
 														class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-green-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-green-400 dark:hover:bg-white/6"
 														aria-label="Modifier"
 													>
@@ -207,83 +148,5 @@
 					</div>
 				}
 			</div>
-		</app-component-card>
-
-		<app-modal [isOpen]="isModalOpen" (close)="closeModal()" className="max-w-225 p-6 lg:p-10">
-			<div>
-				<h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-					@if (mode === 'create') { Ajouter un infirmier } @else { Modifier un infirmier }
-				</h4>
-				<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
-					Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
-				</p>
-
-				<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<div>
-						<app-label for="nom">Nom <span class="font-semibold text-error-500">*</span></app-label>
-						<app-input-field id="nom" name="nom" placeholder="Nom" [(value)]="form.nom" [error]="submitted && !form.nom.trim()" />
-					</div>
-					<div>
-						<app-label for="prenom">Prénom <span class="font-semibold text-error-500">*</span></app-label>
-						<app-input-field id="prenom" name="prenom" placeholder="Prénom" [(value)]="form.prenom" [error]="submitted && !form.prenom.trim()" />
-					</div>
-
-					<div>
-						<app-label for="cin">CIN <span class="font-semibold text-error-500">*</span></app-label>
-						<app-input-field id="cin" name="cin" placeholder="CIN" [(value)]="form.cin" [error]="submitted && !form.cin.trim()" />
-					</div>
-					<div>
-						<app-label for="email">Email <span class="font-semibold text-error-500">*</span></app-label>
-						<app-input-field id="email" name="email" type="email" placeholder="email@..." [(value)]="form.email" [error]="submitted && !form.email.trim()" />
-					</div>
-
-					<div>
-						<app-label for="mot_de_passe">
-							Mot de passe
-							@if (mode === 'create') { <span class="font-semibold text-error-500">*</span> }
-						</app-label>
-						<app-input-field
-							id="mot_de_passe"
-							name="mot_de_passe"
-							type="password"
-							placeholder="Mot de passe"
-							[(value)]="form.password"
-							[error]="submitted && mode === 'create' && !form.password.trim()"
-							[hint]="mode === 'edit' ? 'Laisser vide pour ne pas changer.' : ''"
-						/>
-					</div>
-
-					<div>
-						<app-label>Sexe</app-label>
-						<app-select [options]="sexeOptions" [(value)]="form.sexe" [hasSearch]="false" />
-					</div>
-
-					<div>
-						<app-label>Statut</app-label>
-						<app-select [options]="statutOptions" [(value)]="form.statutValue" [hasSearch]="false" />
-					</div>
-
-					<div>
-						<app-label for="date_naissance">Date de naissance <span class="font-semibold text-error-500">*</span></app-label>
-						<app-input-field id="date_naissance" name="date_naissance" type="date" [(value)]="form.dateNaissance" [error]="submitted && !form.dateNaissance.trim()" />
-					</div>
-
-					<div>
-						<app-label for="telephone">Téléphone <span class="font-semibold text-error-500">*</span></app-label>
-						<app-input-field id="telephone" name="telephone" placeholder="Téléphone" [(value)]="form.telephone" [error]="submitted && !form.telephone.trim()" />
-					</div>
-
-					<div class="sm:col-span-2">
-						<app-label for="adresse">Adresse</app-label>
-						<app-text-area id="adresse" name="adresse" placeholder="Adresse" [(value)]="form.adresse" [rows]="3" />
-					</div>
-				</div>
-
-				<div class="mt-8 flex items-center justify-end gap-3">
-					<app-button size="sm" variant="outline" (btnClick)="closeModal()">Annuler</app-button>
-					<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
-				</div>
-			</div>
-		</app-modal>
-	}
+	</app-component-card>
 </div>

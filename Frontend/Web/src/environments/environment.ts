@@ -4,6 +4,7 @@ export const environment = {
     auth: '/auth',
     patient: '/patient',
     doctor: '/doctor',
+    infirmier: '/infirmier',
     rdv: '/rdv/api/rendez_vouses'
   }
 };

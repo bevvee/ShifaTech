@@ -25,9 +25,17 @@ import { PlanningComponent } from './pages/planning/planning.component';
 import { PatientsComponent } from './pages/patients/patients.component';
 import { PatientsFormPageComponent } from './pages/patients/patients-form-page.component';
 import { DocteursComponent } from './pages/docteurs/docteurs.component';
+import { DocteursFormPageComponent } from './pages/docteurs/docteurs-form-page.component';
+import { DocteursViewComponent } from './pages/docteurs/docteurs-view.component';
 import { InfirmiersComponent } from './pages/infirmiers/infirmiers.component';
+import { InfirmiersFormPageComponent } from './pages/infirmiers/infirmiers-form-page.component';
+import { InfirmiersViewComponent } from './pages/infirmiers/infirmiers-view.component';
 import { ServicesComponent } from './pages/services/services.component';
+import { ServicesFormPageComponent } from './pages/services/services-form-page.component';
+import { ServicesViewComponent } from './pages/services/services-view.component';
 import { SpecialisationsComponent } from './pages/specialisations/specialisations.component';
+import { SpecialisationsFormPageComponent } from './pages/specialisations/specialisations-form-page.component';
+import { SpecialisationsViewComponent } from './pages/specialisations/specialisations-view.component';
 import { DossierMedicalComponent } from './pages/dossier-medical/dossier-medical.component';
 import { DossierMedicalFormPageComponent } from './pages/dossier-medical/dossier-medical-form-page.component';
 import { VisitesComponent } from './pages/visites/visites.component';
@@ -139,10 +147,24 @@ export const routes: Routes = [
       },
       {
         path: "docteurs/new",
-        component: DocteursComponent,
+        component: DocteursFormPageComponent,
         title: "Ajouter un Docteur | ShifaTech",
         canActivate: [roleGuard],
+        data: { mode: 'create', roles: [Role.ADMIN] },
+      },
+      {
+        path: "docteurs/:id",
+        component: DocteursViewComponent,
+        title: "Détails Docteur | ShifaTech",
+        canActivate: [roleGuard],
         data: { roles: [Role.ADMIN] },
+      },
+      {
+        path: "docteurs/:id/edit",
+        component: DocteursFormPageComponent,
+        title: "Modifier Docteur | ShifaTech",
+        canActivate: [roleGuard],
+        data: { mode: 'edit', roles: [Role.ADMIN] },
       },
       {
         path: "patients",
@@ -274,10 +296,24 @@ export const routes: Routes = [
       },
       {
         path: "infirmiers/new",
-        component: InfirmiersComponent,
+        component: InfirmiersFormPageComponent,
         title: "Ajouter un Infirmier | ShifaTech",
         canActivate: [roleGuard],
+        data: { mode: 'create', roles: [Role.ADMIN] },
+      },
+      {
+        path: "infirmiers/:id",
+        component: InfirmiersViewComponent,
+        title: "Détails Infirmier | ShifaTech",
+        canActivate: [roleGuard],
         data: { roles: [Role.ADMIN] },
+      },
+      {
+        path: "infirmiers/:id/edit",
+        component: InfirmiersFormPageComponent,
+        title: "Modifier Infirmier | ShifaTech",
+        canActivate: [roleGuard],
+        data: { mode: 'edit', roles: [Role.ADMIN] },
       },
       {
         path: "services",
@@ -288,10 +324,24 @@ export const routes: Routes = [
       },
       {
         path: "services/new",
-        component: ServicesComponent,
+        component: ServicesFormPageComponent,
         title: "Ajouter un Service | ShifaTech",
         canActivate: [roleGuard],
+        data: { mode: 'create', roles: [Role.ADMIN] },
+      },
+      {
+        path: "services/:id",
+        component: ServicesViewComponent,
+        title: "Détails Service | ShifaTech",
+        canActivate: [roleGuard],
         data: { roles: [Role.ADMIN] },
+      },
+      {
+        path: "services/:id/edit",
+        component: ServicesFormPageComponent,
+        title: "Modifier Service | ShifaTech",
+        canActivate: [roleGuard],
+        data: { mode: 'edit', roles: [Role.ADMIN] },
       },
       {
         path: "specialisations",
@@ -302,10 +352,24 @@ export const routes: Routes = [
       },
       {
         path: "specialisations/new",
-        component: SpecialisationsComponent,
+        component: SpecialisationsFormPageComponent,
         title: "Ajouter une Spécialisation | ShifaTech",
         canActivate: [roleGuard],
+        data: { mode: 'create', roles: [Role.ADMIN] },
+      },
+      {
+        path: "specialisations/:id",
+        component: SpecialisationsViewComponent,
+        title: "Détails Spécialisation | ShifaTech",
+        canActivate: [roleGuard],
         data: { roles: [Role.ADMIN] },
+      },
+      {
+        path: "specialisations/:id/edit",
+        component: SpecialisationsFormPageComponent,
+        title: "Modifier Spécialisation | ShifaTech",
+        canActivate: [roleGuard],
+        data: { mode: 'edit', roles: [Role.ADMIN] },
       },
       {
         path: "profile",
