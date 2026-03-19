@@ -68,6 +68,7 @@ class InfirmierProcessor implements ProcessorInterface
                 );
                 $infirmier->setIdSpecialite($specialite);
             }
+            $infirmier->setCreatedAt(new \DateTimeImmutable());
 
             $this->entityManager->persist($infirmier);
             $this->entityManager->flush();
@@ -121,6 +122,7 @@ class InfirmierProcessor implements ProcessorInterface
                 $specialite = $this->entityManager->getReference(InfirmierSpecialite::class, $id_specialite);
                 $infirmier->setIdSpecialite($specialite);
             }
+            $infirmier->setUpdatedAt(new \DateTimeImmutable());
 
             $this->entityManager->flush();
             $data->id = $infirmier->getId();
@@ -141,7 +143,7 @@ class InfirmierProcessor implements ProcessorInterface
                     // Continue même si auth-service échoue
                 }
 
-                $this->entityManager->remove($infirmier);
+                $infirmier->setDeletedAt(new \DateTimeImmutable());
                 $this->entityManager->flush();
             }
             return null;

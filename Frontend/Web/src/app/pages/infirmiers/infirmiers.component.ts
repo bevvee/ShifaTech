@@ -10,11 +10,13 @@ import { Option } from '../../shared/components/form/select/select.component';
 import { TableDropdownComponent } from '../../shared/components/common/table-dropdown/table-dropdown.component';
 import { InfirmierService } from '../../core/services/infirmier.service';
 import { InfirmierDto } from '../../core/models/infirmier.model';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-infirmiers',
   imports: [
     CommonModule,
+    FormsModule,
     PageBreadcrumbComponent,
     ComponentCardComponent,
     ButtonComponent,
@@ -59,8 +61,6 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
         } else {
           this.infirmiers = [];
         }
-         console.log('premier infirmier:', this.infirmiers[0]);
-         console.log('statut:', this.infirmiers[0]?.statut, typeof this.infirmiers[0]?.statut);
       },
       error: (err) => console.error('Erreur:', err)
     });
@@ -101,14 +101,36 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
     const found = this.specialiteOptions.find(s => s.value === String(id));
     return found ? found.label : '-';
   }
+  searchTerm = '';
+
+get filteredInfirmiers(): InfirmierDto[] {
+  const q = this.searchTerm.trim().toLowerCase();
+  if (!q) return this.infirmiers;
+
+  return this.infirmiers.filter(inf => {
+      const haystack = [
+        inf.nom,
+        inf.prenom,
+        inf.cin,
+        inf.email,
+        inf.telephone,
+        inf.adresse,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+  }
 
   get totalPages(): number {
-    return Math.max(1, Math.ceil(this.infirmiers.length / this.itemsPerPage));
+    return Math.max(1, Math.ceil(this.filteredInfirmiers.length / this.itemsPerPage));
   }
 
   get currentInfirmiersItems(): InfirmierDto[] {
     const start = (this.currentPage - 1) * this.itemsPerPage;
-    return this.infirmiers.slice(start, start + this.itemsPerPage);
+    return this.filteredInfirmiers.slice(start, start + this.itemsPerPage);
+  }
+
+  onSearch() {
+    this.currentPage = 1;
   }
 
   goToPage(page: number) {

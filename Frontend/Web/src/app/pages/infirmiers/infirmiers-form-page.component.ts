@@ -10,6 +10,7 @@ import { TextAreaComponent } from '../../shared/components/form/input/text-area.
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
 import { InfirmierService } from '../../core/services/infirmier.service';
+import { ToastService } from '../../shared/services/toast.service';
 import { Sexe } from '../../core/models/infirmier.model';
 
 type Mode = 'create' | 'edit';
@@ -41,6 +42,7 @@ export class InfirmiersFormPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly infirmierService = inject(InfirmierService);
+  private readonly toastService = inject(ToastService);
 
   sexeOptions: Option[] = [
     { value: 'M', label: 'Masculin' },
@@ -72,8 +74,6 @@ export class InfirmiersFormPageComponent implements OnInit {
       this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
       const idParam = this.route.snapshot.paramMap.get('id');
       this.id = idParam ? Number(idParam) : null;
-
-      console.log('ngOnInit mode:', this.mode, 'id:', this.id);
 
       this.loadSpecialites();
 
@@ -108,7 +108,7 @@ export class InfirmiersFormPageComponent implements OnInit {
           label: s.label
         }));
       },
-      error: (err) => console.error('Erreur spécialités:', err)
+      error: () => {}
     });
   }
 
@@ -158,11 +158,10 @@ export class InfirmiersFormPageComponent implements OnInit {
       }).subscribe({
         next: () => {
           this.loading = false;
+          this.toastService.success('Succès', 'Infirmier créé avec succès.');
           this.router.navigate(['/infirmiers']);
         },
-        error: (err) => {
-          console.error(err);
-          alert('Erreur lors de la création');
+        error: () => {
           this.loading = false;
         }
       });
@@ -192,14 +191,12 @@ export class InfirmiersFormPageComponent implements OnInit {
     this.infirmierService.update(this.id, updateDto).subscribe({
       next: () => {
         this.loading = false;
+        this.toastService.success('Succès', 'Infirmier modifié avec succès.');
         this.router.navigate(['/infirmiers']);
       },
-      error: (err) => {
-        console.error(err);
-        alert('Erreur lors de la modification');
+      error: () => {
         this.loading = false;
       }
     });
-    console.log('statut envoyé:', statut, typeof statut);
   }
 }
