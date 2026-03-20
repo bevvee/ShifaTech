@@ -118,6 +118,23 @@ services:
       timeout: 5s
       retries: 5
 
+  admin-db:
+    image: mysql:8.0
+    container_name: admin-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: admindb
+      MYSQL_USER: adminuser
+      MYSQL_PASSWORD: adminpass
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - shifatech-net
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   ##################################
   # BACKEND SERVICES
   ##################################
@@ -225,6 +242,25 @@ services:
       DATABASE_URL: mysql://bodyuser:bodypass@body-db:3306/bodydb
     expose:
       - "9000"
+    networks:
+      - shifatech-net
+
+
+  admin-service:
+    build: ./Backend/admin-service
+    container_name: admin-service
+    restart: unless-stopped
+    depends_on:
+      admin-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://admin-db:3306/admindb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: adminuser
+      SPRING_DATASOURCE_PASSWORD: adminpass
+      SERVICES_DOCTOR_URL: http://doctor-service:8080
+      SERVICES_INFIRMIER_URL: http://infirmier-service:8080
+    expose:
+      - "8080"
     networks:
       - shifatech-net
   ##################################
