@@ -14,8 +14,11 @@ export class InfirmierService extends ApiService {
     private authBase = environment.api.auth;
     private specialiteBase = environment.api.infirmierSpecialite
 
-    getAll() {
-        return this.get<any>(`${this.base}`);
+    getAll(idSpecialite: string = '') {
+      const url = idSpecialite 
+        ? `${this.base}?id_specialite=${idSpecialite}`
+        : `${this.base}`;
+      return this.get<any>(url);
     }
 
     getById(id: number) {

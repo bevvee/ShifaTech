@@ -1,0 +1,35 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: admin-service
+
+  datasource:
+    url: jdbc:mysql://admin-db:3306/admindb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: adminuser
+    password: adminpass
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+        format_sql: true
+
+  mail:
+    host: mailhog        # nom du container Docker
+    port: 1025
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+app:
+  auth-service-url: http://auth-service:8080
+  rdv-service-url: http://rdv-service:9000

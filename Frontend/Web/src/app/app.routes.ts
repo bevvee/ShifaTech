@@ -71,7 +71,7 @@ export const routes: Routes = [
         }
       },
       {
-        path: 'infirmiers',
+        path: 'infirmier',
         component: InfirmiersComponent,
         title: 'Infirmier | ShifaTech',
         canActivate: [roleGuard],
@@ -228,21 +228,21 @@ export const routes: Routes = [
         data: { mode: 'edit', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
       },
       {
-        path: 'infirmiers',
+        path: 'infirmier',
         component: InfirmiersComponent,
         title: 'Liste des Infirmiers | ShifaTech',
         canActivate: [roleGuard],
         data: { roles: [Role.ADMIN] }
       },
       {
-        path: 'infirmiers/new',
+        path: 'infirmier/new',
         component: InfirmiersFormPageComponent,
         title: 'Ajouter un Infirmier | ShifaTech',
         canActivate: [roleGuard],
         data: { roles: [Role.ADMIN] }
       },
       {
-        path: 'infirmiers/:id/edit',
+        path: 'infirmier/:id/edit',
         component: InfirmiersFormPageComponent,
         title: 'Modifier un Infirmier | ShifaTech',
         canActivate: [roleGuard],

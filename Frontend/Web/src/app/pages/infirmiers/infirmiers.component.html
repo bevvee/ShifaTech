@@ -3,9 +3,20 @@
 
 	<app-component-card title="Liste Infirmiers">
 		<div card-actions class="flex items-center gap-3">
-			<app-button size="sm" variant="outline">
+			<!-- <app-button size="sm" variant="outline" (btnClick)="toggleFilters()">
 				Filters
-			</app-button>
+			</app-button> -->
+			<select
+		        [(ngModel)]="selectedSpecialite"
+		        (ngModelChange)="onFilterSpecialite()"
+		        name="filterSpecialite"
+		        class="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+		    >
+		        <option value="">Toutes les spécialités</option>
+		        @for (s of specialiteOptions; track s.value) {
+		            <option [value]="s.value">{{ s.label }}</option>
+		        }
+		    </select>
 			<app-button size="sm" (btnClick)="goToCreate()">
 				+ Ajouter Infirmier
 			</app-button>
@@ -14,7 +25,7 @@
 		<span card-title-addon class="text-sm text-primary-600 font-medium">
 			Total Infirmiers : {{ infirmiers.length }}
 		</span>
-
+		
 		<div class="rounded-2xl border border-gray-200 bg-white pt-4 dark:border-white/5 dark:bg-white/3">
 			<div class="flex flex-col gap-2 px-5 mb-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
 				<div>

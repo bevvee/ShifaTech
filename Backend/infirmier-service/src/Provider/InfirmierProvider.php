@@ -38,9 +38,16 @@ class InfirmierProvider implements ProviderInterface
             return $this->mapToResource($infirmier);
         }
 
+        $request = $this->requestStack->getCurrentRequest();
+        $idSpecialite = $request?->query->get('id_specialite');
+
+        $infirmiers = $idSpecialite
+            ? $this->infirmierRepository->findBy(['id_specialite' => (int) $idSpecialite])
+            : $this->infirmierRepository->findAll();
+
         return array_map(
             fn($infirmier) => $this->mapToResource($infirmier),
-            $this->infirmierRepository->findAll()
+            $infirmiers
         );
     }
 

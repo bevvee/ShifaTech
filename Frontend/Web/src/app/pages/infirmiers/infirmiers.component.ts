@@ -49,8 +49,24 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  loadInfirmiers() {
-    this.infirmierService.getAll().subscribe({
+  selectedSpecialite = '';
+  showFilters = false;
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
+  }
+
+  onFilterSpecialite() {
+    this.currentPage = 1;
+    this.loadInfirmiers(this.selectedSpecialite);
+  }
+
+  resetFilters() {
+    this.selectedSpecialite = '';
+    this.currentPage = 1;
+    this.loadInfirmiers();
+  }
+  loadInfirmiers(idSpecialite: string = '') {
+    this.infirmierService.getAll(idSpecialite).subscribe({
       next: (res: any) => {
         if (Array.isArray(res)) {
           this.infirmiers = res;

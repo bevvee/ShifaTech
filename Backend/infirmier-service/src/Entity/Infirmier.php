@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 
-use App\Processor\InfirmierProcessor;
 use App\Repository\InfirmierRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
