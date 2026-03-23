@@ -1,9 +1,19 @@
 export interface RdvCreateDto {
-  date_rdv: string;  
-  heure_rdv: string;     
+
+  id?: number;
+
+  date_rdv: string;
+
+  heure_debut: string;
+
+  heure_fin: string;
+
   id_patient: number;
+
   id_docteur: number;
-  status?: string;       
+
+  statut?: string;
+
 }
 
 export interface RdvDto extends RdvCreateDto {

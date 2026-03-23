@@ -500,6 +500,43 @@ layer(base);
   @apply !text-gray-700 dark:!text-gray-400;
 }
 
+/* ===== SweetAlert2 (Shifa theme) ===== */
+.swal-shifa-container.swal2-backdrop-show {
+  background-color: color-mix(in srgb, var(--color-gray-950) 60%, transparent);
+}
+
+.dark .swal-shifa-container.swal2-backdrop-show {
+  background-color: color-mix(in srgb, var(--color-gray-950) 72%, transparent);
+}
+
+.swal-shifa-popup {
+  @apply !rounded-2xl !border !border-gray-200 !bg-white !text-gray-900 !shadow-theme-xl;
+}
+
+.dark .swal-shifa-popup {
+  @apply !border-gray-800 !bg-shifa-dark-bg !text-white/90;
+}
+
+.swal-shifa-title {
+  @apply !text-lg !font-semibold !text-gray-900 dark:!text-white/90;
+}
+
+.swal-shifa-text {
+  @apply !mt-2 !text-sm !text-gray-600 dark:!text-gray-300;
+}
+
+.swal-shifa-actions {
+  @apply !mt-5 !gap-2;
+}
+
+.swal-shifa-confirm {
+  @apply !inline-flex !items-center !justify-center !rounded-lg !bg-brand-500 !px-4 !py-2.5 !text-sm !font-medium !text-white hover:!bg-brand-600 focus:!outline-hidden focus:!ring-3 focus:!ring-brand-500/10;
+}
+
+.swal-shifa-cancel {
+  @apply !inline-flex !items-center !justify-center !rounded-lg !border !border-gray-200 !bg-white !px-4 !py-2.5 !text-sm !font-medium !text-gray-700 hover:!bg-gray-50 dark:!border-white/10 dark:!bg-white/3 dark:!text-gray-200 dark:hover:!bg-white/5;
+}
+
 .apexcharts-text {
   @apply !fill-gray-700 dark:!fill-gray-400;
 }

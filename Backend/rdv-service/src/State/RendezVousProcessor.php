@@ -97,6 +97,9 @@ class RendezVousProcessor implements ProcessorInterface
         $this->em->persist($data);
         $this->em->flush();
 
+        $doctorName = $this->doctorClient->getDoctorFullName(
+            $data->getIdDocteur()
+        );
         /*
         |-------------------------------------------------
         | 6️⃣ Send Email Confirmation
@@ -106,7 +109,7 @@ class RendezVousProcessor implements ProcessorInterface
         $email = $this->authClient->getUserEmail($patientUserId);
 
         if ($email) {
-            $this->mailer->sendConfirmation($email, $data);
+            $this->mailer->sendConfirmation($email, $data, $doctorName);
         }
 
         return $data;

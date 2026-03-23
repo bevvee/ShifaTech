@@ -2,139 +2,224 @@
 	<app-page-breadcrumb pageTitle="Dossier Médical" />
 
 	<app-component-card [title]="title">
-		<div class="flex items-center justify-between mb-4">
-			<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
-				Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
-			</p>
-			@if (isReadOnly) {
-				<app-button size="sm" variant="outline" (btnClick)="createVisite()">
-					<svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-					Nouvelle Visite
-				</app-button>
-			}
-		</div>
-
-		<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-			<!-- Form Fields (Existing) -->
-			<div>
-				<app-label>Patient <span class="font-semibold text-error-500">*</span></app-label>
-				<app-select [options]="patientOptions" [(value)]="form.idPatient" [hasSearch]="true" [disabled]="isReadOnly || mode === 'edit'" />
-			</div>
-
-			<div>
-				<app-label>Status</app-label>
-				<app-select [options]="statusOptions" [(value)]="form.status" [hasSearch]="false" [disabled]="isReadOnly" />
-			</div>
-
-			<div>
-				<app-label for="poids">Poids (kg) <span class="font-semibold text-error-500">*</span></app-label>
-				<app-input-field id="poids" name="poids" type="number" [(value)]="form.poids" [error]="submitted && form.poids <= 0" [disabled]="isReadOnly" />
-			</div>
-
-			<div>
-				<app-label for="taille">Taille (cm) <span class="font-semibold text-error-500">*</span></app-label>
-				<app-input-field id="taille" name="taille" type="number" [(value)]="form.taille" [error]="submitted && form.taille <= 0" [disabled]="isReadOnly" />
-			</div>
-
-			<div>
-				<app-label>Groupe Sanguin</app-label>
-				<app-select [options]="groupeSanguinOptions" [(value)]="form.groupeSanguin" [hasSearch]="false" [disabled]="isReadOnly" />
-			</div>
-
-			<div class="sm:col-span-2">
-				<app-label for="antecedents">Antécédents Médicaux</app-label>
-				<app-text-area id="antecedents" name="antecedents" placeholder="Antécédents..." [(value)]="form.antecedentsMedicaux" [rows]="3" [disabled]="isReadOnly" />
-			</div>
-
-			<div class="sm:col-span-2">
-				<app-label for="allergies">Allergies</app-label>
-				<app-text-area id="allergies" name="allergies" placeholder="Allergies..." [(value)]="form.allergies" [rows]="2" [disabled]="isReadOnly" />
-			</div>
-
-			<div class="sm:col-span-2">
-				<app-label for="pathologies">Pathologies Chroniques</app-label>
-				<app-text-area id="pathologies" name="pathologies" placeholder="Pathologies chroniques..." [(value)]="form.pathologiesChroniques" [rows]="2" [disabled]="isReadOnly" />
-			</div>
-
-			<div class="sm:col-span-2">
-				<app-label for="diagnostic">Diagnostic initial</app-label>
-				<app-text-area id="diagnostic" name="diagnostic" placeholder="Diagnostic..." [(value)]="form.diagnostic" [rows]="3" [disabled]="isReadOnly" />
-			</div>
-
-			<div class="sm:col-span-2">
-				<app-label for="notes">Notes/Observations</app-label>
-				<app-text-area id="notes" name="notes" placeholder="Notes complémentaires..." [(value)]="form.notes" [rows]="3" [disabled]="isReadOnly" />
-			</div>
-		</div>
-
-		<!-- Linked History (View Mode Only) -->
-		@if (isReadOnly) {
-			<div class="mt-12 space-y-8">
-				<section>
-					<h3 class="text-lg font-bold text-heading border-b border-default pb-2 mb-4">Historique des Visites</h3>
-					@if (linkedVisites.length === 0) {
-						<p class="text-sm text-body italic">Aucune visite enregistrée.</p>
-					} @else {
-						<div class="overflow-x-auto rounded-base border border-default">
-							<table class="w-full text-sm text-left text-body">
-								<thead class="bg-neutral-secondary-medium text-xs uppercase font-medium">
-									<tr>
-										<th class="px-4 py-2">Date</th>
-										<th class="px-4 py-2">Traitement</th>
-										<th class="px-4 py-2">Status</th>
-									</tr>
-								</thead>
-								<tbody>
-									@for (v of linkedVisites; track v.id) {
-										<tr class="border-t border-default hover:bg-neutral-secondary-medium pointer-cursor" [routerLink]="['/visites', v.id]">
-											<td class="px-4 py-3">{{ v.dateCreation | date:'dd/MM/yyyy' }}</td>
-											<td class="px-4 py-3 truncate max-w-xs">{{ v.planTraitement }}</td>
-											<td class="px-4 py-3">{{ v.status }}</td>
-										</tr>
-									}
-								</tbody>
-							</table>
+		@if (mode === 'view') {
+			<div class="space-y-8">
+				<!-- Patient / Dossier header strip -->
+				<div class="rounded-md bg-gray-100 px-6 py-4 dark:bg-white/5">
+					<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+						<div class="flex items-center gap-4">
+							<div class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-sm font-semibold text-gray-700 shadow-sm dark:bg-white/10 dark:text-white/80">
+								{{ patientInitials }}
+							</div>
+							<div>
+								<div class="text-xl font-semibold text-gray-900 dark:text-white">{{ patientDisplayName }}</div>
+								<div class="mt-0.5 text-sm text-gray-700 dark:text-gray-300">
+									N° Dossier : <span class="font-semibold text-gray-900 dark:text-white">{{ dossierNumber }}</span>
+								</div>
+							</div>
 						</div>
-					}
-				</section>
 
-				<section>
-					<h3 class="text-lg font-bold text-heading border-b border-default pb-2 mb-4">Ordonnances Récentes</h3>
-					@if (linkedOrdonnances.length === 0) {
-						<p class="text-sm text-body italic">Aucune ordonnance émise.</p>
-					} @else {
-						<div class="overflow-x-auto rounded-base border border-default">
-							<table class="w-full text-sm text-left text-body">
-								<thead class="bg-neutral-secondary-medium text-xs uppercase font-medium">
-									<tr>
-										<th class="px-4 py-2">Date</th>
-										<th class="px-4 py-2">Médicaments</th>
-										<th class="px-4 py-2">Validité</th>
-									</tr>
-								</thead>
-								<tbody>
-									@for (o of linkedOrdonnances; track o.id) {
-										<tr class="border-t border-default hover:bg-neutral-secondary-medium pointer-cursor" [routerLink]="['/ordonnances', o.id]">
-											<td class="px-4 py-3">{{ o.dateCreation | date:'dd/MM/yyyy' }}</td>
-											<td class="px-4 py-3 truncate max-w-xs">{{ o.medicaments }}</td>
-											<td class="px-4 py-3">{{ o.dateValidite | date:'dd/MM/yyyy' }}</td>
-										</tr>
-									}
-								</tbody>
-							</table>
+						<div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-700 dark:text-gray-300">
+							<span
+								class="inline-flex items-center rounded-full px-2 py-0.5 text-theme-xs font-semibold"
+								[ngClass]="getStatusPillClass(form.status)"
+							>
+								{{ form.status }}
+							</span>
+							<div>
+								Créé : <span class="font-semibold text-gray-900 dark:text-white">{{ createdAtIso ? (createdAtIso | date:'dd/MM/yyyy') : '-' }}</span>
+							</div>
+							<div class="font-semibold text-gray-900 dark:text-white">Patient ID {{ patientIdDisplay }}</div>
 						</div>
-					}
-				</section>
+					</div>
+
+					<div class="mt-4 flex items-center justify-end">
+						<app-button size="sm" variant="outline" (btnClick)="createVisite()">
+							<svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+							Nouvelle Visite
+						</app-button>
+					</div>
+				</div>
+
+				<!-- Key metrics -->
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+					<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
+						<div class="text-xs font-medium text-gray-500 dark:text-gray-400">Poids</div>
+						<div class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ form.poids || '-' }} <span class="text-sm font-medium text-gray-500 dark:text-gray-400">kg</span></div>
+					</div>
+					<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
+						<div class="text-xs font-medium text-gray-500 dark:text-gray-400">Taille</div>
+						<div class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ form.taille || '-' }} <span class="text-sm font-medium text-gray-500 dark:text-gray-400">cm</span></div>
+					</div>
+					<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
+						<div class="text-xs font-medium text-gray-500 dark:text-gray-400">IMC (BMI)</div>
+						<div class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ bmiDisplay }}</div>
+					</div>
+					<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/3">
+						<div class="text-xs font-medium text-gray-500 dark:text-gray-400">Groupe sanguin</div>
+						<div class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ form.groupeSanguin || '-' }}</div>
+					</div>
+				</div>
+
+				<!-- Clinical sections -->
+				<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+					<div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/3">
+						<div class="text-sm font-semibold text-gray-900 dark:text-white">Antécédents médicaux</div>
+						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.antecedentsMedicaux.trim() || '-' }}</p>
+					</div>
+					<div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/3">
+						<div class="text-sm font-semibold text-gray-900 dark:text-white">Allergies</div>
+						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.allergies.trim() || '-' }}</p>
+					</div>
+					<div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/3 lg:col-span-2">
+						<div class="text-sm font-semibold text-gray-900 dark:text-white">Pathologies chroniques</div>
+						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.pathologiesChroniques.trim() || '-' }}</p>
+					</div>
+					<div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/3 lg:col-span-2">
+						<div class="text-sm font-semibold text-gray-900 dark:text-white">Diagnostic</div>
+						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.diagnostic.trim() || '-' }}</p>
+						<div class="mt-6 text-sm font-semibold text-gray-900 dark:text-white">Notes / Observations</div>
+						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.notes.trim() || '-' }}</p>
+					</div>
+				</div>
+
+				<!-- Linked history -->
+				<div class="space-y-8">
+					<section>
+						<div class="flex items-center justify-between">
+							<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Historique des Visites</h3>
+						</div>
+						@if (linkedVisites.length === 0) {
+							<div class="mt-3 rounded-xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-500 dark:border-white/10 dark:bg-white/3 dark:text-gray-400">
+								Aucune visite enregistrée.
+							</div>
+						} @else {
+							<div class="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-white/3">
+								<div class="max-w-full overflow-x-auto">
+									<table class="min-w-full">
+										<thead class="border-b border-gray-200 dark:border-white/10">
+											<tr>
+												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Date</th>
+												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Traitement</th>
+												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Status</th>
+											</tr>
+										</thead>
+										<tbody>
+											@for (v of linkedVisites; track v.id) {
+												<tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer" [routerLink]="['/visites', v.id]">
+													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ v.dateCreation | date:'dd/MM/yyyy' }}</td>
+													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300 truncate max-w-xs">{{ v.planTraitement || '-' }}</td>
+													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ v.status || '-' }}</td>
+												</tr>
+											}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						}
+					</section>
+
+					<section>
+						<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Ordonnances récentes</h3>
+						@if (linkedOrdonnances.length === 0) {
+							<div class="mt-3 rounded-xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-500 dark:border-white/10 dark:bg-white/3 dark:text-gray-400">
+								Aucune ordonnance émise.
+							</div>
+						} @else {
+							<div class="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-white/3">
+								<div class="max-w-full overflow-x-auto">
+									<table class="min-w-full">
+										<thead class="border-b border-gray-200 dark:border-white/10">
+											<tr>
+												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Date</th>
+												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Médicaments</th>
+												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Validité</th>
+											</tr>
+										</thead>
+										<tbody>
+											@for (o of linkedOrdonnances; track o.id) {
+												<tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer" [routerLink]="['/ordonnances', o.id]">
+													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ o.dateCreation | date:'dd/MM/yyyy' }}</td>
+													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300 truncate max-w-xs">{{ o.medicaments || '-' }}</td>
+													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ o.dateValidite | date:'dd/MM/yyyy' }}</td>
+												</tr>
+											}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						}
+					</section>
+				</div>
+
+				<div class="flex items-center justify-end">
+					<app-button size="sm" variant="outline" (btnClick)="cancel()">Fermer</app-button>
+				</div>
+			</div>
+		} @else {
+			<div class="flex items-center justify-between mb-4">
+				<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+					Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
+				</p>
+			</div>
+
+			<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+				<!-- Form Fields (Create/Edit) -->
+				<div>
+					<app-label>Patient <span class="font-semibold text-error-500">*</span></app-label>
+					<app-select [options]="patientOptions" [(value)]="form.idPatient" [hasSearch]="true" [disabled]="mode === 'edit'" />
+				</div>
+
+				<div>
+					<app-label>Status</app-label>
+					<app-select [options]="statusOptions" [(value)]="form.status" [hasSearch]="false" />
+				</div>
+
+				<div>
+					<app-label for="poids">Poids (kg) <span class="font-semibold text-error-500">*</span></app-label>
+					<app-input-field id="poids" name="poids" type="number" [(value)]="form.poids" [error]="submitted && form.poids <= 0" />
+				</div>
+
+				<div>
+					<app-label for="taille">Taille (cm) <span class="font-semibold text-error-500">*</span></app-label>
+					<app-input-field id="taille" name="taille" type="number" [(value)]="form.taille" [error]="submitted && form.taille <= 0" />
+				</div>
+
+				<div>
+					<app-label>Groupe Sanguin</app-label>
+					<app-select [options]="groupeSanguinOptions" [(value)]="form.groupeSanguin" [hasSearch]="false" />
+				</div>
+
+				<div class="sm:col-span-2">
+					<app-label for="antecedents">Antécédents Médicaux</app-label>
+					<app-text-area id="antecedents" name="antecedents" placeholder="Antécédents..." [(value)]="form.antecedentsMedicaux" [rows]="3" />
+				</div>
+
+				<div class="sm:col-span-2">
+					<app-label for="allergies">Allergies</app-label>
+					<app-text-area id="allergies" name="allergies" placeholder="Allergies..." [(value)]="form.allergies" [rows]="2" />
+				</div>
+
+				<div class="sm:col-span-2">
+					<app-label for="pathologies">Pathologies Chroniques</app-label>
+					<app-text-area id="pathologies" name="pathologies" placeholder="Pathologies chroniques..." [(value)]="form.pathologiesChroniques" [rows]="2" />
+				</div>
+
+				<div class="sm:col-span-2">
+					<app-label for="diagnostic">Diagnostic initial</app-label>
+					<app-text-area id="diagnostic" name="diagnostic" placeholder="Diagnostic..." [(value)]="form.diagnostic" [rows]="3" />
+				</div>
+
+				<div class="sm:col-span-2">
+					<app-label for="notes">Notes/Observations</app-label>
+					<app-text-area id="notes" name="notes" placeholder="Notes complémentaires..." [(value)]="form.notes" [rows]="3" />
+				</div>
+			</div>
+
+			<div class="mt-8 flex items-center justify-end gap-3">
+				<app-button size="sm" variant="outline" (btnClick)="cancel()">Annuler</app-button>
+				<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
 			</div>
 		}
-
-		<div class="mt-8 flex items-center justify-end gap-3">
-			<app-button size="sm" variant="outline" (btnClick)="cancel()">
-				@if (isReadOnly) { Fermer } @else { Annuler }
-			</app-button>
-			@if (!isReadOnly) {
-				<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
-			}
-		</div>
 	</app-component-card>
 </div>

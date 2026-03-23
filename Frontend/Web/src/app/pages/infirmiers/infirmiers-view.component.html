@@ -1,0 +1,50 @@
+<div class="px-2 pb-4">
+  <app-page-breadcrumb pageTitle="Infirmiers" />
+
+  <app-component-card title="Détails de l'infirmier">
+    @if (infirmier) {
+      <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <app-label>Nom</app-label>
+          <app-input-field [disabled]="true" [(value)]="infirmier.nom" />
+        </div>
+        <div>
+          <app-label>Prénom</app-label>
+          <app-input-field [disabled]="true" [(value)]="infirmier.prenom" />
+        </div>
+        <div>
+          <app-label>CIN</app-label>
+          <app-input-field [disabled]="true" [(value)]="infirmier.cin" />
+        </div>
+        <div>
+          <app-label>Email</app-label>
+          <app-input-field [disabled]="true" [(value)]="infirmier.email" />
+        </div>
+        <div>
+          <app-label>Sexe</app-label>
+          <app-input-field [disabled]="true" [(value)]="infirmier.sexe" />
+        </div>
+        <div>
+          <app-label>Statut</app-label>
+          <app-input-field [disabled]="true" [value]="infirmier.statut ? 'Actif' : 'Inactif'" />
+        </div>
+        <div>
+          <app-label>Date de naissance</app-label>
+          <app-input-field [disabled]="true" [(value)]="infirmier.dateNaissance" />
+        </div>
+        <div>
+          <app-label>Téléphone</app-label>
+          <app-input-field [disabled]="true" [(value)]="infirmier.telephone" />
+        </div>
+        <div class="sm:col-span-2">
+          <app-label>Adresse</app-label>
+          <app-text-area [disabled]="true" [(value)]="infirmier.adresse" [rows]="3" />
+        </div>
+      </div>
+
+      <div class="mt-8 flex items-center justify-end gap-3">
+        <app-button size="sm" variant="outline" (btnClick)="close()">Fermer</app-button>
+      </div>
+    }
+  </app-component-card>
+</div>

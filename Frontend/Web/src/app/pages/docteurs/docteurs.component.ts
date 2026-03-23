@@ -6,10 +6,9 @@ import { PageBreadcrumbComponent } from '../../shared/components/common/page-bre
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
-import { Subscription } from 'rxjs';
 import { DoctorService } from '../../core/services/doctor.service';
-import { SpecialityService } from '../../core/services/speciality.service';
 import { Doctor } from '../../core/models/doctor.model';
+import { AlertService } from '../../core/services/alert.service';
 
 
 @Component({
@@ -28,15 +27,11 @@ import { Doctor } from '../../core/models/doctor.model';
 export class DocteursComponent implements OnInit, OnDestroy {
 
   docteurs: Doctor[] = [];
-  filteredDocteurs: Doctor[] = [];
-  searchTerm = '';
-
-  private readonly subscription = new Subscription();
 
   constructor(
     private readonly router: Router,
     private readonly doctorService: DoctorService,
-    private readonly specialityService: SpecialityService
+    private readonly alerts: AlertService,
   ) { }
 
   ngOnInit() {
@@ -57,6 +52,13 @@ export class DocteursComponent implements OnInit, OnDestroy {
     });
   }
 
+  ngOnInit() {
+    this.loadDoctors();
+  }
+
+  searchTerm = '';
+  filteredDocteurs: Doctor[] = [];
+
   onSearch() {
     const q = this.searchTerm.toLowerCase().trim();
     if (!q) {
@@ -75,16 +77,25 @@ export class DocteursComponent implements OnInit, OnDestroy {
     this.router.navigate(['/docteurs/new']);
   }
 
-  goToEdit(id: number) {
-    this.router.navigate(['/docteurs', id, 'edit']);
+  goToView(row: Doctor) {
+    this.router.navigate(['/docteurs', row.idDocteur]);
+  }
+
+  goToEdit(row: Doctor) {
+    this.router.navigate(['/docteurs', row.idDocteur, 'edit']);
   }
 
   deleteDoctor(id: number) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce docteur ?')) {
-      this.doctorService.deleteDoctor(id).subscribe({
-        next: () => this.loadDoctors(),
-        error: (err: any) => console.error('Error deleting doctor', err)
-      });
-    }
+    void this.confirmAndDeleteDoctor(id);
+  }
+
+  private async confirmAndDeleteDoctor(id: number) {
+    const ok = await this.alerts.confirmDelete('ce docteur');
+    if (!ok) return;
+
+    this.doctorService.deleteDoctor(id).subscribe({
+      next: () => this.loadDoctors(),
+      error: (err: any) => console.error('Error deleting doctor', err)
+    });
   }
 }

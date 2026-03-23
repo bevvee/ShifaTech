@@ -9,6 +9,7 @@ import { InputFieldComponent } from '../../shared/components/form/input/input-fi
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
 import { AuthService } from '../../core/services/auth.service';
+import { AlertService } from '../../core/services/alert.service';
 import { PatientApiService } from '../../core/services/api/patient-api.service';
 import {
   AssuranceType,
@@ -45,7 +46,7 @@ export class PatientsFormPageComponent {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly patientApi = inject(PatientApiService);
-  private readonly toastService = inject(ToastService);
+  private readonly alerts = inject(AlertService);
 
   private id: number | null;
 
@@ -190,7 +191,7 @@ export class PatientsFormPageComponent {
         }),
         catchError(err => {
           console.error('[PATIENT FORM] Erreur:', err);
-          this.toastService.error('Erreur', err.message || 'Erreur lors de la création');
+          void this.alerts.error('Une erreur est survenue : ' + (err.message || 'Erreur inconnue'));
           this.loading = false;
           return of(null);
         })
@@ -211,7 +212,7 @@ export class PatientsFormPageComponent {
         },
         error: (err) => {
           console.error(err);
-          this.toastService.error('Erreur', 'Erreur lors de la modification');
+          void this.alerts.error('Erreur lors de la modification');
           this.loading = false;
         }
       });
