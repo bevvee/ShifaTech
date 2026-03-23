@@ -169,10 +169,20 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
       {
         key: 'visites',
         label: 'Total Visites',
-        value: this.visiteStore.getAll().length,
+        value: 0,
         icon: this.icons.boxIconLine,
       },
     ];
+
+    this.subscription.add(
+      this.visiteStore
+        .getAll()
+        .pipe(
+          map((rows) => (Array.isArray(rows) ? rows.length : 0)),
+          catchError(() => of(0)),
+        )
+        .subscribe((count) => this.setMetricValue('visites', count)),
+    );
 
     this.rdvService
       .getAll()
@@ -208,10 +218,20 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
       {
         key: 'visites',
         label: 'Total Visites',
-        value: this.visiteStore.getAll().length,
+        value: 0,
         icon: this.icons.boxIconLine,
       },
     ];
+
+    this.subscription.add(
+      this.visiteStore
+        .getAll()
+        .pipe(
+          map((rows) => (Array.isArray(rows) ? rows.length : 0)),
+          catchError(() => of(0)),
+        )
+        .subscribe((count) => this.setMetricValue('visites', count)),
+    );
 
     this.patientApi
       .getAll()
@@ -247,10 +267,20 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
       {
         key: 'visites',
         label: 'Total Visites',
-        value: this.visiteStore.getAll().length,
+        value: 0,
         icon: this.icons.boxIconLine,
       },
     ];
+
+    this.subscription.add(
+      this.visiteStore
+        .getAll()
+        .pipe(
+          map((rows) => (Array.isArray(rows) ? rows.length : 0)),
+          catchError(() => of(0)),
+        )
+        .subscribe((count) => this.setMetricValue('visites', count)),
+    );
 
     this.patientApi
       .getAll()

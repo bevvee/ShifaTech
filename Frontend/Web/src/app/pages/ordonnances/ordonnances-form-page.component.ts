@@ -12,8 +12,6 @@ import { Option, SelectComponent } from '../../shared/components/form/select/sel
 import { OrdonnanceStore } from './ordonnances.store';
 import { PatientsStore } from '../patients/patients.store';
 import { VisiteStore } from '../visites/visites.store';
-import { OrdonnanceStatut } from '../../core/models/ordonnance.model';
-import { ToastService } from '../../shared/services/toast.service';
 import { OrdonnanceDto, OrdonnanceStatut } from '../../core/models/ordonnance.model';
 import { PatientDto } from '../../core/models/patient.model';
 import { DossierMedicalStore } from '../dossier-medical/dossier-medical.store';
@@ -59,11 +57,6 @@ export class OrdonnancesFormPageComponent implements OnInit {
 
   ordonnance: OrdonnanceDto | null = null;
 
-  visiteOptions: Option[] = this.visitesStore.getAll().map(v => ({
-    value: String(v.id),
-    label: `Visite du ${v.dateCreation ? v.dateCreation.substring(0, 10) : 'Date inconnue'} - ${v.nomPatient}`
-  }));
-  */
   visiteOptions: Option[] = [];
 
   statutOptions: Option[] = [
@@ -173,7 +166,16 @@ export class OrdonnancesFormPageComponent implements OnInit {
 
       const idPatient = Number(this.form.idPatient);
       this.patient = Number.isFinite(idPatient) ? (list.find((p) => p.id === idPatient) ?? null) : null;
-      this.dossier = this.patient ? (this.dossierStore.getByPatientId(this.patient.id) ?? null) : null;
+
+      if (!this.patient) {
+        this.dossier = null;
+        return;
+      }
+
+      this.dossierStore.getByPatientId(this.patient.id).subscribe({
+        next: (dossier) => (this.dossier = dossier ?? null),
+        error: () => (this.dossier = null),
+      });
     });
   }
 
@@ -292,11 +294,11 @@ export class OrdonnancesFormPageComponent implements OnInit {
     );
   }
 
-  cancel() {
+  cancel = () => {
     this.router.navigate(['/ordonnances']);
-  }
+  };
 
-  async save() {
+  save = async () => {
     this.submitted = true;
     if (!this.isValid) return;
 
@@ -305,24 +307,31 @@ export class OrdonnancesFormPageComponent implements OnInit {
       return;
     }
 
+    const form = this.form!;
+    const mode = this.mode!;
+    const store = this.store!;
+    const alerts = this.alerts!;
+    const router = this.router!;
+    const id = this.id;
+
     const payload = {
-      ...this.form,
-      idPatient: Number(this.form.idPatient),
-      idVisite: this.form.idVisite ? Number(this.form.idVisite) : undefined
+      ...form,
+      idPatient: Number(form.idPatient),
+      idVisite: form.idVisite ? Number(form.idVisite) : undefined
     };
 
     try {
-      if (this.mode === 'create') {
-        this.store.create(payload as any); // Use any for now as other stores aren't async yet
-        await this.alerts.success('Ordonnance ajoutée avec succès.');
-      } else if (this.id != null) {
-        this.store.update(this.id, payload as any);
-        await this.alerts.success('Ordonnance modifiée avec succès.');
+      if (mode === 'create') {
+        store.create(payload as any); // Use any for now as other stores aren't async yet
+        await alerts.success('Ordonnance ajoutée avec succès.');
+      } else if (id != null) {
+        store.update(id, payload as any);
+        await alerts.success('Ordonnance modifiée avec succès.');
       }
 
-      this.router.navigate(['/ordonnances']);
+      router.navigate(['/ordonnances']);
     } catch {
-      await this.alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+      await alerts.error('Une erreur est survenue lors de l\'enregistrement.');
     }
-  }
+  };
 }

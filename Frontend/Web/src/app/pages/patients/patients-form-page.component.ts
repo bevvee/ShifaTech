@@ -47,6 +47,7 @@ export class PatientsFormPageComponent {
   private readonly authService = inject(AuthService);
   private readonly patientApi = inject(PatientApiService);
   private readonly alerts = inject(AlertService);
+  private readonly toastService = inject(ToastService);
 
   private id: number | null;
 
