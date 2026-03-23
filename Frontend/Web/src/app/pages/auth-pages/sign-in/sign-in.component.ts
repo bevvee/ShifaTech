@@ -72,15 +72,13 @@ export class SignInComponent {
 
             const userRole = role?.toUpperCase();
 
-            if (userRole === 'ADMIN') {
-              this.router.navigate(['/admin']);
-
-            } else if (userRole === 'DOCTEUR') {
-              this.router.navigate(['/docteur']);
-
-            } else if (userRole === 'INFIRMIER') {
-              this.router.navigate(['/infirmier']);
-
+            if (
+              userRole === 'ADMIN' ||
+              userRole === 'DOCTEUR' ||
+              userRole === 'INFIRMIER' ||
+              userRole === 'SECRETAIRE'
+            ) {
+              this.router.navigate(['/dashboard']);
             } else if (userRole === 'PATIENT') {
                this.errorMessage = "Email ou mot de passe incorrect.";
               this.authService.logout();

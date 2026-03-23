@@ -1,5 +1,13 @@
 
-import { Component, Input, Output, EventEmitter, ElementRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  Output,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.css';
 
@@ -35,6 +43,23 @@ export class TimePickerComponent {
         this.timeChange.emit(dateStr); // emit "HH:mm"
       }
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (!changes['defaultTime']) return;
+    if (!this.flatpickrInstance) return;
+
+    const next = changes['defaultTime'].currentValue as string | Date | undefined;
+
+    try {
+      if (next) {
+        this.flatpickrInstance.setDate(next, false);
+      } else {
+        this.flatpickrInstance.clear();
+      }
+    } catch {
+      // Ignore invalid values; user can still pick a time.
+    }
   }
 
   ngOnDestroy() {

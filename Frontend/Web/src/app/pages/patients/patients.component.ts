@@ -7,6 +7,7 @@ import { ComponentCardComponent } from '../../shared/components/common/component
 import { PatientsStore } from './patients.store';
 import { DossierMedicalStore } from '../dossier-medical/dossier-medical.store';
 import { PatientDto } from '../../core/models/patient.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-patients',
@@ -27,6 +28,7 @@ export class PatientsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly store = inject(PatientsStore);
   private readonly dossierStore = inject(DossierMedicalStore);
+  private readonly alerts = inject(AlertService);
 
   ngOnInit(): void {
     this.loadPatients();
@@ -77,8 +79,19 @@ export class PatientsComponent implements OnInit {
   }
 
   deletePatient(id: number) {
-    this.store.delete(id).subscribe(() => {
-      this.loadPatients();
+    void this.confirmAndDeletePatient(id);
+  }
+
+  private async confirmAndDeletePatient(id: number) {
+    const ok = await this.alerts.confirmDelete('ce patient');
+    if (!ok) return;
+
+    this.store.delete(id).subscribe({
+      next: () => this.loadPatients(),
+      error: (err) => {
+        console.error('Erreur suppression patient', err);
+        void this.alerts.error('Erreur lors de la suppression du patient');
+      }
     });
   }
 

@@ -1,38 +1,40 @@
-import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
-// import { ToastService } from '../services/toast.service';
-import { ToastService } from '../../shared/services/toast.service';
+import { Injectable } from '@angular/core';
+import {
+  HttpInterceptor,
+  HttpRequest,
+  HttpHandler,
+  HttpErrorResponse
+} from '@angular/common/http';
+import { catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 
-export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-  const router = inject(Router);
-  const toastService = inject(ToastService);
+@Injectable()
+export class ErrorInterceptor implements HttpInterceptor {
 
-  return next(req).pipe(
-    catchError((error) => {
-      if (error.status === 401) {
-        localStorage.clear();
-        router.navigate(['/login']);
-      } else if (error.status === 403) {
-        router.navigate(['/unauthorized']);
-      } else {
-        // Show error toast for other errors
-        const errBody = error.error;
-        const message = errBody?.message || error.message || 'Une erreur inattendue est survenue';
+  intercept(req: HttpRequest<any>, next: HttpHandler) {
 
-        // Si c'est une erreur de validation avec des détails par champ
-        if (errBody?.data && typeof errBody.data === 'object' && !Array.isArray(errBody.data)) {
-          Object.values(errBody.data).forEach((errMsg: any) => {
-            toastService.error('Erreur Validation', String(errMsg));
-          });
-        } else {
-          toastService.error('Erreur API', message);
+    return next.handle(req).pipe(
+
+      catchError((error: HttpErrorResponse) => {
+
+        if (error.status === 401) {
+
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+
         }
-      }
 
-      console.error('API Error:', error);
-      return throwError(() => error);
-    })
-  );
-};
+        if (error.status === 403) {
+
+          console.error('Access denied');
+
+        }
+
+        return throwError(() => error);
+
+      })
+
+    );
+
+  }
+}

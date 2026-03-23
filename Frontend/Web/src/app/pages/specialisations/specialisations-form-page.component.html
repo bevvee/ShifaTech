@@ -1,0 +1,36 @@
+<div class="px-2 pb-4">
+  <app-page-breadcrumb pageTitle="Spécialités" />
+
+  <app-component-card [title]="title">
+    <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+      Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
+    </p>
+
+    <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div>
+        <app-label for="label">Nom <span class="font-semibold text-error-500">*</span></app-label>
+        <app-input-field
+          id="label"
+          name="label"
+          placeholder="Nom"
+          [(value)]="form.label"
+          [error]="submitted && !form.label.trim()"
+        />
+      </div>
+
+      <div>
+        <app-label>Service <span class="font-semibold text-error-500">*</span></app-label>
+        <app-select
+          [options]="serviceOptions"
+          placeholder="Choisir un service"
+          [(value)]="form.serviceIdValue"
+        />
+      </div>
+    </div>
+
+    <div class="mt-8 flex items-center justify-end gap-3">
+      <app-button size="sm" variant="outline" (btnClick)="cancel()">Annuler</app-button>
+      <app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
+    </div>
+  </app-component-card>
+</div>

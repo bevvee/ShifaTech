@@ -45,4 +45,28 @@ class PatientServiceClient
 
         return (int) $data['idUser'];
     }
+
+    public function getPatient(int $patientId): array
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $jwt = $request?->headers->get('Authorization');
+
+        $response = $this->httpClient->request(
+            'GET',
+            sprintf('http://patient-service:8080/%d', $patientId),
+            [
+                'headers' => [
+                    'Authorization' => $jwt
+                ]
+            ]
+        );
+
+        if ($response->getStatusCode() !== 200) {
+            return [];
+        }
+
+        $data = $response->toArray(false);
+
+        return $data['data'] ?? $data;
+    }
 }
