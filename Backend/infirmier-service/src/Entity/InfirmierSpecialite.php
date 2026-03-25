@@ -54,8 +54,8 @@ class InfirmierSpecialite
     #[ORM\Column(length: 50)]
     private ?string $label = null;
 
-    #[ORM\Column(name: 'id_service', nullable: true)]
-    private ?int $idService = null;
+    #[ORM\Column]
+    private ?int $id_service = null;
     public function __construct()
     {
         $this -> infirmiers = new ArrayCollection();
@@ -79,12 +79,12 @@ class InfirmierSpecialite
 
     public function getIdService(): ?int
     {
-        return $this->idService;
+        return $this->id_service;
     }
 
     public function setIdService(?int $idService): static
     {
-        $this->idService = $idService;
+        $this->id_service = $idService;
 
         return $this;
     }

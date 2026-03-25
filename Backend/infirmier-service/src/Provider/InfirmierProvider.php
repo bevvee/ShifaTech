@@ -6,11 +6,13 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\InfirmierResource;
 use App\Repository\InfirmierRepository;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class InfirmierProvider implements ProviderInterface
 {
     public function __construct(
-        private InfirmierRepository $infirmierRepository
+        private InfirmierRepository $infirmierRepository,
+        private HttpClientInterface $httpClient,
     ) {}
 
     public function provide(
@@ -45,8 +47,30 @@ class InfirmierProvider implements ProviderInterface
         $resource = new InfirmierResource();
         $resource->id = $infirmier->getId();
         $resource->id_utilisateur = $infirmier->getIdUtilisateur();
-        $resource->id_service = $infirmier->getIdService();
         $resource->id_specialite = $infirmier->getIdSpecialite()?->getId();
+
+        // Appel à auth-service pour récupérer les infos utilisateur
+        try {
+            $authUrl = $_ENV['AUTH_SERVICE_URL'] ?? 'http://auth-service:8080';
+            $response = $this->httpClient->request(
+                'GET',
+                "{$authUrl}/users/{$infirmier->getIdUtilisateur()}"
+            );
+            $userData = $response->toArray();
+
+            $resource->nom          = $userData['nom'] ?? null;
+            $resource->prenom       = $userData['prenom'] ?? null;
+            $resource->cin          = $userData['cin'] ?? null;
+            $resource->email        = $userData['email'] ?? null;
+            $resource->sexe         = $userData['sexe'] ?? null;
+            $resource->statut       = $userData['statut'] ?? true;
+            $resource->dateNaissance = $userData['dateNaissance'] ?? null;
+            $resource->telephone    = $userData['telephone'] ?? null;
+            $resource->adresse      = $userData['adresse'] ?? null;
+        } catch (\Throwable $e) {
+            // Si auth-service ne répond pas, on retourne quand même les données de base
+        }
+
         return $resource;
     }
 }

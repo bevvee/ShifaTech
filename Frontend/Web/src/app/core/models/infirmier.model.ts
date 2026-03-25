@@ -1,6 +1,6 @@
 export type Sexe = 'M' | 'F';
 
-export interface InfirmierRow {
+export interface InfirmierDto {
   id: number;
   nom: string;
   prenom: string;
@@ -12,6 +12,7 @@ export interface InfirmierRow {
   dateNaissance: string;
   telephone: string;
   adresse: string;
-  idService: number;
-  idSpecialite: number;
+  id_utilisateur?: number;
+  id_specialite: number;
+  id_service: number;
 }
