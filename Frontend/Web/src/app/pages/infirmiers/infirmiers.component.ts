@@ -42,16 +42,11 @@ export class InfirmiersComponent implements OnInit {
   loadInfirmiers() {
     this.infirmierService.getAll().subscribe({
       next: (res: any) => {
-        if (Array.isArray(res)) {
-          this.infirmiers = res;
-        } else {
-          this.infirmiers = [];
-        }
+        this.infirmiers = res['member'] ?? res['hydra:member'] ?? (Array.isArray(res) ? res : []);
       },
       error: (err) => console.error('Erreur:', err)
     });
   }
-
   goToCreate() {
     this.router.navigate(['/infirmiers/new']);
   }
