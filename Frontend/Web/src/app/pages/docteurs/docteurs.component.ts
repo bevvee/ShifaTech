@@ -9,6 +9,7 @@ import { BadgeComponent } from '../../shared/components/ui/badge/badge.component
 import { DoctorService } from '../../core/services/doctor.service';
 import { Doctor } from '../../core/models/doctor.model';
 import { AlertService } from '../../core/services/alert.service';
+import { Subscription } from 'rxjs';
 
 
 @Component({
@@ -25,6 +26,8 @@ import { AlertService } from '../../core/services/alert.service';
   styles: ``
 })
 export class DocteursComponent implements OnInit, OnDestroy {
+
+  private readonly subscription = new Subscription();
 
   docteurs: Doctor[] = [];
 
@@ -43,17 +46,15 @@ export class DocteursComponent implements OnInit, OnDestroy {
   }
 
   loadDoctors() {
-    this.doctorService.getDoctors().subscribe({
-      next: (data) => {
-        this.docteurs = data;
-        this.filteredDocteurs = data;
-      },
-      error: (err: any) => console.error('Error loading doctors', err)
-    });
-  }
-
-  ngOnInit() {
-    this.loadDoctors();
+    this.subscription.add(
+      this.doctorService.getDoctors().subscribe({
+        next: (data) => {
+          this.docteurs = data;
+          this.filteredDocteurs = data;
+        },
+        error: (err: any) => console.error('Error loading doctors', err),
+      }),
+    );
   }
 
   searchTerm = '';

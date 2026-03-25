@@ -5,5 +5,5 @@ public enum RoleEnum {
     DOCTEUR,
     INFIRMIER,
     PATIENT,
-    SECRETARIAT
+    SECRETAIRE
 }
