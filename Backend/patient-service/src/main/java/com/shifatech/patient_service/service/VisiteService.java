@@ -63,6 +63,18 @@ public class VisiteService {
         Visite visite = new Visite();
         visite.setIdDoctor(request.getIdDoctor());
         visite.setIdDossier(request.getIdDossier());
+        visite.setTypeVisite(request.getTypeVisite());
+        visite.setTypeBlessure(request.getTypeBlessure());
+        visite.setIdBodyPart(request.getIdBodyPart());
+
+        // 🛡️ Validation métier : si BLESSURE, typeBlessure est obligatoire.
+        if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.BLESSURE && request.getTypeBlessure() == null) {
+            throw new IllegalArgumentException("Le type de blessure est obligatoire pour une visite de type BLESSURE.");
+        }
+        if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.CONSULTATION && request.getTypeBlessure() != null) {
+            throw new IllegalArgumentException("Le type de blessure doit être nul pour une CONSULTATION.");
+        }
+
         visite.setPlanTraitement(request.getPlanTraitement());
         visite.setObservations(request.getObservations());
         visite.setCreatedBy(createdBy);
@@ -130,6 +142,17 @@ public class VisiteService {
 
         visite.setPlanTraitement(request.getPlanTraitement());
         visite.setObservations(request.getObservations());
+        visite.setTypeVisite(request.getTypeVisite());
+        visite.setTypeBlessure(request.getTypeBlessure());
+        visite.setIdBodyPart(request.getIdBodyPart());
+
+        // 🛡️ Validation métier identique pour l'update
+        if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.BLESSURE && request.getTypeBlessure() == null) {
+            throw new IllegalArgumentException("Le type de blessure est obligatoire pour une visite de type BLESSURE.");
+        }
+        if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.CONSULTATION && request.getTypeBlessure() != null) {
+            throw new IllegalArgumentException("Le type de blessure doit être nul pour une CONSULTATION.");
+        }
 
         return mapToDTO(visiteRepository.save(visite), authHeader);
     }
@@ -191,6 +214,9 @@ public class VisiteService {
                 .idDoctor(visite.getIdDoctor())
                 .idDossier(visite.getIdDossier())
                 .status(visite.getStatus())
+                .typeVisite(visite.getTypeVisite())
+                .typeBlessure(visite.getTypeBlessure())
+                .idBodyPart(visite.getIdBodyPart())
                 .dateCreation(visite.getDateCreation())
                 .planTraitement(visite.getPlanTraitement())
                 .observations(visite.getObservations())

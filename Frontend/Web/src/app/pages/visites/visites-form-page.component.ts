@@ -56,10 +56,28 @@ export class VisitesFormPageComponent implements OnInit {
     { value: 'CANCELLED', label: 'Annulée' },
   ];
 
+  typeVisiteOptions: Option[] = [
+    { value: 'CONSULTATION', label: 'Consultation Normale' },
+    { value: 'BLESSURE', label: 'Blessure / Accident' },
+  ];
+
+  typeBlessureOptions: Option[] = [
+    { value: 'BRULURE', label: 'Brûlure' },
+    { value: 'COUPURE', label: 'Coupure' },
+    { value: 'FRACTURE', label: 'Fracture' },
+    { value: 'PLAIE', label: 'Plaie' },
+    { value: 'HEMATOME', label: 'Hématome' },
+    { value: 'ENTORSE', label: 'Entorse' },
+    { value: 'AUTRE', label: 'Autre' },
+  ];
+
   form = {
     idDossier: '',
     idDoctor: 1, // Mock doctor
     status: 'OPEN' as VisiteStatus,
+    typeVisite: 'CONSULTATION' as 'CONSULTATION' | 'BLESSURE',
+    typeBlessure: '' as string,
+    idBodyPart: null as number | null,
     planTraitement: '',
     observations: '',
   };
@@ -68,28 +86,6 @@ export class VisitesFormPageComponent implements OnInit {
     this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
     const idParam = this.route.snapshot.paramMap.get('id');
     this.id = idParam ? Number(idParam) : null;
-
-    /*
-    if (this.mode !== 'create' && this.id != null) {
-      const existing = this.store.getById(this.id);
-      if (!existing) {
-        this.router.navigate(['/visites']);
-        return;
-      }
-      this.form = {
-        idDossier: String(existing.idDossier),
-        idDoctor: existing.idDoctor,
-        status: existing.status,
-        planTraitement: existing.planTraitement,
-        observations: existing.observations,
-      };
-    } else if (this.mode === 'create') {
-      const qDossierId = this.route.snapshot.queryParamMap.get('dossierId');
-      if (qDossierId) {
-        this.form.idDossier = qDossierId;
-      }
-    }
-    */
   }
 
   ngOnInit() {
@@ -105,6 +101,9 @@ export class VisitesFormPageComponent implements OnInit {
           idDossier: String(existing.idDossier),
           idDoctor: existing.idDoctor,
           status: existing.status,
+          typeVisite: existing.typeVisite || 'CONSULTATION',
+          typeBlessure: existing.typeBlessure || '',
+          idBodyPart: existing.idBodyPart || null,
           planTraitement: existing.planTraitement,
           observations: existing.observations,
         };
@@ -125,20 +124,6 @@ export class VisitesFormPageComponent implements OnInit {
       }));
     });
   }
-
-  /*
-  generateOrdonnance() {
-    const existing = this.store.getById(this.id!);
-    if (existing) {
-      this.router.navigate(['/ordonnances/new'], { 
-        queryParams: { 
-          patientId: this.dossiersStore.getById(existing.idDossier)?.idPatient,
-          visiteId: this.id
-        } 
-      });
-    }
-  }
-  */
 
   generateOrdonnance() {
     this.store.getById(this.id!).subscribe(existing => {
@@ -167,7 +152,11 @@ export class VisitesFormPageComponent implements OnInit {
 
   get isValid(): boolean {
     if (this.isReadOnly) return true;
-    return this.form.idDossier !== '' && this.form.planTraitement.trim().length > 0;
+    
+    const basicValid = this.form.idDossier !== '';
+    const injuryValid = this.form.typeVisite === 'BLESSURE' ? !!this.form.typeBlessure : true;
+    
+    return basicValid && injuryValid;
   }
 
   cancel() {

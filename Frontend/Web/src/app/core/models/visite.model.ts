@@ -10,6 +10,9 @@ export interface VisiteDto {
     numDossier?: string;
 
     status: VisiteStatus;
+    typeVisite?: 'CONSULTATION' | 'BLESSURE';
+    typeBlessure?: string;
+    idBodyPart?: number;
     planTraitement: string;
     observations: string;
 
@@ -21,6 +24,9 @@ export interface VisiteCreateDto {
     idDossier: number;
     idDoctor: number;
     status: VisiteStatus;
+    typeVisite: 'CONSULTATION' | 'BLESSURE';
+    typeBlessure?: string | null;
+    idBodyPart?: number | null;
     planTraitement: string;
     observations: string;
 }

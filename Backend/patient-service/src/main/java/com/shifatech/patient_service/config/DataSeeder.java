@@ -29,10 +29,11 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) {
         log.info("Vérification de la base de données pour le seeding...");
 
-        // On génère 20 patients correspondant aux idUser 101 à 120 (du script SQL auth-service)
+        // On génère 20 patients correspondant aux idUser 101 à 120 (du script SQL
+        // auth-service)
         for (int i = 101; i <= 120; i++) {
             Long currentIdUser = (long) i;
-            
+
             // Si le patient pour cet idUser existe déjà, on le saute
             if (patientRepository.existsByIdUser(currentIdUser)) {
                 log.debug("Patient pour idUser {} existe déjà. Saut.", currentIdUser);
@@ -48,7 +49,7 @@ public class DataSeeder implements CommandLineRunner {
             patient.setNumeroAssurance(faker.number().digits(10));
             patient.setStatut(true);
             patient.setCreatedBy(1L); // Admin par défaut
-            
+
             patient = patientRepository.save(patient);
 
             // 2. Créer le Dossier Médical
@@ -63,17 +64,31 @@ public class DataSeeder implements CommandLineRunner {
             dossier.setPathologiesChroniques("Diabète de type 2 (sous contrôle).");
             dossier.setNotes("Patient coopératif. Suivi régulier recommandé.");
             dossier.setCreatedBy(1L);
-            
+
             dossier = dossierMedicalRepository.save(dossier);
 
             // 3. Créer 2 Visites par dossier
             for (int v = 1; v <= 2; v++) {
                 Visite visite = new Visite();
                 visite.setIdDossier(dossier.getIdDossier());
-                visite.setIdDoctor(201L + faker.number().numberBetween(0, 4)); // Médecins fictifs (ID 201-205)
+                visite.setIdDoctor(201L + faker.number().numberBetween(0, 4));
                 visite.setStatus(v == 1 ? Visite.StatusVisite.CLOSED : Visite.StatusVisite.OPEN);
+
+                // 🎲 Randomisation du type de visite
+                if (faker.bool().bool()) {
+                    visite.setTypeVisite(TypeVisite.CONSULTATION);
+                    visite.setTypeBlessure(null);
+                    visite.setIdBodyPart(null);
+                    visite.setObservations("Consultation de routine : " + faker.medical().symptoms());
+                } else {
+                    visite.setTypeVisite(TypeVisite.BLESSURE);
+                    visite.setTypeBlessure(faker.options().option(TypeBlessure.class));
+                    // On choisit une partie du corps au hasard parmi les 125 existantes dans body-service
+                    visite.setIdBodyPart((long) faker.number().numberBetween(1, 126));
+                    visite.setObservations("Blessure constatée de type " + visite.getTypeBlessure());
+                }
+
                 visite.setPlanTraitement(faker.medical().medicineName() + " : 1 comprimé matin et soir pendant 7 jours.");
-                visite.setObservations(faker.lorem().sentence(10));
                 visite.setCreatedBy(1L);
                 
                 visite = visiteRepository.save(visite);
@@ -90,13 +105,14 @@ public class DataSeeder implements CommandLineRunner {
                     ordonnance.setDescription("Ordonnance générée suite à la visite de contrôle.");
                     ordonnance.setStatut(true);
                     ordonnance.setCreatedBy(1L);
-                    
+
                     ordonnanceRepository.save(ordonnance);
                 }
             }
         }
 
-        log.info("Génération des données de test terminée avec succès : 20 patients, 20 dossiers, 40 visites et 20 ordonnances.");
+        log.info(
+                "Génération des données de test terminée avec succès : 20 patients, 20 dossiers, 40 visites et 20 ordonnances.");
     }
 
     private String generateNumDossier() {
