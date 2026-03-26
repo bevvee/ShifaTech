@@ -5,9 +5,11 @@ WORKDIR /app
 # Install dependencies first (better layer caching)
 COPY package.json package-lock.json ./
 
-RUN npm ci
+RUN npm ci --prefer-offline 2>/dev/null || npm ci
 
 COPY . .
+
+ENV NODE_OPTIONS=--max_old_space_size=4096
 
 EXPOSE 4200
 
