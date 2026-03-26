@@ -82,29 +82,26 @@ class InfirmierProcessor implements ProcessorInterface
             if (!$infirmier) throw new BadRequestHttpException('Infirmier introuvable');
 
             if ($data->id_utilisateur) {
-                    try {
-                        $response = $this->httpClient->request(
-                            'GET',
-                            'http://auth-service:8080/user/' . $data->id_utilisateur,
-                            ['headers' => $headers]
-                        )->toArray();
+                try {
+                    $response = $this->httpClient->request(
+                        'GET',
+                        'http://auth-service:8080/user/' . $data->id_utilisateur,
+                        ['headers' => $headers, 'timeout' => 3]  // ← ajouter timeout
+                    )->toArray();
 
-                        if ($response['error'] ?? true) {
-                            throw new BadRequestHttpException('Utilisateur introuvable');
-                        }
-
-                        $role = $response['user']['role'] ?? null;
-                        if ($role !== 'INFIRMIER') {
-                            throw new BadRequestHttpException('Cet utilisateur n\'a pas le rôle INFIRMIER, rôle actuel : ' . $role);
-                        }
-                    } catch (BadRequestHttpException $e) {
-                        throw $e;
-                    } catch (\Exception $e) {
-                        throw new BadRequestHttpException('Utilisateur introuvable : ' . $data->id_utilisateur);
+                    $role = $response['user']['role'] ?? null;
+                    if ($role !== null && $role !== 'INFIRMIER') {
+                        throw new BadRequestHttpException('Rôle invalide : ' . $role);
                     }
-
-                    $infirmier->setIdUtilisateur($data->id_utilisateur);
+                } catch (BadRequestHttpException $e) {
+                    throw $e;
+                } catch (\Exception $e) {
+                    // ← Ne pas bloquer le PUT si auth-service est inaccessible
+                    // juste logger si besoin
                 }
+
+                $infirmier->setIdUtilisateur($data->id_utilisateur);
+            }
             if ($data->id_service) $infirmier->setIdService($data->id_service);
 
             if ($data->id_specialite) {

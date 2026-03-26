@@ -42,6 +42,7 @@ export class InfirmiersComponent implements OnInit {
   loadInfirmiers() {
     this.infirmierService.getAll().subscribe({
       next: (res: any) => {
+        console.log('API response:', res); // <-- add this
         this.infirmiers = res['member'] ?? res['hydra:member'] ?? (Array.isArray(res) ? res : []);
       },
       error: (err) => console.error('Erreur:', err)

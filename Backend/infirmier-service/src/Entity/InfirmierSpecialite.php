@@ -48,14 +48,14 @@ class InfirmierSpecialite
     #[ORM\Column(name: 'id_specialite')]
     private ?int $id = null;
 
+    #[ORM\Column]
+    private ?int $id_service = null;
+
     #[ORM\OneToMany(targetEntity: Infirmier::class, mappedBy: 'id_specialite')]
     private Collection $infirmiers;
 
     #[ORM\Column(length: 50)]
     private ?string $label = null;
-
-    #[ORM\Column]
-    private ?int $id_service = null;
     public function __construct()
     {
         $this -> infirmiers = new ArrayCollection();
@@ -76,15 +76,14 @@ class InfirmierSpecialite
 
         return $this;
     }
-
     public function getIdService(): ?int
     {
         return $this->id_service;
     }
 
-    public function setIdService(?int $idService): static
+    public function setIdService(?int $id_service): static
     {
-        $this->id_service = $idService;
+        $this->id_service = $id_service;
 
         return $this;
     }
