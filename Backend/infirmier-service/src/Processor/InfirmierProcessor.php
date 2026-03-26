@@ -59,7 +59,6 @@ class InfirmierProcessor implements ProcessorInterface
             }
             $infirmier = new Infirmier();
             $infirmier->setIdUtilisateur($data->id_utilisateur);
-            $infirmier->setIdService($data->id_service);
 
             if ($data->id_specialite) {
                $idSpecialite = (int) basename($data->id_specialite);
@@ -69,6 +68,7 @@ class InfirmierProcessor implements ProcessorInterface
                 );
                 $infirmier->setIdSpecialite($specialite);
             }
+            $infirmier->setCreatedAt(new \DateTimeImmutable());
 
             $this->entityManager->persist($infirmier);
             $this->entityManager->flush();
@@ -81,37 +81,48 @@ class InfirmierProcessor implements ProcessorInterface
             $infirmier = $this->entityManager->find(Infirmier::class, $uriVariables['id']);
             if (!$infirmier) throw new BadRequestHttpException('Infirmier introuvable');
 
-            if ($data->id_utilisateur) {
-                try {
-                    $response = $this->httpClient->request(
-                        'GET',
-                        'http://auth-service:8080/user/' . $data->id_utilisateur,
-                        ['headers' => $headers, 'timeout' => 3]  // ← ajouter timeout
-                    )->toArray();
+            // Lire le body brut — $data->nom etc. sont null en PUT !
+            $request = $this->requestStack->getCurrentRequest();
+            $rawData = json_decode($request->getContent(), true) ?? [];
+            error_log('RAW DATA PUT: ' . json_encode($rawData));
 
-                    $role = $response['user']['role'] ?? null;
-                    if ($role !== null && $role !== 'INFIRMIER') {
-                        throw new BadRequestHttpException('Rôle invalide : ' . $role);
-                    }
-                } catch (BadRequestHttpException $e) {
-                    throw $e;
-                } catch (\Exception $e) {
-                    // ← Ne pas bloquer le PUT si auth-service est inaccessible
-                    // juste logger si besoin
+            try {
+                $updateData = array_filter([
+                    'nom'           => $rawData['nom'] ?? null,
+                    'prenom'        => $rawData['prenom'] ?? null,
+                    'cin'           => $rawData['cin'] ?? null,
+                    'email'         => $rawData['email'] ?? null,
+                    'sexe'          => $rawData['sexe'] ?? null,
+                    'statut'        => $rawData['statut'] ?? null,
+                    'dateNaissance' => $rawData['dateNaissance'] ?? null,
+                    'telephone'     => $rawData['telephone'] ?? null,
+                    'adresse'       => $rawData['adresse'] ?? null,
+                    'password'      => $rawData['password'] ?? null,
+                ], fn($v) => $v !== null);
+
+                error_log('UPDATE DATA vers auth-service: ' . json_encode($updateData));
+
+                if (!empty($updateData)) {
+                    $statusCode = $this->httpClient->request(
+                        'PUT',
+                        'http://auth-service:8080/update/' . $infirmier->getIdUtilisateur(),
+                        [
+                            'headers' => array_merge($headers, ['Content-Type' => 'application/json']),
+                            'json' => $updateData
+                        ]
+                    )->getStatusCode();
+                    error_log('AUTH SERVICE STATUS: ' . $statusCode);
                 }
-
-                $infirmier->setIdUtilisateur($data->id_utilisateur);
+            } catch (\Exception $e) {
+                error_log('Auth-service error: ' . $e->getMessage());
             }
-            if ($data->id_service) $infirmier->setIdService($data->id_service);
 
-            if ($data->id_specialite) {
-                $id_specialite = (int) basename($data->id_specialite);
-                $specialite = $this->entityManager->getReference(
-                    InfirmierSpecialite::class,
-                    $id_specialite
-                );
+            if (!empty($rawData['id_specialite'])) {
+                $id_specialite = (int) basename($rawData['id_specialite']);
+                $specialite = $this->entityManager->getReference(InfirmierSpecialite::class, $id_specialite);
                 $infirmier->setIdSpecialite($specialite);
             }
+            $infirmier->setUpdatedAt(new \DateTimeImmutable());
 
             $this->entityManager->flush();
             $data->id = $infirmier->getId();
@@ -132,7 +143,7 @@ class InfirmierProcessor implements ProcessorInterface
                     // Continue même si auth-service échoue
                 }
 
-                $this->entityManager->remove($infirmier);
+                $infirmier->setDeletedAt(new \DateTimeImmutable());
                 $this->entityManager->flush();
             }
             return null;

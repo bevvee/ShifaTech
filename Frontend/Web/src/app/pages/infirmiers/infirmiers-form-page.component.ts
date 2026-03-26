@@ -66,6 +66,7 @@ export class InfirmiersFormPageComponent implements OnInit {
     telephone: '',
     adresse: '',
     idSpecialite: '',
+    idUtilisateur: null as number | null,
   };
 
   ngOnInit() {
@@ -90,6 +91,7 @@ export class InfirmiersFormPageComponent implements OnInit {
             telephone: existing.telephone ?? '',
             adresse: existing.adresse ?? '',
             idSpecialite: String(existing.id_specialite ?? ''),
+            idUtilisateur: existing.id_utilisateur ?? null,
           };
         },
         error: () => this.router.navigate(['/infirmiers'])
@@ -172,7 +174,7 @@ export class InfirmiersFormPageComponent implements OnInit {
       dateNaissance: this.form.dateNaissance,
       telephone: this.form.telephone.trim(),
       adresse: this.form.adresse.trim(),
-      id_specialite: Number(this.form.idSpecialite),
+      id_specialite: `/api/infirmier_specialites/${Number(this.form.idSpecialite)}`,  // ✅ IRI
     };
     if (this.form.password.trim()) updateDto.password = this.form.password.trim();
 
