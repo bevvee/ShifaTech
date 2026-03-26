@@ -174,7 +174,8 @@ export class InfirmiersFormPageComponent implements OnInit {
       dateNaissance: this.form.dateNaissance,
       telephone: this.form.telephone.trim(),
       adresse: this.form.adresse.trim(),
-      id_specialite: `/api/infirmier_specialites/${Number(this.form.idSpecialite)}`,  // ✅ IRI
+      id_specialite: `/api/infirmier_specialites/${Number(this.form.idSpecialite)}`, // ← fix
+      id_utilisateur: this.form.idUtilisateur,
     };
     if (this.form.password.trim()) updateDto.password = this.form.password.trim();
 

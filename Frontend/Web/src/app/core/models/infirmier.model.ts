@@ -14,6 +14,7 @@ export interface InfirmierDto {
     adresse: string;
     id_utilisateur: number;
     id_specialite: number;
+    id_service?: number;
 }
 
 export interface InfirmierCreateDto {
