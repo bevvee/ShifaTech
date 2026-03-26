@@ -10,13 +10,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-// @RequestMapping("/api/patient")
 @RequiredArgsConstructor
 @Slf4j
 @CrossOrigin(origins = "*")
@@ -25,8 +24,7 @@ public class OrdonnanceController {
     private final OrdonnanceService ordonnanceService;
     private final JwtUtil jwtUtil;
 
-    // @PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN')")
-    //@PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN', 'INFIRMIER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER')")
     @GetMapping("/{idPatient}/ordonnances")
     public ResponseEntity<ApiResponse<List<OrdonnanceDTO>>> getOrdonnancesByPatient(
             @PathVariable Long idPatient,
@@ -37,8 +35,7 @@ public class OrdonnanceController {
                 String.format("%d ordonnance(s) trouvée(s)", ordonnances.size())));
     }
 
-    // @PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN')")
-    //@PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN', 'INFIRMIER')")
+    @PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN', 'INFIRMIER')")
     @GetMapping("/ordonnances")
     public ResponseEntity<ApiResponse<List<OrdonnanceDTO>>> getAllOrdonnances(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -47,8 +44,7 @@ public class OrdonnanceController {
         return ResponseEntity.ok(ApiResponse.success(ordonnances, "Toutes les ordonnances récupérées"));
     }
 
-    // @PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN')")
-    //@PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN', 'INFIRMIER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER')")
     @GetMapping("/ordonnances/{id}")
     public ResponseEntity<ApiResponse<OrdonnanceDTO>> getOrdonnanceById(
             @PathVariable Long id,
@@ -58,8 +54,7 @@ public class OrdonnanceController {
         return ResponseEntity.ok(ApiResponse.success(ordonnance, "Ordonnance récupérée avec succès"));
     }
 
-    // @PreAuthorize("hasRole('DOCTEUR')")
-    //@PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN')")
     @PostMapping("/ordonnances")
     public ResponseEntity<ApiResponse<OrdonnanceDTO>> createOrdonnance(
             @Valid @RequestBody CreateOrdonnanceRequest request,
@@ -72,8 +67,7 @@ public class OrdonnanceController {
                 .body(ApiResponse.success(ordonnance, "Ordonnance créée avec succès"));
     }
 
-    // @PreAuthorize("hasRole('DOCTEUR')")
-    //@PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN')")
     @PutMapping("/ordonnances/{id}")
     public ResponseEntity<ApiResponse<OrdonnanceDTO>> updateOrdonnance(
             @PathVariable Long id,
@@ -84,8 +78,7 @@ public class OrdonnanceController {
         return ResponseEntity.ok(ApiResponse.success(ordonnance, "Ordonnance mise à jour avec succès"));
     }
 
-    // @PreAuthorize("hasRole('DOCTEUR')")
-    //@PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN')")
     @DeleteMapping("/ordonnances/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteOrdonnance(
             @PathVariable Long id) {

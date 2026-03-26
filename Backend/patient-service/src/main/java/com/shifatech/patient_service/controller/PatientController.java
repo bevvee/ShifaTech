@@ -11,13 +11,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-// @RequestMapping("/api/patient")
 @RequiredArgsConstructor
 @Slf4j
 @CrossOrigin(origins = "*")
@@ -31,7 +30,7 @@ public class PatientController {
         return tokenUserId != null ? tokenUserId : headerUserId;
     }
 
-    //@PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @PostMapping(value = { "", "/" })
     public ResponseEntity<ApiResponse<PatientDTO>> createPatient(
             @Valid @RequestBody CreatePatientRequest request,
@@ -45,7 +44,7 @@ public class PatientController {
                 .body(ApiResponse.success(patient, "Patient créé avec succès"));
     }
 
-    //@PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PatientDTO>> getPatientById(
             @PathVariable Long id,
@@ -55,7 +54,7 @@ public class PatientController {
         return ResponseEntity.ok(ApiResponse.success(patient, "Patient récupéré avec succès"));
     }
 
-    //@PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER')")
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<PatientDTO>> getPatientByUserId(
             @PathVariable Long userId,
@@ -65,7 +64,7 @@ public class PatientController {
         return ResponseEntity.ok(ApiResponse.success(patient, "Patient récupéré avec succès"));
     }
 
-    //@PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN', 'INFIRMIER')")
     @GetMapping(value = { "", "/" })
     public ResponseEntity<ApiResponse<List<PatientDTO>>> getAllPatients(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -75,7 +74,7 @@ public class PatientController {
                 String.format("%d patient(s) trouvé(s)", patients.size())));
     }
 
-    //@PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PatientDTO>> updatePatient(
             @PathVariable Long id,
@@ -88,7 +87,7 @@ public class PatientController {
         return ResponseEntity.ok(ApiResponse.success(patient, "Patient mis à jour avec succès"));
     }
 
-    //@PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePatient(
             @PathVariable Long id,

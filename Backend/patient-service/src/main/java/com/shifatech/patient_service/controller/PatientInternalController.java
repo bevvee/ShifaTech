@@ -5,7 +5,7 @@ import com.shifatech.patient_service.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +17,6 @@ import java.util.List;
  * communication inter-services
  */
 @RestController
-// @RequestMapping("/api/patient/internal")
 @RequiredArgsConstructor
 @Slf4j
 @CrossOrigin(origins = "*")
@@ -29,7 +28,7 @@ public class PatientInternalController {
      * Créer un nouveau patient (appel interne)
      * POST /api/patient/internal/patients
      */
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/patients")
     public ResponseEntity<PatientDTO> createPatient(@RequestBody CreatePatientRequest request) {
         log.info("[INTERNAL] Création d'un nouveau patient pour l'utilisateur: {}", request.getIdUser());
@@ -42,7 +41,7 @@ public class PatientInternalController {
      * Lister tous les patients (appel interne)
      * GET /api/patient/internal/patients
      */
-   //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/patients")
     public ResponseEntity<List<PatientDTO>> getAllPatients() {
         log.info("[INTERNAL] Récupération de tous les patients");
@@ -53,7 +52,7 @@ public class PatientInternalController {
      * Obtenir un patient par son ID (appel interne)
      * GET /api/patient/internal/patients/{id}
      */
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/patients/{id}")
     public ResponseEntity<PatientDTO> getPatientById(@PathVariable Long id) {
         log.info("[INTERNAL] Récupération du patient avec l'ID: {}", id);
@@ -64,7 +63,7 @@ public class PatientInternalController {
      * Obtenir un patient par l'ID utilisateur (appel interne)
      * GET /api/patient/internal/patients/user/{idUser}
      */
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/patients/user/{idUser}")
     public ResponseEntity<PatientDTO> getPatientByUserId(@PathVariable Long idUser) {
         log.info("[INTERNAL] Récupération du patient pour l'utilisateur: {}", idUser);
@@ -75,7 +74,7 @@ public class PatientInternalController {
      * Mettre à jour un patient (appel interne)
      * PUT /api/patient/internal/patients/{id}
      */
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/patients/{id}")
     public ResponseEntity<PatientDTO> updatePatient(
             @PathVariable Long id,
@@ -92,7 +91,7 @@ public class PatientInternalController {
      * Supprimer un patient (appel interne)
      * DELETE /api/patient/internal/patients/{id}
      */
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/patients/{id}")
     public ResponseEntity<Void> deletePatient(@PathVariable Long id) {
         log.info("[INTERNAL] Suppression du patient avec l'ID: {}", id);

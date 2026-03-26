@@ -24,7 +24,8 @@
 
 			<div>
 				<app-label for="cin">CIN <span class="font-semibold text-error-500">*</span></app-label>
-				<app-input-field id="cin" name="cin" placeholder="Ex: BE123456" [(value)]="form.cin" [error]="submitted && !form.cin.trim()" [disabled]="isReadOnly" />
+				<app-input-field id="cin" name="cin" placeholder="Ex: BE123456" [(value)]="form.cin" 
+          [error]="submitted && cinError !== ''" [hint]="submitted ? cinError : ''" [disabled]="isReadOnly" />
 			</div>
 
 			<div>
@@ -44,12 +45,14 @@
 
 			<div>
 				<app-label for="email">Email</app-label>
-				<app-input-field id="email" name="email" type="email" placeholder="email@exemple.com" [(value)]="form.email" [disabled]="isReadOnly" />
+				<app-input-field id="email" name="email" type="email" placeholder="email@exemple.com" [(value)]="form.email" 
+          [error]="emailError !== ''" [hint]="emailError" [disabled]="isReadOnly" />
 			</div>
 
 			<div>
 				<app-label for="telephone">Téléphone</app-label>
-				<app-input-field id="telephone" name="telephone" placeholder="06XXXXXXXX" [(value)]="form.telephone" [disabled]="isReadOnly" />
+				<app-input-field id="telephone" name="telephone" placeholder="06XXXXXXXX" [(value)]="form.telephone" 
+          [error]="phoneError !== ''" [hint]="phoneError" [disabled]="isReadOnly" />
 			</div>
 
 			<div class="sm:col-span-2">

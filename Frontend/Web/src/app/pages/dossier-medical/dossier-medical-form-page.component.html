@@ -177,12 +177,11 @@
 
 				<div>
 					<app-label for="poids">Poids (kg) <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="poids" name="poids" type="number" [(value)]="form.poids" [error]="submitted && form.poids <= 0" />
+					<app-input-field id="poids" name="poids" type="number" [step]="0.1" [(value)]="form.poids" [error]="weightError !== ''" [hint]="weightError" [disabled]="isReadOnly" />
 				</div>
-
 				<div>
 					<app-label for="taille">Taille (cm) <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="taille" name="taille" type="number" [(value)]="form.taille" [error]="submitted && form.taille <= 0" />
+					<app-input-field id="taille" name="taille" type="number" [step]="1" [(value)]="form.taille" [error]="heightError !== ''" [hint]="heightError" [disabled]="isReadOnly" />
 				</div>
 
 				<div>

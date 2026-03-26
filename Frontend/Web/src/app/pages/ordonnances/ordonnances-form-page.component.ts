@@ -322,16 +322,31 @@ export class OrdonnancesFormPageComponent implements OnInit {
 
     try {
       if (mode === 'create') {
-        store.create(payload as any); // Use any for now as other stores aren't async yet
-        await alerts.success('Ordonnance ajoutée avec succès.');
+        store.create(payload as any).subscribe({
+          next: async () => {
+            await alerts.success('Ordonnance ajoutée avec succès.');
+            router.navigate(['/ordonnances']);
+          },
+          error: async (err) => {
+            console.error('Erreur creation ordonnance', err);
+            await alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+          }
+        });
       } else if (id != null) {
-        store.update(id, payload as any);
-        await alerts.success('Ordonnance modifiée avec succès.');
+        store.update(id, payload as any).subscribe({
+          next: async () => {
+            await alerts.success('Ordonnance modifiée avec succès.');
+            router.navigate(['/ordonnances']);
+          },
+          error: async (err) => {
+            console.error('Erreur modification ordonnance', err);
+            await alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+          }
+        });
       }
-
-      router.navigate(['/ordonnances']);
-    } catch {
-      await alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+    } catch (err) {
+      console.error('Unexpected error', err);
+      await alerts.error('Une erreur inattendue est survenue.');
     }
   };
 }

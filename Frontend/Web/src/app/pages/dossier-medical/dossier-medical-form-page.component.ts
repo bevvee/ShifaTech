@@ -193,9 +193,29 @@ export class DossierMedicalFormPageComponent implements OnInit {
     return this.mode === 'view';
   }
 
+  get weightError(): string {
+    if (this.form.poids === null || this.form.poids === undefined) return '';
+    if (this.form.poids <= 0.5) return 'Le poids doit être supérieur à 0.5 kg';
+    if (this.form.poids > 500) return 'Le poids doit être inférieur à 500 kg';
+    return '';
+  }
+
+  get heightError(): string {
+    if (this.form.taille === null || this.form.taille === undefined) return '';
+    if (this.form.taille <= 30) return 'La taille doit être supérieure à 30 cm';
+    if (this.form.taille > 250) return 'La taille doit être inférieure à 250 cm';
+    return '';
+  }
+
   get isValid(): boolean {
     if (this.isReadOnly) return true;
-    return this.form.idPatient !== '' && this.form.poids > 0 && this.form.taille > 0;
+    return (
+      this.form.idPatient !== '' && 
+      this.weightError === '' && 
+      this.heightError === '' &&
+      this.form.poids > 0 && 
+      this.form.taille > 0
+    );
   }
 
   get patientDisplayName(): string {
@@ -272,16 +292,31 @@ export class DossierMedicalFormPageComponent implements OnInit {
 
     try {
       if (this.mode === 'create') {
-        this.store.create(payload);
-        await this.alerts.success('Dossier médical ajouté avec succès.');
+        this.store.create(payload).subscribe({
+          next: async () => {
+            await this.alerts.success('Dossier médical ajouté avec succès.');
+            this.router.navigate(['/dossier-medical']);
+          },
+          error: async (err) => {
+            console.error('Erreur creation dossier', err);
+            await this.alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+          }
+        });
       } else if (this.id != null) {
-        this.store.update(this.id, payload);
-        await this.alerts.success('Dossier médical modifié avec succès.');
+        this.store.update(this.id, payload).subscribe({
+          next: async () => {
+            await this.alerts.success('Dossier médical modifié avec succès.');
+            this.router.navigate(['/dossier-medical']);
+          },
+          error: async (err) => {
+            console.error('Erreur modification dossier', err);
+            await this.alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+          }
+        });
       }
-
-      this.router.navigate(['/dossier-medical']);
-    } catch {
-      await this.alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+    } catch (err) {
+      console.error('Unexpected error', err);
+      await this.alerts.error('Une erreur inattendue est survenue.');
     }
   }
 }

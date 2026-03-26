@@ -29,41 +29,39 @@ public class OrdonnanceService {
     private final AuthServiceClient authServiceClient;
     private final JwtUtil jwtUtil;
 
+    // =========================================================================
+    // ✅ RÉSOLUTION D'ID ROBUSTE (PK vs idUser)
+    // =========================================================================
+
+    private Patient resolvePatient(Long idInput) {
+        if (idInput == null) return null;
+        return patientRepository.findById(idInput)
+                .orElseGet(() -> {
+                    log.info("Patient non trouvé par ID PK {}. Tentative par idUser...", idInput);
+                    return patientRepository.findByIdUser(idInput)
+                            .orElseThrow(() -> new ResourceNotFoundException("Patient", "id/idUser", idInput));
+                });
+    }
+
+    // =========================================================================
+    // ✅ CREATE
+    // =========================================================================
+
     public OrdonnanceDTO createOrdonnance(CreateOrdonnanceRequest request, Long createdBy, String authHeader) {
-        /*
-         * if (!isDocteur()) {
-         * throw new AccessDeniedException("Seul un médecin peut créer une ordonnance.");
-         * }
-         */
-        log.info("Création d'une ordonnance pour le patient ID: {}", request.getIdPatient());
-
-        // Seuls les médecins ou admins peuvent créer des ordonnances
-        // On suppose que le rôle est vérifié via l'annotation ou ici
-        // if (!patientRepository.existsById(request.getIdPatient())) {
-        //     throw new ResourceNotFoundException("Patient", "id", request.getIdPatient());
-        // }
-        // if (!patientRepository.existsById(request.getIdPatient())) {
-        //     throw new ResourceNotFoundException("Patient", "id", request.getIdPatient());
-        // }
-        if (request.getIdPatient() == null || !patientRepository.existsById((Long) request.getIdPatient())) {
-            throw new ResourceNotFoundException("Patient", "id", request.getIdPatient());
+        if (!isDocteur() && !isAdmin()) {
+            throw new AccessDeniedException("Seul un médecin ou un administrateur peut créer une ordonnance.");
         }
-
-        // Seuls les médecins ou admins peuvent créer des ordonnances
-        // Exception pour le patient lui-même (Pour Testing)
-        /*
-         * if (!hasWriteAccess() && !patient.getIdUser().equals(createdBy)) {
-         * throw new
-         * AccessDeniedException("Seul un médecin ou un administrateur peut créer une ordonnance."
-         * );
-         * }
-         */
+        
+        log.info("Création d'une ordonnance - ID reçu: {}", request.getIdPatient());
+        
+        Patient patient = resolvePatient(request.getIdPatient());
+        Long actualIdPatient = patient.getIdPatient();
 
         Ordonnance ordonnance = new Ordonnance();
-        ordonnance.setIdPatient(request.getIdPatient());
+        ordonnance.setIdPatient(actualIdPatient);
         ordonnance.setIdDoctor(request.getIdDoctor());
         ordonnance.setIdVisite(request.getIdVisite());
-        ordonnance.setMedicaments(request.getMedicaments()); // JSON ou Text
+        ordonnance.setMedicaments(request.getMedicaments());
         ordonnance.setDescription(request.getDescription());
         ordonnance.setPosologie(request.getPosologie());
         ordonnance.setDureeTraitement(request.getDureeTraitement());
@@ -72,25 +70,33 @@ public class OrdonnanceService {
         ordonnance.setCreatedBy(createdBy);
         ordonnance.setStatut(true);
 
-        Ordonnance savedOrdonnance = ordonnanceRepository.save(ordonnance);
-        return mapToDTO(savedOrdonnance, authHeader);
+        Ordonnance saved = ordonnanceRepository.save(ordonnance);
+        log.info("Ordonnance sauvegardée avec ID: {} pour patient: {}", saved.getIdOrdonnance(), actualIdPatient);
+        
+        return mapToDTO(saved, authHeader);
     }
 
-    @Transactional(readOnly = true)
-    public List<OrdonnanceDTO> getOrdonnancesByPatientId(Long idPatient, String authHeader) {
-        log.info("Récupération des ordonnances pour le patient ID: {}", idPatient);
+    // =========================================================================
+    // ✅ READ (BY PATIENT)
+    // =========================================================================
 
-        // Patient patient = patientRepository.findById(idPatient)
-        //         .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", idPatient));
-        Patient patient = patientRepository.findById((Long) idPatient)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", idPatient));
+    @Transactional(readOnly = true)
+    public List<OrdonnanceDTO> getOrdonnancesByPatientId(Long idPatientInput, String authHeader) {
+        log.info("Récupération des ordonnances pour le patient IDInput: {}", idPatientInput);
+
+        Patient patient = resolvePatient(idPatientInput);
+        Long actualIdPatient = patient.getIdPatient();
 
         checkReadAccess(patient);
 
-        return ordonnanceRepository.findByIdPatient(idPatient).stream()
+        return ordonnanceRepository.findByIdPatient(actualIdPatient).stream()
                 .map(o -> mapToDTO(o, authHeader))
                 .collect(Collectors.toList());
     }
+
+    // =========================================================================
+    // ✅ READ ONE
+    // =========================================================================
 
     @Transactional(readOnly = true)
     public OrdonnanceDTO getOrdonnanceById(Long id, String authHeader) {
@@ -98,9 +104,7 @@ public class OrdonnanceService {
         Ordonnance ordonnance = ordonnanceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ordonnance", "id", id));
 
-        // Patient patient = patientRepository.findById(ordonnance.getIdPatient())
-        //         .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", ordonnance.getIdPatient()));
-        Patient patient = patientRepository.findById((Long) ordonnance.getIdPatient())
+        Patient patient = patientRepository.findById(ordonnance.getIdPatient())
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", ordonnance.getIdPatient()));
 
         checkReadAccess(patient);
@@ -108,25 +112,30 @@ public class OrdonnanceService {
         return mapToDTO(ordonnance, authHeader);
     }
 
+    // =========================================================================
+    // ✅ READ ALL
+    // =========================================================================
+
     @Transactional(readOnly = true)
     public List<OrdonnanceDTO> getAllOrdonnances(String authHeader) {
-        /*
-         * if (!isAdmin() && !isDocteur()) {
-         * throw new AccessDeniedException("Seul un médecin ou un administrateur peut lister les ordonnances.");
-         * }
-         */
+        // Harmonisation avec le contrôleur : Autoriser INFIRMIER
+        if (!isAdmin() && !isDocteur() && !isInfirmier()) {
+            throw new AccessDeniedException("Accès refusé à la liste globale des ordonnances.");
+        }
         log.info("Récupération de toutes les ordonnances");
         return ordonnanceRepository.findAll().stream()
                 .map(o -> mapToDTO(o, authHeader))
                 .collect(Collectors.toList());
     }
 
+    // =========================================================================
+    // ✅ UPDATE
+    // =========================================================================
+
     public OrdonnanceDTO updateOrdonnance(Long id, CreateOrdonnanceRequest request, String authHeader) {
-        /*
-         * if (!isDocteur()) {
-         * throw new AccessDeniedException("Seul un médecin peut modifier une ordonnance.");
-         * }
-         */
+        if (!isDocteur() && !isAdmin()) {
+            throw new AccessDeniedException("Seul un médecin ou un administrateur peut modifier une ordonnance.");
+        }
         log.info("Mise à jour de l'ordonnance ID: {}", id);
         Ordonnance ordonnance = ordonnanceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ordonnance", "id", id));
@@ -141,50 +150,52 @@ public class OrdonnanceService {
         return mapToDTO(ordonnanceRepository.save(ordonnance), authHeader);
     }
 
+    // =========================================================================
+    // ✅ DELETE
+    // =========================================================================
+
     public void deleteOrdonnance(Long id) {
-        /*
-         * if (!isDocteur()) {
-         * throw new AccessDeniedException("Seul un médecin peut supprimer une ordonnance.");
-         * }
-         */
+        if (!isDocteur() && !isAdmin()) {
+            throw new AccessDeniedException("Seul un médecin ou un administrateur peut supprimer une ordonnance.");
+        }
         log.info("Suppression de l'ordonnance ID: {}", id);
         Ordonnance ordonnance = ordonnanceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ordonnance", "id", id));
-        ordonnance.setStatut(false);
+        
+        ordonnance.setStatut(false); // Suppression logique
         ordonnanceRepository.save(ordonnance);
     }
 
+    // =========================================================================
+    // 🔐 SÉCURITÉ & ROLES
+    // =========================================================================
+
     private void checkReadAccess(Patient patient) {
         Long currentUserId = jwtUtil.getUserIdFromToken();
-        /*
-         * if (currentUserId != null && !isAdmin() && !isDocteur() &&
-         * !patient.getIdUser().equals(currentUserId)) {
-         * throw new AccessDeniedException("Accès refusé aux ordonnances de ce patient.");
-         * }
-         */
-    }
-
-    private boolean hasWriteAccess() {
-        return isAdmin() || isDocteur();
+        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() &&
+                !patient.getIdUser().equals(currentUserId)) {
+            throw new AccessDeniedException("Accès refusé aux ordonnances de ce patient.");
+        }
     }
 
     private boolean isAdmin() {
-        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext()
-                .getAuthentication();
-        if (authentication == null)
-            return false;
-        return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
     private boolean isDocteur() {
-        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext()
-                .getAuthentication();
-        if (authentication == null)
-            return false;
-        return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_DOCTEUR"));
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_DOCTEUR"));
     }
+
+    private boolean isInfirmier() {
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_INFIRMIER"));
+    }
+
+    // =========================================================================
+    // 🧾 MAPPING (SÉCURISÉ)
+    // =========================================================================
 
     private OrdonnanceDTO mapToDTO(Ordonnance ordonnance, String authHeader) {
         OrdonnanceDTO dto = OrdonnanceDTO.builder()
@@ -202,10 +213,8 @@ public class OrdonnanceService {
                 .statut(ordonnance.getStatut())
                 .build();
 
-        // Récupérer les infos du patient
-        // patientRepository.findById(ordonnance.getIdPatient()).ifPresent(patient -> {
         if (ordonnance.getIdPatient() != null) {
-            patientRepository.findById((Long) ordonnance.getIdPatient()).ifPresent(patient -> {
+            patientRepository.findById(ordonnance.getIdPatient()).ifPresent(patient -> {
                 dto.setNumDossier(patient.getNumDossier());
                 if (patient.getIdUser() != null) {
                     try {
@@ -214,12 +223,11 @@ public class OrdonnanceService {
                             dto.setNomPatient(user.getNom() + " " + user.getPrenom());
                         }
                     } catch (Exception e) {
-                        log.warn("Erreur récupération patient pour ordonnance: {}", e.getMessage());
+                        log.warn("Erreur AuthServiceClient pour ordonnance {}: {}", ordonnance.getIdOrdonnance(), e.getMessage());
                     }
                 }
             });
         }
-
         return dto;
     }
 }
