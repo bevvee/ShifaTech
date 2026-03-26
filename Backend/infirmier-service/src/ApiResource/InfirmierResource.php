@@ -59,4 +59,6 @@ class InfirmierResource
     public ?string $dateNaissance = null;
     public ?string $telephone = null;
     public ?string $adresse = null;
+    public ?int $id_service = null;
+    public ?int $id_specialite = null;
 }

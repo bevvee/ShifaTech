@@ -50,6 +50,7 @@ class InfirmierProvider implements ProviderInterface
         $resource->id = $infirmier->getId();
         $resource->id_utilisateur = $infirmier->getIdUtilisateur();
         $resource->id_specialite = $infirmier->getIdSpecialite()?->getId();
+        $resource->id_service = $infirmier->getIdSpecialite()?->getIdService(); 
 
         // Récupérer les infos depuis auth-service
         try {
