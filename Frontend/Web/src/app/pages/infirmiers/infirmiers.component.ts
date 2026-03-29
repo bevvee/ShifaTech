@@ -1,17 +1,19 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
+import { Option } from '../../shared/components/form/select/select.component';
+import { TableDropdownComponent } from '../../shared/components/common/table-dropdown/table-dropdown.component';
 import { InfirmierService } from '../../core/services/infirmier.service';
 import { InfirmierDto } from '../../core/models/infirmier.model';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-infirmiers',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -19,64 +21,136 @@ import { InfirmierDto } from '../../core/models/infirmier.model';
     ComponentCardComponent,
     ButtonComponent,
     BadgeComponent,
+    TableDropdownComponent,
   ],
   templateUrl: './infirmiers.component.html',
   styles: ``
 })
-export class InfirmiersComponent implements OnInit {
+export class InfirmiersComponent implements OnInit, OnDestroy {
 
   infirmiers: InfirmierDto[] = [];
-  searchTerm = '';
+  specialiteOptions: Option[] = [];
+  private readonly subscription = new Subscription();
+
   currentPage = 1;
   itemsPerPage = 5;
 
+  // Recherche & Filtres
+  searchTerm = '';
+  selectedSexe = '';
+  selectedSpecialite = '';
+
+  showFilters = false;
+
   constructor(
     private readonly router: Router,
-    private readonly infirmierService: InfirmierService,
+    private readonly infirmierService: InfirmierService
   ) {}
 
   ngOnInit() {
     this.loadInfirmiers();
+    this.loadSpecialites();
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
   }
 
   loadInfirmiers() {
     this.infirmierService.getAll().subscribe({
       next: (res: any) => {
-        console.log('API response:', res); // <-- add this
-        this.infirmiers = res['member'] ?? res['hydra:member'] ?? (Array.isArray(res) ? res : []);
+        let items: any[] = [];
+
+        if (Array.isArray(res)) {
+          items = res;
+        } else if (res['data']) {
+          items = res['data'];
+        } else if (res['member']) {
+          items = res['member'];
+        } else if (res['hydra:member']) {
+          items = res['hydra:member'];
+        }
+
+        this.infirmiers = items.map((inf: any) => ({
+          ...inf,
+          id: inf.id ?? (inf['@id'] ? parseInt(inf['@id'].split('/').pop(), 10) : inf.id_utilisateur)
+        }));
       },
       error: (err) => console.error('Erreur:', err)
     });
   }
+
+  loadSpecialites() {
+    this.infirmierService.getSpecialites().subscribe({
+      next: (res: any) => {
+        let items: any[] = [];
+        if (Array.isArray(res)) {
+          items = res;
+        } else if (res['data']) {
+          items = res['data'];
+        } else if (res['member']) {
+          items = res['member'];
+        } else if (res['hydra:member']) {
+          items = res['hydra:member'];
+        }
+
+        this.specialiteOptions = items.map((s: any) => {
+          const sId = s.id ? String(s.id) : (s['@id'] ? s['@id'].split('/').pop() : '');
+          return {
+            value: sId,
+            label: s.label ?? s.nom ?? s.libelle
+          };
+        });
+      },
+      error: (err) => console.error('Erreur spécialités:', err)
+    });
+  }
+
   goToCreate() {
     this.router.navigate(['/infirmiers/new']);
   }
 
-  goToEdit(row: InfirmierDto) {
+  openEditModal(row: any) {
     this.router.navigate(['/infirmiers', row.id, 'edit']);
   }
 
-  goToView(row: InfirmierDto) {
-    this.router.navigate(['/infirmiers', row.id]);
-  }
-  
   deleteInfirmier(id: number) {
     if (!confirm('Confirmer la suppression ?')) return;
     this.infirmierService.deleteById(id).subscribe({
       next: () => {
         this.infirmiers = this.infirmiers.filter(i => i.id !== id);
       },
-      error: () => alert('Erreur lors de la suppression.')
+      error: () => alert('Erreur suppression')
     });
+  }
+
+  getSpecialiteLabel(id: number): string {
+    const found = this.specialiteOptions.find(s => s.value === String(id));
+    return found ? found.label : '-';
   }
 
   get filteredInfirmiers(): InfirmierDto[] {
     const q = this.searchTerm.trim().toLowerCase();
-    if (!q) return this.infirmiers;
+
     return this.infirmiers.filter(inf => {
-      const haystack = [inf.nom, inf.prenom, inf.cin, inf.email, inf.telephone, inf.adresse]
-        .filter(Boolean).join(' ').toLowerCase();
-      return haystack.includes(q);
+      // Recherche texte
+      const matchSearch = !q || [
+        inf.nom,
+        inf.prenom,
+        inf.cin,
+        inf.email,
+        inf.telephone,
+        inf.adresse,
+      ].filter(Boolean).join(' ').toLowerCase().includes(q);
+
+      // Filtre sexe
+      const matchSexe = !this.selectedSexe || inf.sexe === this.selectedSexe;
+
+      // Filtre spécialité
+      const matchSpecialite = !this.selectedSpecialite ||
+        String(inf.id_specialite) === this.selectedSpecialite;
+
+      return matchSearch && matchSexe && matchSpecialite;
     });
   }
 
@@ -93,9 +167,35 @@ export class InfirmiersComponent implements OnInit {
     this.currentPage = 1;
   }
 
+  onFilterChange() {
+    this.currentPage = 1;
+  }
+
+  resetFilters() {
+    this.searchTerm = '';
+    this.selectedSexe = '';
+    this.selectedSpecialite = '';
+    this.currentPage = 1;
+  }
+
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!this.selectedSexe || !!this.selectedSpecialite;
+  }
+
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
+  }
+  goToEdit(row: any) {
+    this.router.navigate(['/infirmiers', row.id, 'edit']);
+  }
+
+  goToView(row: any) {
+    this.router.navigate(['/infirmiers', row.id, 'view']);
   }
 }

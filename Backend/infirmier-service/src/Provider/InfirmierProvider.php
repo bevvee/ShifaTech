@@ -6,15 +6,11 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\InfirmierResource;
 use App\Repository\InfirmierRepository;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class InfirmierProvider implements ProviderInterface
 {
     public function __construct(
-        private InfirmierRepository $infirmierRepository,
-        private HttpClientInterface $httpClient,
-        private RequestStack $requestStack
+        private InfirmierRepository $infirmierRepository
     ) {}
 
     public function provide(
@@ -49,34 +45,8 @@ class InfirmierProvider implements ProviderInterface
         $resource = new InfirmierResource();
         $resource->id = $infirmier->getId();
         $resource->id_utilisateur = $infirmier->getIdUtilisateur();
+        $resource->id_service = $infirmier->getIdService();
         $resource->id_specialite = $infirmier->getIdSpecialite()?->getId();
-        $resource->id_service = $infirmier->getIdSpecialite()?->getIdService(); 
-
-        // Récupérer les infos depuis auth-service
-        try {
-            $authHeader = $this->requestStack->getCurrentRequest()?->headers->get('Authorization');
-            $headers = $authHeader ? ['Authorization' => $authHeader] : [];
-
-            $response = $this->httpClient->request(
-                'GET',
-                'http://auth-service:8080/user/' . $infirmier->getIdUtilisateur(),
-                ['headers' => $headers]
-            )->toArray();
-
-            $user = $response['user'] ?? [];
-            $resource->nom = $user['nom'] ?? null;
-            $resource->prenom = $user['prenom'] ?? null;
-            $resource->cin = $user['cin'] ?? null;
-            $resource->email = $user['email'] ?? null;
-            $resource->sexe = $user['sexe'] ?? null;
-            $resource->statut = $user['statut'] ?? false;
-            $resource->dateNaissance = $user['dateNaissance'] ?? null;
-            $resource->telephone = $user['telephone'] ?? null;
-            $resource->adresse = $user['adresse'] ?? null;
-        } catch (\Exception $e) {
-            // Continue sans les données auth
-        }
-
         return $resource;
     }
 }

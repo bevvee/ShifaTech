@@ -304,6 +304,9 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
   }
 
   private countFromResponse(res: any): number {
+    if (res && typeof res['totalItems'] === 'number') return res['totalItems'];
+    if (res && Array.isArray(res['hydra:member'])) return res['hydra:member'].length;
+    if (res && Array.isArray(res.member)) return res.member.length;
     if (Array.isArray(res)) return res.length;
     if (res && Array.isArray(res.data)) return res.data.length;
     if (res && Array.isArray(res.items)) return res.items.length;

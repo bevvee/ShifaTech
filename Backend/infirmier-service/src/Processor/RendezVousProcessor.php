@@ -20,19 +20,43 @@ class RendezVousProcessor implements ProcessorInterface
         array $uriVariables = [],
         array $context = []
     ) {
-        dump('RendezVousProcessor appelé!!!!');
         $method = $operation->getMethod();
         $id = $uriVariables['id'] ?? null;
 
-        $authHeader = $this->requestStack->getCurrentRequest()?->headers->get('Authorization');
+        $authHeader = $this->requestStack->getCurrentRequest()?->headers->get('Authorization')
+            ?? $this->requestStack->getCurrentRequest()?->server->get('HTTP_AUTHORIZATION')
+            ?? null;
+
+        // LOG
+        file_put_contents('/tmp/debug.log', json_encode([
+            'method' => $method,
+            'auth'   => $authHeader ?? 'AUCUN TOKEN',
+            'data'   => (array) $data,
+        ]) . "\n", FILE_APPEND);
+
         $headers = $authHeader ? ['Authorization' => $authHeader] : [];
 
         if ($method === 'POST') {
-            return $this->httpClient->request(
+            $response = $this->httpClient->request(
                 'POST',
                 'http://rdv-service:9000/api/rendez_vouses',
-                ['headers' => $headers, 'json' => $data]
-            )->toArray();
+                [
+                    'headers' => array_merge($headers, [
+                        'Content-Type' => 'application/json',
+                        'Accept'       => 'application/json',
+                    ]),
+                    'json' => [
+                        'id_patient'  => $data->id_patient,
+                        'id_docteur'  => $data->id_docteur,
+                        'date_rdv'    => $data->date_rdv,
+                        'heure_debut' => $data->heure_debut,
+                        'heure_fin'   => $data->heure_fin,
+                        'statut'      => $data->statut ?: 'EN_ATTENTE',
+                    ]
+                ]
+            )->toArray(false);
+
+            return $this->mapToRendezVous($response);
         }
 
         if ($method === 'PATCH' && $id) {
@@ -46,17 +70,33 @@ class RendezVousProcessor implements ProcessorInterface
                     ]),
                     'body' => json_encode($body)
                 ]
-            )->toArray();
+            )->toArray(false);
         }
 
         if ($method === 'DELETE' && $id) {
-            return $this->httpClient->request(
+            $this->httpClient->request(
                 'DELETE',
                 'http://rdv-service:9000/api/rendez_vouses/' . $id,
                 ['headers' => $headers]
             )->getStatusCode();
+            return null;
         }
 
         return null;
+    }
+
+    private function mapToRendezVous(array $r): \App\ApiResource\RendezVous
+    {
+        file_put_contents('/tmp/rdv-response.log', json_encode($r) . "\n", FILE_APPEND);
+
+        $rdv = new \App\ApiResource\RendezVous();
+        $rdv->id          = $r['id'] ?? $r['idRdv'] ?? $r['id_rdv'] ?? $r['rendezVousId'] ?? 999;
+        $rdv->id_patient  = $r['id_patient']  ?? $r['idPatient']  ?? null;
+        $rdv->id_docteur  = $r['id_docteur']  ?? $r['idDocteur']  ?? null;
+        $rdv->date_rdv    = $r['date_rdv']    ?? $r['dateRdv']    ?? null;
+        $rdv->heure_debut = $r['heure_debut'] ?? $r['heureDebut'] ?? null;
+        $rdv->heure_fin   = $r['heure_fin']   ?? $r['heureFin']   ?? null;
+        $rdv->statut      = $r['statut']      ?? 'EN_ATTENTE';
+        return $rdv;
     }
 }
