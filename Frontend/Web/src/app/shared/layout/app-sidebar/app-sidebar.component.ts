@@ -140,15 +140,15 @@ export class AppSidebarComponent {
   <path d="M12 11v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
   <path d="M9 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
 </svg>`,
-      name: "Infirmiers",
+      name: "Infirmier",
       subItems: [
         {
           name: 'Liste des Infirmiers',
-          path: '/infirmiers',
+          path: '/infirmier',
         },
         {
           name: 'Ajouter Infirmier',
-          path: '/infirmiers/new',
+          path: '/infirmier/new',
         },
       ],
     },

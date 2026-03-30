@@ -118,25 +118,24 @@ services:
       timeout: 5s
       retries: 5
 
-  admin-db:
-    image: mysql:8.3
-    container_name: admin-db
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: admindb
-      MYSQL_USER: adminuser
-      MYSQL_PASSWORD: adminpass
-      MYSQL_ROOT_PASSWORD: root
-    volumes:
-      - admin_mysql_data:/var/lib/mysql
-    networks:
-      - shifatech-net
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
+  # admin-db:
+  #   image: mysql:8.0
+  #   container_name: admin-db
+  #   restart: always
+  #   environment:
+  #     MYSQL_DATABASE: admindb
+  #     MYSQL_USER: adminuser
+  #     MYSQL_PASSWORD: adminpass
+  #     MYSQL_ROOT_PASSWORD: root
+  #   volumes:
+  #     - admin_mysql_data:/var/lib/mysql
+  #   networks:
+  #     - shifatech-net
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
   ##################################
   # BACKEND SERVICES
@@ -249,23 +248,23 @@ services:
       - shifatech-net
 
 
-  admin-service:
-    build: ./Backend/admin-service
-    container_name: admin-service
-    restart: unless-stopped
-    depends_on:
-      admin-db:
-        condition: service_healthy
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://admin-db:3306/admindb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: adminuser
-      SPRING_DATASOURCE_PASSWORD: adminpass
-      SERVICES_DOCTOR_URL: http://doctor-service:8080
-      SERVICES_INFIRMIER_URL: http://infirmier-service:8080
-    expose:
-      - "8080"
-    networks:
-      - shifatech-net
+  # admin-service:
+  #   build: ./Backend/admin-service
+  #   container_name: admin-service
+  #   restart: unless-stopped
+  #   depends_on:
+  #     admin-db:
+  #       condition: service_healthy
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://admin-db:3306/admindb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+  #     SPRING_DATASOURCE_USERNAME: adminuser
+  #     SPRING_DATASOURCE_PASSWORD: adminpass
+  #     SERVICES_DOCTOR_URL: http://doctor-service:8080
+  #     SERVICES_INFIRMIER_URL: http://infirmier-service:8080
+  #   expose:
+  #     - "8080"
+  #   networks:
+  #     - shifatech-net
   ##################################
   # FRONTEND
   ##################################
@@ -281,6 +280,7 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - NODE_OPTIONS=--max-old-space-size=3072
     command: npm start
     networks:
       - shifatech-net
@@ -300,7 +300,7 @@ services:
       - infirmier-service
       - rdv-service
       - body-service
-      - admin-service
+      # - admin-service
     ports:
       - "8082:80"
     volumes:
@@ -319,7 +319,7 @@ services:
     container_name: phpmyadmin
     restart: always
     environment:
-      PMA_HOSTS: auth-db,rdv-db,patient-db,infirmier-db,doctor-db,body-db,admin-db
+      PMA_HOSTS: auth-db,rdv-db,patient-db,infirmier-db,doctor-db,body-db
       PMA_USER: root
       PMA_PASSWORD: root
     ports:
@@ -351,7 +351,7 @@ volumes:
   patient_mysql_data:
   infirmier_mysql_data:
   doctor_mysql_data:
+  # admin_mysql_data:
   rdv-service-logs:
   rdv-service-cache:
   body_mysql_data:
-  admin_mysql_data:

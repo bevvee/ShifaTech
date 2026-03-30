@@ -96,11 +96,11 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
   }
 
   goToCreate() {
-    this.router.navigate(['/infirmiers/new']);
+    this.router.navigate(['/infirmier/new']);
   }
 
   openEditModal(row: any) {
-    this.router.navigate(['/infirmiers', row.id, 'edit']);
+    this.router.navigate(['/infirmier', row.id, 'edit']);
   }
 
   deleteInfirmier(id: number) {
