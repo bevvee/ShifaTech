@@ -71,8 +71,32 @@ public class PatientInternalController {
     }
 
     /**
+     * Obtenir les détails complets d'un patient (appel interne par un autre service)
+     * GET /internal/patients/details/{id}
+     */
+    @GetMapping("/patients/details/{id}")
+    public ResponseEntity<PatientDTO> getFullPatientDetails(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        log.info("[INTERNAL] Requête de détails complets pour le patient ID: {}", id);
+        return ResponseEntity.ok(patientService.getPatientDetailsInternal(id, authHeader));
+    }
+
+    /**
+     * Obtenir les détails de plusieurs patients en masse (appel interne)
+     * POST /internal/patients/bulk
+     */
+    @PostMapping("/patients/bulk")
+    public ResponseEntity<List<PatientDTO>> getPatientsBulk(
+            @RequestBody List<Long> ids,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        log.info("[INTERNAL] Requête en masse pour {} patients", ids.size());
+        return ResponseEntity.ok(patientService.getPatientsBulkInternal(ids, authHeader));
+    }
+
+    /**
      * Mettre à jour un patient (appel interne)
-     * PUT /api/patient/internal/patients/{id}
+     * PUT /internal/patients/{id}
      */
     @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/patients/{id}")
@@ -89,7 +113,7 @@ public class PatientInternalController {
 
     /**
      * Supprimer un patient (appel interne)
-     * DELETE /api/patient/internal/patients/{id}
+     * DELETE /internal/patients/{id}
      */
     @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/patients/{id}")

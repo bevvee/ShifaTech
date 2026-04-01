@@ -29,16 +29,17 @@
 							<div>
 								Créé : <span class="font-semibold text-gray-900 dark:text-white">{{ createdAtIso ? (createdAtIso | date:'dd/MM/yyyy') : '-' }}</span>
 							</div>
-							<div class="font-semibold text-gray-900 dark:text-white">Patient ID {{ patientIdDisplay }}</div>
 						</div>
 					</div>
 
-					<div class="mt-4 flex items-center justify-end">
-						<app-button size="sm" variant="outline" (btnClick)="createVisite()">
-							<svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-							Nouvelle Visite
-						</app-button>
-					</div>
+					@if (((userRole$ | async) === Role.INFIRMIER) || ((userRole$ | async) === Role.ADMIN)) {
+						<div class="mt-4 flex items-center justify-end">
+							<app-button size="sm" variant="outline" (btnClick)="createVisite()">
+								<svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+								Nouvelle Visite
+							</app-button>
+						</div>
+					}
 				</div>
 
 				<!-- Key metrics -->

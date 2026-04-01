@@ -69,7 +69,7 @@ public class VisiteController {
                 .body(ApiResponse.success(visite, "Visite créée avec succès"));
     }
 
-    @PreAuthorize("hasRole('INFIRMIER')")
+    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR')")
     // @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @PutMapping("/visites/{id}")
     public ResponseEntity<ApiResponse<VisiteDTO>> updateVisite(
