@@ -95,9 +95,9 @@ public class PatientService {
         Patient patient = patientRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
 
-        // Sécurité : Vérifier que c'est le patient lui-même, un médecin ou un admin
+        // Sécurité : Vérifier que c'est le patient lui-même, un médecin, infirmier, secrétaire ou un admin
         Long currentUserId = jwtUtil.getUserIdFromToken();
-        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() &&
+        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire() &&
                 !patient.getIdUser().equals(currentUserId)) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Accès refusé au dossier de ce patient.");
@@ -111,7 +111,7 @@ public class PatientService {
         log.info("Récupération du patient par User ID: {}", userId);
 
         Long currentUserId = jwtUtil.getUserIdFromToken();
-        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() &&
+        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire() &&
                 !userId.equals(currentUserId)) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Accès refusé au profil de cet utilisateur.");
@@ -124,9 +124,9 @@ public class PatientService {
 
     @Transactional(readOnly = true)
     public List<PatientDTO> getAllPatients(String authHeader) {
-        if (!isAdmin() && !isDocteur() && !isInfirmier()) {
+        if (!isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire()) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Seuls les médecins ou administrateurs peuvent lister tous les patients.");
+                    "Seuls les médecins, infirmiers, secrétaires ou administrateurs peuvent lister tous les patients.");
         }
         log.info("Récupération de tous les patients actifs");
         return patientRepository.findAllActive().stream()
@@ -140,9 +140,9 @@ public class PatientService {
         Patient patient = patientRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
 
-        if (!isAdmin() && !isDocteur() && !isInfirmier() && !patient.getIdUser().equals(updatedBy)) {
+        if (!isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire() && !patient.getIdUser().equals(updatedBy)) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Vous ne pouvez modifier que votre propre dossier patient (sauf si vous êtes médecin/infirmier).");
+                    "Vous ne pouvez modifier que votre propre dossier patient (sauf si vous êtes personnel médical/admin).");
         }
 
         if (request.getAssurance() != null)
@@ -220,8 +220,8 @@ public class PatientService {
                 }
             }
             
-            // 2. Si non récupéré et que le demandeur est Admin/Docteur, utiliser getUserById
-            if (userInfo == null && (isAdmin() || isDocteur())) {
+            // 2. Si non récupéré et que le demandeur est Admin/Docteur/Infirmier/Secretaire, utiliser getUserById
+            if (userInfo == null && (isAdmin() || isDocteur() || isInfirmier() || isSecretaire())) {
                 userInfo = authServiceClient.getUserById(patient.getIdUser(), authHeader);
             }
 
@@ -276,5 +276,14 @@ public class PatientService {
             return false;
         return authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_INFIRMIER"));
+    }
+
+    private boolean isSecretaire() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication();
+        if (authentication == null)
+            return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SECRETAIRE"));
     }
 }

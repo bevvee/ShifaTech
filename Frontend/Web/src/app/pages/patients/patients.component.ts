@@ -8,6 +8,9 @@ import { PatientsStore } from './patients.store';
 import { DossierMedicalStore } from '../dossier-medical/dossier-medical.store';
 import { PatientDto } from '../../core/models/patient.model';
 import { AlertService } from '../../core/services/alert.service';
+import { Role } from '../../core/models/role.enum';
+import { Store } from '@ngrx/store';
+import { selectUserRole } from '../../core/store/auth/auth.selectors';
 
 @Component({
   selector: 'app-patients',
@@ -29,6 +32,10 @@ export class PatientsComponent implements OnInit {
   private readonly store = inject(PatientsStore);
   private readonly dossierStore = inject(DossierMedicalStore);
   private readonly alerts = inject(AlertService);
+  private readonly authStore = inject(Store);
+  
+  userRole$ = this.authStore.select(selectUserRole);
+  readonly Role = Role;
 
   ngOnInit(): void {
     this.loadPatients();

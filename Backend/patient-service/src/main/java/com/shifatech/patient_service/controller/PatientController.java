@@ -30,7 +30,7 @@ public class PatientController {
         return tokenUserId != null ? tokenUserId : headerUserId;
     }
 
-    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN', 'SECRETAIRE')")
     @PostMapping(value = { "", "/" })
     public ResponseEntity<ApiResponse<PatientDTO>> createPatient(
             @Valid @RequestBody CreatePatientRequest request,
@@ -44,7 +44,7 @@ public class PatientController {
                 .body(ApiResponse.success(patient, "Patient créé avec succès"));
     }
 
-    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER', 'SECRETAIRE')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PatientDTO>> getPatientById(
             @PathVariable Long id,
@@ -54,7 +54,7 @@ public class PatientController {
         return ResponseEntity.ok(ApiResponse.success(patient, "Patient récupéré avec succès"));
     }
 
-    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER', 'SECRETAIRE')")
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<PatientDTO>> getPatientByUserId(
             @PathVariable Long userId,
@@ -64,7 +64,7 @@ public class PatientController {
         return ResponseEntity.ok(ApiResponse.success(patient, "Patient récupéré avec succès"));
     }
 
-    @PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN', 'INFIRMIER')")
+    @PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN', 'INFIRMIER', 'SECRETAIRE')")
     @GetMapping(value = { "", "/" })
     public ResponseEntity<ApiResponse<List<PatientDTO>>> getAllPatients(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -74,7 +74,7 @@ public class PatientController {
                 String.format("%d patient(s) trouvé(s)", patients.size())));
     }
 
-    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'INFIRMIER', 'DOCTEUR', 'ADMIN', 'SECRETAIRE')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PatientDTO>> updatePatient(
             @PathVariable Long id,
