@@ -6,10 +6,11 @@ import { Role } from '../models/role.enum';
 import { selectUserRole } from '../store/auth/auth.selectors';
 
 const roleDashboardMap: Record<Role, string> = {
-  [Role.ADMIN]: '/admin',
-  [Role.DOCTEUR]: '/docteur',
-  [Role.INFIRMIER]: '/infirmier',
+  [Role.ADMIN]: '/dashboard',
+  [Role.DOCTEUR]: '/dashboard',
+  [Role.INFIRMIER]: '/dashboard',
   [Role.PATIENT]: '/signin',
+  [Role.SECRETAIRE]: '/dashboard',
 };
 
 export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {

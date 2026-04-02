@@ -38,4 +38,28 @@ class AuthServiceClient
 
         return $data['user']['email'] ?? null;
     }
+
+    public function getUser(int $userId): array
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $jwt = $request?->headers->get('Authorization');
+
+        $response = $this->httpClient->request(
+            'GET',
+            sprintf('http://auth-service:8080/user/%d', $userId),
+            [
+                'headers' => [
+                    'Authorization' => $jwt
+                ]
+            ]
+        );
+
+        if ($response->getStatusCode() !== 200) {
+            return [];
+        }
+
+        $data = $response->toArray(false);
+
+        return $data['data'] ?? $data;
+    }
 }

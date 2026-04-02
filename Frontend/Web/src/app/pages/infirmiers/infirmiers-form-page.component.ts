@@ -11,6 +11,7 @@ import { LabelComponent } from '../../shared/components/form/label/label.compone
 import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
 import { InfirmierService } from '../../core/services/infirmier.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { AlertService } from '../../core/services/alert.service';
 import { Sexe } from '../../core/models/infirmier.model';
 
 type Mode = 'create' | 'edit';
@@ -43,6 +44,7 @@ export class InfirmiersFormPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly infirmierService = inject(InfirmierService);
   private readonly toastService = inject(ToastService);
+  private readonly alertService = inject(AlertService);
 
   sexeOptions: Option[] = [
     { value: 'M', label: 'Masculin' },
@@ -80,6 +82,7 @@ export class InfirmiersFormPageComponent implements OnInit {
       if (this.mode === 'edit' && this.id != null) {
         this.infirmierService.getById(this.id).subscribe({
           next: (existing: any) => {
+            console.log('existing reçu:', existing); 
             this.form = {
               nom: existing.nom ?? '',
               prenom: existing.prenom ?? '',
@@ -94,7 +97,11 @@ export class InfirmiersFormPageComponent implements OnInit {
               idSpecialite: String(existing.id_specialite ?? ''),
             };
           },
-          error: () => this.router.navigate(['/infirmiers'])
+          error: (err) => {
+            this.loading = false;
+            const message = err?.error?.message || 'Une erreur est survenue.';
+            this.toastService.error('Erreur', message);
+          }
         });
       }
     }
@@ -129,6 +136,10 @@ export class InfirmiersFormPageComponent implements OnInit {
     );
   }
 
+  testToast() {
+    this.toastService.error('Erreur', 'Test message erreur');
+  }
+  
   cancel() {
     this.router.navigate(['/infirmiers']);
   }
@@ -161,8 +172,10 @@ export class InfirmiersFormPageComponent implements OnInit {
           this.toastService.success('Succès', 'Infirmier créé avec succès.');
           this.router.navigate(['/infirmiers']);
         },
-        error: () => {
+       error: (err) => {
           this.loading = false;
+          const message = err?.error?.message || 'Une erreur est survenue.';
+          this.toastService.error('Erreur', message);
         }
       });
       return;
@@ -186,15 +199,18 @@ export class InfirmiersFormPageComponent implements OnInit {
       adresse: this.form.adresse.trim(),
       id_specialite: `/api/infirmier_specialites/${this.form.idSpecialite}`,
     };
-    if (this.form.password.trim()) updateDto.password = this.form.password.trim();
+    if (this.form.password.trim()) updateDto.motDePasse = this.form.password.trim();
     console.log('avant update, id:', this.id, 'dto:', updateDto);
     this.infirmierService.update(this.id, updateDto).subscribe({
-      next: () => {
+      next: (res) => {
         this.loading = false;
         this.toastService.success('Succès', 'Infirmier modifié avec succès.');
-        this.router.navigate(['/infirmiers']);
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate(['/infirmiers']);
+        });
       },
-      error: () => {
+      error: (err) => {
+        console.log('PUT error reçu:', err);
         this.loading = false;
       }
     });

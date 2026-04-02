@@ -27,6 +27,7 @@ use App\Provider\RendezVousProvider;
 )]
 class RendezVous
 {
+    #[ApiProperty(identifier: true)]
     public ?int $id = null;
     public ?int $id_patient = null;
     public ?int $id_docteur = null;

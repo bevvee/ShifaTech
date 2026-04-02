@@ -1,0 +1,78 @@
+<app-page-breadcrumb pageTitle="Modifier Rendez Vous" />
+
+<div>
+  <app-component-card title="Modifier Rendez Vous">
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div>
+        <app-label>Patient</app-label>
+        <app-input-field
+          type="number"
+          placeholder="ID patient"
+          [value]="rdv.id_patient"
+          (valueChange)="rdv.id_patient = $event"
+        />
+      </div>
+
+      <div>
+        <app-label>Docteur</app-label>
+        <app-input-field
+          type="number"
+          placeholder="ID docteur"
+          [value]="rdv.id_docteur"
+          (valueChange)="rdv.id_docteur = $event"
+        />
+      </div>
+
+      <div class="sm:col-span-2">
+        <app-date-picker
+          id="rdv-edit-date"
+          label="Date"
+          placeholder="Select date"
+          [defaultDate]="rdv.date_rdv"
+          (dateChange)="onDateChange($event)"
+        />
+      </div>
+
+      <div>
+        <app-time-picker
+          id="rdv-edit-time-start"
+          label="Heure début"
+          placeholder="Select start time"
+          [defaultTime]="rdv.heure_debut"
+          (timeChange)="onStartTimeChange($event)"
+        />
+      </div>
+
+      <div>
+        <app-time-picker
+          id="rdv-edit-time-end"
+          label="Heure fin"
+          placeholder="Select end time"
+          [defaultTime]="rdv.heure_fin"
+          (timeChange)="onEndTimeChange($event)"
+        />
+      </div>
+
+      <div class="sm:col-span-2">
+        <app-label>Statut</app-label>
+        <app-select
+          [options]="statusOptions"
+          placeholder="Select status"
+          [value]="rdv.status || ''"
+          (valueChange)="onStatusChange($event)"
+          className="dark:bg-dark-900"
+        ></app-select>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-3">
+      <button
+        (click)="save()"
+        type="button"
+        class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
+      >
+        Save
+      </button>
+    </div>
+  </app-component-card>
+</div>

@@ -19,13 +19,17 @@ class RendezVousFixture extends Fixture
             $rdv = new RendezVous();
 
             $date = $faker->dateTimeBetween('-1 month', '+1 month');
-            $time = $faker->dateTimeBetween('08:00', '18:00');
+            $time = $faker->dateTimeBetween('08:00', '17:00');
+            $heureDebut = clone $time;
+            $heureFin = clone $time;
+            $heureFin->modify('+1 hour');
 
             $rdv
                 ->setIdPatient($faker->numberBetween(1, 20))
                 ->setIdDocteur($faker->numberBetween(1, 5))
                 ->setDateRdv($date)
-                ->setHeureRdv($time)
+                ->setHeureDebut($heureDebut)
+                ->setHeureFin($heureFin)
                 ->setStatut($faker->randomElement(StatutEnum::cases()))
                 ->setCreatedAt(new \DateTimeImmutable())
                 ->setCreatedBy(1);

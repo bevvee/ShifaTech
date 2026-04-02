@@ -6,6 +6,7 @@ import { PageBreadcrumbComponent } from '../../shared/components/common/page-bre
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { VisiteStore } from './visites.store';
 import { VisiteDto } from '../../core/models/visite.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-visites',
@@ -25,6 +26,7 @@ export class VisitesComponent implements OnInit {
 
   private readonly router = inject(Router);
   private readonly store = inject(VisiteStore);
+  private readonly alerts = inject(AlertService);
 
   ngOnInit(): void {
     this.loadVisites();
@@ -53,6 +55,12 @@ export class VisitesComponent implements OnInit {
 
   /*
   deleteVisite(id: number) {
+    void this.confirmAndDeleteVisite(id);
+  }
+
+  private async confirmAndDeleteVisite(id: number) {
+    const ok = await this.alerts.confirmDelete('cette visite');
+    if (!ok) return;
     this.store.delete(id);
     this.loadVisites();
   }

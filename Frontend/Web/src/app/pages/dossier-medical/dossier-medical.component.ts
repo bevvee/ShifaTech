@@ -5,7 +5,9 @@ import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { DossierMedicalStore } from './dossier-medical.store';
-import { DossierMedicalDto } from '../../core/models/dossier-medical.model';
+import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
+import { DossierMedicalDto, DossierStatus } from '../../core/models/dossier-medical.model';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-dossier-medical',
@@ -15,6 +17,7 @@ import { DossierMedicalDto } from '../../core/models/dossier-medical.model';
     FormsModule,
     PageBreadcrumbComponent,
     ComponentCardComponent,
+    BadgeComponent,
   ],
   templateUrl: './dossier-medical.component.html'
 })
@@ -25,6 +28,7 @@ export class DossierMedicalComponent implements OnInit {
 
   private readonly router = inject(Router);
   private readonly store = inject(DossierMedicalStore);
+  private readonly alerts = inject(AlertService);
 
   ngOnInit(): void {
     this.loadDossiers();
@@ -43,6 +47,10 @@ export class DossierMedicalComponent implements OnInit {
     });
   }
 
+  createDossier() {
+    this.router.navigate(['/dossier-medical/new']);
+  }
+
   viewDossier(id: number) {
     this.router.navigate(['/dossier-medical', id]);
   }
@@ -53,6 +61,12 @@ export class DossierMedicalComponent implements OnInit {
 
   /*
   deleteDossier(id: number) {
+    void this.confirmAndDeleteDossier(id);
+  }
+
+  private async confirmAndDeleteDossier(id: number) {
+    const ok = await this.alerts.confirmDelete('ce dossier');
+    if (!ok) return;
     this.store.delete(id);
     this.loadDossiers();
   }
@@ -65,6 +79,12 @@ export class DossierMedicalComponent implements OnInit {
         error: (err) => console.error('Erreur suppression dossier', err)
       });
     }
+  }
+
+  getStatusBadgeColor(status: DossierStatus): 'success' | 'warning' | 'error' {
+    if (status === 'ACTIVE') return 'success';
+    if (status === 'ARCHIVED') return 'warning';
+    return 'error';
   }
 
   get filteredDossiers(): DossierMedicalDto[] {

@@ -28,7 +28,7 @@ class Infirmier implements UserInterface
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updated_at = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $deleted_at = null;
 
     public function getId(): ?int

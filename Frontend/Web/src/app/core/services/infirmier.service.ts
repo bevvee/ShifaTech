@@ -1,65 +1,65 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { ApiService } from './api.service';
-import { InfirmierCreateDto, InfirmierDto, InfirmierUpdateDto } from '../models/infirmier.model';
+import { environment } from '../../../environments/environment';
 import { switchMap } from 'rxjs';
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class InfirmierService extends ApiService {
 
-    private base = environment.api.infirmier;
-    private authBase = environment.api.auth;
-    private specialiteBase = environment.api.infirmierSpecialite
+  private base = environment.api.infirmier;
+  private authBase = environment.api.auth;
+  private specialiteBase = environment.api.infirmierSpecialite;
 
-    getAll(idSpecialite: string = '') {
-      const url = idSpecialite 
-        ? `${this.base}?id_specialite=${idSpecialite}`
-        : `${this.base}`;
-      return this.get<any>(url);
-    }
+  constructor() {
+    super(inject(HttpClient));
+  }
 
-    getById(id: number) {
-        return this.get<InfirmierDto>(`${this.base}/${id}`);
-    }
+  getAll() {
+    return this.get<any>(`${this.base}`);
+  }
 
-    create(dto: InfirmierCreateDto) {
-        const registerPayload = {
-            nom: dto.nom,
-            prenom: dto.prenom,
-            cin: dto.cin,
-            email: dto.email,
-            password: dto.password,
-            passwordConfirmation: dto.password,
-            role: 'INFIRMIER',
-            sexe: dto.sexe,
-            dateNaissance: dto.dateNaissance,
-            telephone: dto.telephone,
-            adresse: dto.adresse,
-        };
+  getById(id: number) {
+    return this.get<any>(`${this.base}/${id}`);
+  }
 
-        return this.post<any>(`${this.authBase}/register`, registerPayload).pipe(
-            switchMap((authResponse: any) => {
-                const userId = authResponse?.user?.idUser;
-                return this.post<InfirmierDto>(`${this.base}`, {
-                    id_utilisateur: userId,
-                    id_specialite: `/api/infirmier_specialites/${dto.idSpecialite}`,
-                });
-            })
-        );
-    }
+  create(dto: any) {
+    const registerPayload = {
+      nom: dto.nom,
+      prenom: dto.prenom,
+      cin: dto.cin,
+      email: dto.email,
+      password: dto.password,
+      passwordConfirmation: dto.password,
+      role: 'INFIRMIER',
+      sexe: dto.sexe,
+      dateNaissance: dto.dateNaissance,
+      telephone: dto.telephone,
+      adresse: dto.adresse,
+    };
 
-    update(id: number, dto: InfirmierUpdateDto) {
-        console.log('update appelé URL:', `${this.base}/${id}`);
-        return this.put<InfirmierDto>(`${this.base}/${id}`, dto);
-    }
+    return this.post<any>(`${this.authBase}/register`, registerPayload).pipe(
+      switchMap((authResponse: any) => {
+        const userId = authResponse?.user?.idUser;
+        return this.post<any>(`${this.base}`, {
+          id_utilisateur: userId,
+          id_specialite: `/api/infirmier_specialites/${dto.idSpecialite}`,
+        });
+      })
+    );
+  }
 
-    deleteById(id: number) {
-        return this.delete<void>(`${this.base}/${id}`);
-    }
-    getSpecialites() {
-        return this.get<any>(`${this.specialiteBase}`);
-    }
+  update(id: number, dto: any) {
+    return this.put<any>(`${this.base}/${id}`, dto);
+  }
+
+  deleteById(id: number) {
+    return this.delete(`${this.base}/${id}`);
+  }
+
+  getSpecialites() {
+    return this.get<any>(`${this.specialiteBase}`);
+  }
 }

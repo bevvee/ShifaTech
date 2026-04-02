@@ -1,35 +1,46 @@
-<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-  <!-- Metric Item Start -->
-  <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
-    <div class="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800" [innerHTML]="icons.groupIcon | safeHtml">
+@if (role === 'INFIRMIER') {
+  <div class="mb-4 flex items-center justify-between">
+    <div class="text-sm text-gray-500 dark:text-gray-400">
+       {{ today | date:'EEEE, dd MMMM yyyy' : '' : 'fr' }}
     </div>
-    <div class="flex items-end justify-between mt-5">
-      <div>
-        <span class="text-sm text-gray-500 dark:text-gray-400">Customers</span>
-        <h4 class="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">3,782</h4>
+    @if (getMetricValue('rdv_attente') > 0) {
+      <div class="flex items-center gap-1 rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-700">
+        {{ getMetricValue('rdv_attente') }} RDV en attente de confirmation
       </div>
-      <app-badge color="success">
-        <span [innerHTML]="icons.arrowUpIcon | safeHtml"></span>
-        11.01%
-      </app-badge>
-    </div>
+    }
   </div>
-  <!-- Metric Item End -->
+}
 
-  <!-- Metric Item Start -->
-  <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
-    <div class="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800" [innerHTML]="icons.boxIconLine| safeHtml">
-    </div>
-    <div class="flex items-end justify-between mt-5">
-      <div>
-        <span class="text-sm text-gray-500 dark:text-gray-400">Orders</span>
-        <h4 class="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">5,359</h4>
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
+  <div
+    *ngFor="let metric of metrics"
+    class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/3 md:p-6"
+  >
+    <div class="flex items-center gap-4">
+      <div
+        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+        [ngClass]="getMetricColorClasses(metric.key)"
+        [innerHTML]="metric.icon | safeHtml"
+      ></div>
+
+      <div class="min-w-0">
+        <div class="text-sm text-gray-500 dark:text-gray-400 truncate">
+          {{ metric.label }}
+        </div>
+        <div class="mt-1 font-bold text-gray-800 text-title-sm dark:text-white/90">
+          {{ metric.value }}
+        </div>
+
+        <!-- ← ajout : sous-texte pour rdv_attente -->
+        @if (metric.key === 'rdv_attente' && metric.value > 0) {
+          <div class="mt-1 text-xs text-warning-600">À confirmer aujourd'hui</div>
+        }
+        <!-- ← ajout : date sous rdv_today -->
+        @if (metric.key === 'rdv_today') {
+          <div class="mt-1 text-xs text-gray-400">{{ today | date:'dd/MM/yyyy' }}</div>
+        }
+
       </div>
-      <app-badge color="error">
-        <span [innerHTML]="icons.arrowDownIcon | safeHtml"></span>
-        9.05%
-      </app-badge>
     </div>
   </div>
-  <!-- Metric Item End -->
 </div>

@@ -1,0 +1,23 @@
+<div class="px-2 pb-4">
+  <app-page-breadcrumb pageTitle="Spécialités" />
+
+  <app-component-card title="Détails de la spécialité">
+    @if (speciality) {
+      <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <app-label>Nom</app-label>
+          <app-input-field [disabled]="true" [(value)]="speciality.label" />
+        </div>
+
+        <div>
+          <app-label>Service</app-label>
+          <app-input-field [disabled]="true" [(value)]="serviceLabel" />
+        </div>
+      </div>
+
+      <div class="mt-8 flex items-center justify-end gap-3">
+        <app-button size="sm" variant="outline" (btnClick)="close()">Fermer</app-button>
+      </div>
+    }
+  </app-component-card>
+</div>

@@ -25,6 +25,9 @@ public class DoctorSpeciality {
     @Column(name = "label", length = 50)
     private String label;
 
+    @Column(name = "id_service")
+    private Long idService;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

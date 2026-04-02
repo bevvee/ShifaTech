@@ -10,8 +10,7 @@ class AppointmentMailer
 {
     public function __construct(private MailerInterface $mailer) {}
 
-    public function sendConfirmation(string $emailAddress, RendezVous $rdv): void
-    {
+    public function sendConfirmation(string $emailAddress, RendezVous $rdv, ?string $doctorName): void    {
         $html = '
             <!DOCTYPE html>
 <html>
@@ -53,8 +52,7 @@ class AppointmentMailer
 
 <tr>
 <td style="background:#f9fafb;"><strong>Docteur</strong></td>
-<td>'.$rdv->getIdDocteur().'</td>
-</tr>
+<p><strong>Docteur:</strong> Dr. '.$doctorName.'</p></tr>
 </table>
 
 <p style="font-size:14px;color:#374151;">

@@ -4,8 +4,9 @@ export const environment = {
     auth: '/auth',
     patient: '/patient',
     doctor: '/doctor',
-    rdv: '/rdv/api/rendez_vouses',
     infirmier: '/infirmier/api/infirmier',
-    infirmierSpecialite: '/infirmier/api/infirmier_specialites'
+    infirmierSpecialite: '/infirmier/api/infirmier_specialites',
+    rdv: '/rdv/api/rendez_vouses',
+    visites:'/patient/api/visites',
   }
 };

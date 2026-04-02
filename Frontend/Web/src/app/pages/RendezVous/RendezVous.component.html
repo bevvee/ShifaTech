@@ -1,108 +1,169 @@
 <div>
-  <app-page-breadcrumb pageTitle="Rendez Vous" />
 
-  <div>
-    <app-component-card title="Rendez Vous">
+  <app-page-breadcrumb pageTitle="Rendez Vous"></app-page-breadcrumb>
+
+  <app-component-card title="Rendez Vous">
+
+    <span
+      card-title-addon
+      class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-white/10 dark:text-white/80"
+    >
+      <span class="text-blue-600 px-3">Total : </span> {{ totalItems }}
+    </span>
+
+    <div card-actions class="relative inline-flex items-center gap-2">
+      
+      <!-- Filter dropdown trigger -->
       <button
-        card-actions
         type="button"
-        (click)="openModal()"
-        class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
+        (click)="toggleFilter()"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-gray-200 dark:hover:bg-white/6"
+        [attr.aria-expanded]="filterOpen"
+        aria-label="Filter"
+        title="Filter"
+      >
+        <!-- Funnel icon -->
+        <svg
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M3 5H21L14 13V19L10 21V13L3 5Z"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+
+      <!-- Dropdown panel -->
+      <div
+        *ngIf="filterOpen"
+        class="absolute right-0 top-12 z-20 w-72 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900"
+      >
+        <div class="space-y-3">
+          <!-- Doctor filter (for infirmier/secretaire/admin) -->
+          <div *ngIf="currentRole !== Role.DOCTEUR">
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Doctor</label>
+            <select
+              class="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200"
+              [(ngModel)]="selectedDoctorUserId"
+            >
+              <option value="">All doctors</option>
+              <option *ngFor="let d of doctorsForFilter" [value]="d.idUser">
+                Dr {{ d.prenom }} {{ d.nom }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Date (for all) -->
+          <div>
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Date</label>
+            <input
+              type="date"
+              class="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200"
+              [(ngModel)]="selectedDate"
+            />
+          </div>
+
+          <!-- Statut (for all) -->
+          <div>
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Statut</label>
+            <select
+              class="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200"
+              [(ngModel)]="selectedStatut"
+            >
+              <option value="">All status</option>
+              <option value="CONFIRME">Confirmé</option>
+              <option value="EN_ATTENTE">En attente</option>
+              <option value="ANNULE">Annulé</option>
+              <option value="TERMINE">Terminé</option>
+            </select>
+          </div>
+
+          <!-- Heure (for infirmier/secretaire/admin) -->
+          <div *ngIf="currentRole !== Role.DOCTEUR">
+            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Heure (début)</label>
+            <input
+              type="time"
+              class="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200"
+              [(ngModel)]="selectedHeure"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Filter by start time (HH:mm).
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-4 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            (click)="clearFilters()"
+            class="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-gray-200 dark:hover:bg-white/6"
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            (click)="applyFilters()"
+            class="h-9 rounded-lg bg-brand-500 px-3 text-sm font-medium text-white hover:bg-brand-600"
+          >
+            Apply
+          </button>
+        </div>
+      </div>
+      <!-- Add button -->
+      <button *ngIf="currentRole !== Role.DOCTEUR && currentRole !== Role.INFIRMIER"
+        routerLink="/rendez-vous/new"
+        class="inline-flex items-center justify-center rounded-lg bg-green-400 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-600"
       >
         Add Rendez Vous
       </button>
+    </div>
 
-      <app-modal
-        [isOpen]="isOpen"
-        (close)="closeModal()"
-        className="max-w-175 p-6 lg:p-10"
-      >
-        <div class="flex flex-col px-2 overflow-y-auto custom-scrollbar">
-          <div>
-            <h5
-              class="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl"
-            >
-              {{ selectedRdv ? 'Edit Rendez Vous' : 'Add Rendez Vous' }}
-            </h5>
-          </div>
+    <!-- Table -->
+    <app-basic-table-three
+      [title]="'Liste des Rendez Vous'"
+      [rendezVousData]="rendezVous"
+      [serverSidePagination]="true"
+      [currentRole]="currentRole"
+      [currentPage]="page"
+      [itemsPerPage]="itemsPerPage"
+      [totalItems]="totalItems"
+      (pageChange)="onPageChange($event)"
+      (itemsPerPageChange)="onItemsPerPageChange($event)"
+      (view)="viewRdv($event)"
+      (edit)="editRdv($event)"
+      (delete)="deleteRdv($event)"
+    >
+    </app-basic-table-three>
+    
+    <!-- Loading -->
+    <div *ngIf="loading" class="flex flex-col items-center justify-center py-20 space-y-6">
 
-          <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <app-label>Patient</app-label>
-              <app-select
-                [options]="patientOptions"
-                placeholder="Select patient"
-                [value]="id_patient"
-                (valueChange)="id_patient = $event"
-                className="dark:bg-dark-900"
-              ></app-select>
-            </div>
+      <div class="relative flex items-center justify-center">
 
-            <div>
-              <app-label>Docteur</app-label>
-              <app-select
-                [options]="docteurOptions"
-                placeholder="Select docteur"
-                [value]="id_docteur"
-                (valueChange)="id_docteur = $event"
-                className="dark:bg-dark-900"
-              ></app-select>
-            </div>
+        <span class="absolute h-24 w-24 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></span>
 
-            <div>
-              <app-date-picker
-                id="rdv-date"
-                label="Date de Rendez vous"
-                placeholder="Select date"
-                [defaultDate]="date_rdv"
-                (dateChange)="onDateChange($event)"
-              />
-            </div>
+        <img
+          src="images/logo/logo-icon.png"
+          alt="ShifaTech"
+          class="h-16 w-16 z-10 animate-pulse"
+        />
 
-            <div>
-              <app-time-picker
-                id="rdv-time"
-                label="Heure"
-                placeholder="Select time"
-                [defaultTime]="heure_rdv"
-                (timeChange)="onTimeChange($event)"
-              />
-            </div>
+      </div>
 
-            <div class="sm:col-span-2">
-              <app-label>Statut</app-label>
-              <app-select
-                [options]="statutOptions"
-                placeholder="Select statut"
-                [value]="statut"
-                (valueChange)="onStatutChange($event)"
-                className="dark:bg-dark-900"
-              ></app-select>
-            </div>
-          </div>
+      <div class="flex items-center space-x-1 text-gray-500 dark:text-gray-400 text-sm">
+        <span>Chargement des rendez-vous</span>
+        <span class="animate-bounce">.</span>
+        <span class="animate-bounce [animation-delay:200ms]">.</span>
+        <span class="animate-bounce [animation-delay:400ms]">.</span>
+      </div>
 
-          <div class="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
-            <button
-              (click)="closeModal()"
-              type="button"
-              class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 sm:w-auto"
-            >
-              Annuler
-            </button>
-            <button
-              (click)="handleAddOrUpdateEvent()"
-              type="button"
-              class="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-            >
-              {{ selectedRdv ? 'Modifer Rendez Vous' : 'Ajouter Rendez Vous' }}
-            </button>
-          </div>
-        </div>
-      </app-modal>
-      <app-basic-table-three
-        [title]="'Liste des Rendez Vous'"
-        [rendezVousData]="rendezVous"
-      />
-    </app-component-card>
-  </div>
+    </div>
+
+  </app-component-card>
+
 </div>

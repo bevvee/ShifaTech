@@ -3,35 +3,105 @@ import { HttpClient } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { environment } from '../../../environments/environment';
 import { Speciality } from '../models/speciality.model';
+import { map } from 'rxjs/operators';
+
+export type SpecialityOwner = 'doctor' | 'infirmier';
 
 @Injectable({
     providedIn: 'root'
 })
 export class SpecialityService extends ApiService {
 
-    private base = environment.api.doctor + '/speciality';
+    private doctorBase = environment.api.doctor + '/speciality';
+    private infirmierBase = environment.api.infirmierSpecialite;
 
     constructor() {
         super(inject(HttpClient));
     }
 
-    getSpecialities() {
-        return this.get<Speciality[]>(`${this.base}/all`);
+    getSpecialities(owner: SpecialityOwner = 'doctor') {
+        if (owner === 'doctor') {
+            return this.get<Speciality[]>(`${this.doctorBase}/all`);
+        }
+
+        return this.get<unknown>(`${this.infirmierBase}`).pipe(
+            map((resp) => this.unwrapCollection(resp).map((raw) => this.mapInfirmierSpeciality(raw)))
+        );
     }
 
-    getSpeciality(id: number) {
-        return this.get<Speciality>(`${this.base}/${id}`);
+    getSpeciality(id: number, owner: SpecialityOwner = 'doctor') {
+        if (owner === 'doctor') {
+            return this.get<Speciality>(`${this.doctorBase}/${id}`);
+        }
+
+        return this.get<unknown>(`${this.infirmierBase}/${id}`).pipe(
+            map((raw) => this.mapInfirmierSpeciality(raw))
+        );
     }
 
-    createSpeciality(data: Partial<Speciality>) {
-        return this.post<Speciality>(`${this.base}`, data);
+    createSpeciality(data: Partial<Speciality>, owner: SpecialityOwner = 'doctor') {
+        if (owner === 'doctor') {
+            return this.post<Speciality>(`${this.doctorBase}`, data);
+        }
+
+        const body = {
+            label: data.label,
+            id_service: data.idService ?? null,
+        };
+
+        return this.http.post<unknown>(`${this.infirmierBase}`, body, {
+            headers: { 'Content-Type': 'application/ld+json' }
+        }).pipe(
+            map((raw) => this.mapInfirmierSpeciality(raw))
+        );
     }
 
-    updateSpeciality(id: number, data: Partial<Speciality>) {
-        return this.put<Speciality>(`${this.base}/${id}`, data);
+    updateSpeciality(id: number, data: Partial<Speciality>, owner: SpecialityOwner = 'doctor') {
+        if (owner === 'doctor') {
+            return this.put<Speciality>(`${this.doctorBase}/${id}`, data);
+        }
+
+        const body = {
+            label: data.label,
+            id_service: data.idService ?? null,
+        };
+
+        return this.http.put<unknown>(`${this.infirmierBase}/${id}`, body, {
+            headers: { 'Content-Type': 'application/ld+json' }
+        }).pipe(
+            map((raw) => this.mapInfirmierSpeciality(raw))
+        );
     }
 
-    deleteSpeciality(id: number) {
-        return this.delete(`${this.base}/${id}`);
+    deleteSpeciality(id: number, owner: SpecialityOwner = 'doctor') {
+        if (owner === 'doctor') {
+            return this.delete(`${this.doctorBase}/${id}`);
+        }
+
+        return this.delete(`${this.infirmierBase}/${id}`);
+    }
+
+    private unwrapCollection(resp: unknown): any[] {
+        if (Array.isArray(resp)) return resp;
+        if (resp && typeof resp === 'object') {
+            const r = resp as any;
+            if (Array.isArray(r['hydra:member'])) return r['hydra:member'];
+            if (Array.isArray(r['member']))        return r['member'];  // ✅ ajout
+            if (Array.isArray(r['data']))          return r['data'];
+        }
+        return [];
+    }
+
+    private mapInfirmierSpeciality(raw: any): Speciality {
+        const id = Number(raw?.id ?? raw?.idSpecialite ?? raw?.id_specialite ?? 0);
+        const label = String(raw?.label ?? '');
+        const idServiceRaw = raw?.idService ?? raw?.id_service ?? null;
+        const idServiceNum = idServiceRaw == null || idServiceRaw === '' ? null : Number(idServiceRaw);
+
+        return {
+            idSpecialite: id,
+            label,
+            idService: idServiceNum != null && Number.isFinite(idServiceNum) ? idServiceNum : null,
+        };
     }
 }

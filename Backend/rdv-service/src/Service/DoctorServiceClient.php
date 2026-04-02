@@ -39,4 +39,61 @@ class DoctorServiceClient
             );
         }
     }
+
+
+    public function getDoctorFullName(int $doctorId): ?string
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $jwt = $request?->headers->get('Authorization');
+
+        $response = $this->httpClient->request(
+            'GET',
+            sprintf('http://doctor-service:8080/%d', $doctorId),
+            [
+                'headers' => [
+                    'Authorization' => $jwt
+                ]
+            ]
+        );
+
+        if ($response->getStatusCode() !== 200) {
+            return null;
+        }
+        $content = $response->getContent(false);
+        dump($content);
+        die();
+        $data = $response->toArray(false);
+
+        $nom = $data['data']['nom'] ?? null;
+        $prenom = $data['data']['prenom'] ?? null;
+
+        if (!$nom || !$prenom) {
+            return null;
+        }
+
+        return $prenom.' '.$nom;
+    }
+    public function getDoctor(int $doctorId): array
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $jwt = $request?->headers->get('Authorization');
+
+        $response = $this->httpClient->request(
+            'GET',
+            sprintf('http://doctor-service:8080/%d', $doctorId),
+            [
+                'headers' => [
+                    'Authorization' => $jwt
+                ]
+            ]
+        );
+
+        if ($response->getStatusCode() !== 200) {
+            return [];
+        }
+
+        $data = $response->toArray(false);
+
+        return $data['data'] ?? $data;
+    }
 }

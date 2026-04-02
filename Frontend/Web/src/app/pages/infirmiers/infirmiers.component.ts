@@ -11,6 +11,7 @@ import { TableDropdownComponent } from '../../shared/components/common/table-dro
 import { InfirmierService } from '../../core/services/infirmier.service';
 import { InfirmierDto } from '../../core/models/infirmier.model';
 import { FormsModule } from '@angular/forms';
+import { AlertService } from 'src/app/core/services/alert.service';
 
 @Component({
   selector: 'app-infirmiers',
@@ -35,9 +36,17 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
   currentPage = 1;
   itemsPerPage = 5;
 
+  // Recherche & Filtres
+  searchTerm = '';
+  selectedSexe = '';
+  selectedSpecialite = '';
+
+  showFilters = false;
+
   constructor(
     private readonly router: Router,
-    private readonly infirmierService: InfirmierService
+    private readonly infirmierService: InfirmierService,
+    private readonly alertService : AlertService
   ) {}
 
   ngOnInit() {
@@ -49,34 +58,25 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  selectedSpecialite = '';
-  showFilters = false;
-  toggleFilters() {
-    this.showFilters = !this.showFilters;
-  }
-
-  onFilterSpecialite() {
-    this.currentPage = 1;
-    this.loadInfirmiers(this.selectedSpecialite);
-  }
-
-  resetFilters() {
-    this.selectedSpecialite = '';
-    this.currentPage = 1;
-    this.loadInfirmiers();
-  }
-  loadInfirmiers(idSpecialite: string = '') {
-    this.infirmierService.getAll(idSpecialite).subscribe({
+  loadInfirmiers() {
+    this.infirmierService.getAll().subscribe({
       next: (res: any) => {
+        let items: any[] = [];
+
         if (Array.isArray(res)) {
-          this.infirmiers = res;
+          items = res;
+        } else if (res['data']) {
+          items = res['data'];
         } else if (res['member']) {
-          this.infirmiers = res['member'];
+          items = res['member'];
         } else if (res['hydra:member']) {
-          this.infirmiers = res['hydra:member'];
-        } else {
-          this.infirmiers = [];
+          items = res['hydra:member'];
         }
+
+        this.infirmiers = items.map((inf: any) => ({
+          ...inf,
+          id: inf.id ?? (inf['@id'] ? parseInt(inf['@id'].split('/').pop(), 10) : inf.id_utilisateur)
+        }));
       },
       error: (err) => console.error('Erreur:', err)
     });
@@ -85,26 +85,41 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
   loadSpecialites() {
     this.infirmierService.getSpecialites().subscribe({
       next: (res: any) => {
-        const list = res['member'] ?? res['hydra:member'] ?? res ?? [];
-        this.specialiteOptions = list.map((s: any) => ({
-          value: String(s.id),
-          label: s.label
-        }));
+        let items: any[] = [];
+        if (Array.isArray(res)) {
+          items = res;
+        } else if (res['data']) {
+          items = res['data'];
+        } else if (res['member']) {
+          items = res['member'];
+        } else if (res['hydra:member']) {
+          items = res['hydra:member'];
+        }
+
+        this.specialiteOptions = items.map((s: any) => {
+          const sId = s.id ? String(s.id) : (s['@id'] ? s['@id'].split('/').pop() : '');
+          return {
+            value: sId,
+            label: s.label ?? s.nom ?? s.libelle
+          };
+        });
       },
       error: (err) => console.error('Erreur spécialités:', err)
     });
   }
 
   goToCreate() {
-    this.router.navigate(['/infirmier/new']);
+    this.router.navigate(['/infirmiers/new']);
   }
 
   openEditModal(row: any) {
-    this.router.navigate(['/infirmier', row.id, 'edit']);
+    this.router.navigate(['/infirmiers', row.id, 'edit']);
   }
 
-  deleteInfirmier(id: number) {
-    if (!confirm('Confirmer la suppression ?')) return;
+  async deleteInfirmier(id: number) {
+    const confirmed = await this.alertService.confirmDelete('cet infirmier');
+    if (!confirmed) return;
+    
     this.infirmierService.deleteById(id).subscribe({
       next: () => {
         this.infirmiers = this.infirmiers.filter(i => i.id !== id);
@@ -117,22 +132,29 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
     const found = this.specialiteOptions.find(s => s.value === String(id));
     return found ? found.label : '-';
   }
-  searchTerm = '';
 
-get filteredInfirmiers(): InfirmierDto[] {
-  const q = this.searchTerm.trim().toLowerCase();
-  if (!q) return this.infirmiers;
+  get filteredInfirmiers(): InfirmierDto[] {
+    const q = this.searchTerm.trim().toLowerCase();
 
-  return this.infirmiers.filter(inf => {
-      const haystack = [
+    return this.infirmiers.filter(inf => {
+      // Recherche texte
+      const matchSearch = !q || [
         inf.nom,
         inf.prenom,
         inf.cin,
         inf.email,
         inf.telephone,
         inf.adresse,
-      ].filter(Boolean).join(' ').toLowerCase();
-      return haystack.includes(q);
+      ].filter(Boolean).join(' ').toLowerCase().includes(q);
+
+      // Filtre sexe
+      const matchSexe = !this.selectedSexe || inf.sexe === this.selectedSexe;
+
+      // Filtre spécialité
+      const matchSpecialite = !this.selectedSpecialite ||
+        String(inf.id_specialite) === this.selectedSpecialite;
+
+      return matchSearch && matchSexe && matchSpecialite;
     });
   }
 
@@ -149,9 +171,35 @@ get filteredInfirmiers(): InfirmierDto[] {
     this.currentPage = 1;
   }
 
+  onFilterChange() {
+    this.currentPage = 1;
+  }
+
+  resetFilters() {
+    this.searchTerm = '';
+    this.selectedSexe = '';
+    this.selectedSpecialite = '';
+    this.currentPage = 1;
+  }
+
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!this.selectedSexe || !!this.selectedSpecialite;
+  }
+
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
+  }
+  goToEdit(row: any) {
+    this.router.navigate(['/infirmiers', row.id, 'edit']);
+  }
+
+  goToView(row: any) {
+    this.router.navigate(['/infirmiers', row.id, 'view']);
   }
 }
