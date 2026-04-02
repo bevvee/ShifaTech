@@ -1,3 +1,16 @@
+@if (role === 'INFIRMIER') {
+  <div class="mb-4 flex items-center justify-between">
+    <div class="text-sm text-gray-500 dark:text-gray-400">
+       {{ today | date:'EEEE, dd MMMM yyyy' : '' : 'fr' }}
+    </div>
+    @if (getMetricValue('rdv_attente') > 0) {
+      <div class="flex items-center gap-1 rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-700">
+        {{ getMetricValue('rdv_attente') }} RDV en attente de confirmation
+      </div>
+    }
+  </div>
+}
+
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
   <div
     *ngFor="let metric of metrics"
@@ -14,10 +27,19 @@
         <div class="text-sm text-gray-500 dark:text-gray-400 truncate">
           {{ metric.label }}
         </div>
-
         <div class="mt-1 font-bold text-gray-800 text-title-sm dark:text-white/90">
           {{ metric.value }}
         </div>
+
+        <!-- ← ajout : sous-texte pour rdv_attente -->
+        @if (metric.key === 'rdv_attente' && metric.value > 0) {
+          <div class="mt-1 text-xs text-warning-600">À confirmer aujourd'hui</div>
+        }
+        <!-- ← ajout : date sous rdv_today -->
+        @if (metric.key === 'rdv_today') {
+          <div class="mt-1 text-xs text-gray-400">{{ today | date:'dd/MM/yyyy' }}</div>
+        }
+
       </div>
     </div>
   </div>

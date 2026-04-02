@@ -10,6 +10,7 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Processor\InfirmierProcessor;
 use App\Provider\InfirmierProvider;
+use ApiPlatform\Metadata\ApiProperty;
 
 #[ApiResource(
     shortName: 'Infirmier',

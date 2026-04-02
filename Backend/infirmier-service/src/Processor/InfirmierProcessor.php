@@ -97,7 +97,7 @@ class InfirmierProcessor implements ProcessorInterface
                     'dateNaissance' => $rawData['dateNaissance'] ?? null,
                     'telephone'     => $rawData['telephone'] ?? null,
                     'adresse'       => $rawData['adresse'] ?? null,
-                    'password'      => $rawData['password'] ?? null,
+                    'motDePasse'    => $rawData['motDePasse'] ?? null,
                 ], fn($v) => $v !== null);
 
                 error_log('UPDATE DATA vers auth-service: ' . json_encode($updateData));

@@ -10,7 +10,9 @@ use App\Repository\InfirmierRepository;
 class InfirmierProvider implements ProviderInterface
 {
     public function __construct(
-        private InfirmierRepository $infirmierRepository
+        private InfirmierRepository $infirmierRepository,
+        private \Symfony\Contracts\HttpClient\HttpClientInterface $httpClient,
+        private \Symfony\Component\HttpFoundation\RequestStack $requestStack,
     ) {}
 
     public function provide(
@@ -45,8 +47,33 @@ class InfirmierProvider implements ProviderInterface
         $resource = new InfirmierResource();
         $resource->id = $infirmier->getId();
         $resource->id_utilisateur = $infirmier->getIdUtilisateur();
-        $resource->id_service = $infirmier->getIdService();
         $resource->id_specialite = $infirmier->getIdSpecialite()?->getId();
+        
+        try {
+            $authHeader = $this->requestStack->getCurrentRequest()?->headers->get('Authorization');
+            $headers = $authHeader ? ['Authorization' => $authHeader] : [];
+
+            $response = $this->httpClient->request(
+                'GET',
+                'http://auth-service:8080/user/' . $infirmier->getIdUtilisateur(),
+                ['headers' => $headers]
+            )->toArray();
+
+            $user = $response['user'] ?? [];
+            $resource->nom          = $user['nom'] ?? null;
+            $resource->prenom       = $user['prenom'] ?? null;
+            $resource->cin          = $user['cin'] ?? null;
+            $resource->email        = $user['email'] ?? null;
+            $resource->sexe         = $user['sexe'] ?? null;
+            $resource->statut       = $user['statut'] ?? null;
+            $resource->dateNaissance = $user['dateNaissance'] ?? null;
+            $resource->telephone    = $user['telephone'] ?? null;
+            $resource->adresse      = $user['adresse'] ?? null;
+
+        } catch (\Exception $e) {
+            // Si auth-service inaccessible, on laisse les champs null
+        }
+
         return $resource;
     }
 }

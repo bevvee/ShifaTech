@@ -11,6 +11,7 @@ import { TableDropdownComponent } from '../../shared/components/common/table-dro
 import { InfirmierService } from '../../core/services/infirmier.service';
 import { InfirmierDto } from '../../core/models/infirmier.model';
 import { FormsModule } from '@angular/forms';
+import { AlertService } from 'src/app/core/services/alert.service';
 
 @Component({
   selector: 'app-infirmiers',
@@ -44,7 +45,8 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly router: Router,
-    private readonly infirmierService: InfirmierService
+    private readonly infirmierService: InfirmierService,
+    private readonly alertService : AlertService
   ) {}
 
   ngOnInit() {
@@ -114,8 +116,10 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
     this.router.navigate(['/infirmiers', row.id, 'edit']);
   }
 
-  deleteInfirmier(id: number) {
-    if (!confirm('Confirmer la suppression ?')) return;
+  async deleteInfirmier(id: number) {
+    const confirmed = await this.alertService.confirmDelete('cet infirmier');
+    if (!confirmed) return;
+    
     this.infirmierService.deleteById(id).subscribe({
       next: () => {
         this.infirmiers = this.infirmiers.filter(i => i.id !== id);

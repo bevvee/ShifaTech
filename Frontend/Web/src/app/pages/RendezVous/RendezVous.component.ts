@@ -158,9 +158,11 @@ export class RendezVousComponent implements OnInit {
             ? myDoctorId
             : null;
 
+        const today = new Date().toISOString().slice(0, 10);
         const baseParams: Record<string, string | number> = {
           page: this.page,
           itemsPerPage: this.itemsPerPage,
+          ...(role === Role.INFIRMIER && !this.selectedDate ? { 'date_rdv[after]': today } : {}),
         };
 
         // Backend-supported filters (from your routes)

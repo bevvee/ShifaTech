@@ -6,8 +6,7 @@ export const environment = {
     doctor: '/doctor',
     infirmier: '/infirmier/api/infirmier',
     infirmierSpecialite: '/infirmier/api/infirmier_specialites',
-    // rdv: '/rdv/api/rendez_vouses',
-    rdv: '/infirmier/api/rendez_vouses',
-    visites:'/infirmier/api/visites',
+    rdv: '/rdv/api/rendez_vouses',
+    visites:'/patient/api/visites',
   }
 };

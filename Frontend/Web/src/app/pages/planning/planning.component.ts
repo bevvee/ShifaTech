@@ -32,6 +32,8 @@ export class PlanningComponent {
   errorMessage = '';
 
   doctorId: number | null = null; // doctor table idDocteur
+  doctors: Doctor[] = [];
+  selectedDoctorId: number | null = null;
 
   readonly days: Array<{ key: DayKey; label: string }> = [
     { key: 'MONDAY', label: 'Monday' },
@@ -49,6 +51,9 @@ export class PlanningComponent {
 
   get isDoctor(): boolean {
     return String(this.role ?? '').toUpperCase() === 'DOCTEUR';
+  }
+  get isInfirmier(): boolean {
+    return String(this.role ?? '').toUpperCase() === 'INFIRMIER';
   }
 
   get isFormDisabled(): boolean {
@@ -83,7 +88,33 @@ export class PlanningComponent {
   cancel() {
     this.load();
   }
-
+    onDoctorChange(doctorId: number) {
+      this.selectedDoctorId = doctorId;
+      if (doctorId) {
+        this.isLoading = true;
+        this.planningService.getByDoctor(doctorId).pipe(
+          catchError(() => of([] as PlanningDto[]))
+        ).subscribe(plans => {
+          for (const d of this.days) {
+            this.formByDay[d.key] = this.emptyForm(d.key);
+          }
+          for (const p of plans ?? []) {
+            const dayKey = this.normalizeDayKey((p as any).jour);
+            if (!dayKey) continue;
+            this.formByDay[dayKey] = {
+              idPlan: (p as any).idPlan ?? undefined,
+              jour: dayKey,
+              heureDebut: this.toHHmm((p as any).heureDebut),
+              heureFin: this.toHHmm((p as any).heureFin),
+              pauseDebut: this.toHHmm((p as any).pauseDebut),
+              pauseFin: this.toHHmm((p as any).pauseFin),
+            };
+          }
+          this.activeForm = this.formByDay[this.activeDay];
+          this.isLoading = false;
+        });
+      }
+    }
   saveChanges() {
     if (this.role !== Role.DOCTEUR) return;
     if (this.doctorId == null) return;
@@ -128,6 +159,7 @@ export class PlanningComponent {
     this.errorMessage = '';
     this.isAuthReady = false;
     this.doctorId = null;
+    this.doctors = this.doctors;
 
     const auth$ = combineLatest({
       role: this.store.select(selectUserRole).pipe(catchError(() => of(null))),
@@ -146,12 +178,14 @@ export class PlanningComponent {
         map(({ auth, doctors }) => {
           this.role = auth.role;
           this.isAuthReady = true;
+          this.doctors = doctors;
 
           const userId = this.getAuthUserId(auth.user, auth.profile);
           const doctorId = this.resolveDoctorId(userId, doctors);
           return { doctorId, isDoctor: this.isDoctor };
         }),
         switchMap(({ doctorId, isDoctor }) => {
+          if (this.isInfirmier) return of([] as PlanningDto[]);
           if (!isDoctor) return of([] as PlanningDto[]);
           if (doctorId == null) return of([] as PlanningDto[]);
           this.doctorId = doctorId;

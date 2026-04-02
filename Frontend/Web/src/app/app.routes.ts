@@ -136,7 +136,7 @@ export const routes: Routes = [
         component: PlanningComponent,
         title: "Planning | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.DOCTEUR] },
+        data: { roles: [Role.DOCTEUR, Role.INFIRMIER] },
       },
       {
         path: "docteurs",
