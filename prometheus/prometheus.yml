@@ -9,6 +9,10 @@ scrape_configs:
       - targets: ['nginx-gateway:80']
 
   - job_name: 'doctor-service'
-    metrics_path: '/actuator/prometheus'
+    metrics_path: '/doctor/actuator/prometheus'
     static_configs:
-      - targets: ['doctor-service:8080']
+      - targets: ['nginx-gateway:80']
+  - job_name: 'auth-service'
+    metrics_path: '/auth/actuator/prometheus'
+    static_configs:
+      - targets: ['nginx-gateway:80']
