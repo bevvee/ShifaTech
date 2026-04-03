@@ -1,0 +1,79 @@
+<div class="body-map-container" *ngIf="!loading; else spinner">
+  <!-- Onglets des sections -->
+  <div class="sections-tabs" *ngIf="sections.length > 1">
+    <div 
+      *ngFor="let section of sections" 
+      class="section-tab" 
+      [class.active]="activeSection?.code === section.code"
+      (click)="selectSection(section)"
+    >
+      {{ section.name }}
+    </div>
+  </div>
+
+  <!-- Viewport SVG -->
+  <div 
+    class="map-viewport" 
+    [style.width.px]="activeSection?.width" 
+    [style.height.px]="activeSection?.height"
+  >
+    <!-- On peut optionnellement ajouter l'image de fond ici si elle est fournie par le backend -->
+    <img 
+      *ngIf="activeSection?.background_image" 
+      [src]="activeSection?.background_image" 
+      class="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-20"
+    >
+
+    <svg 
+      *ngIf="activeSection"
+      [attr.viewBox]="'0 0 ' + activeSection.width + ' ' + activeSection.height" 
+      class="map-svg relative z-10"
+    >
+      <ng-container *ngFor="let part of activeSection.parts">
+        <!-- Rendu si c'est un path -->
+        <path 
+          *ngIf="part.shape === 'path'"
+          [attr.d]="part.coords.d"
+          [class.selected]="isSelected(part.code)"
+          [class.not-clickable]="!part.is_clickable || readOnly"
+          class="body-part"
+          (click)="togglePart(part)"
+          [attr.title]="part.label"
+        >
+          <title>{{ part.label }}</title>
+        </path>
+
+        <!-- Rendu si c'est une ellipse -->
+        <ellipse
+          *ngIf="part.shape === 'ellipse'"
+          [attr.cx]="part.coords.cx"
+          [attr.cy]="part.coords.cy"
+          [attr.rx]="part.coords.rx"
+          [attr.ry]="part.coords.ry"
+          [class.selected]="isSelected(part.code)"
+          [class.not-clickable]="!part.is_clickable || readOnly"
+          class="body-part"
+          (click)="togglePart(part)"
+        >
+          <title>{{ part.label }}</title>
+        </ellipse>
+      </ng-container>
+    </svg>
+  </div>
+
+  <!-- Résumé de la sélection -->
+  <div class="selection-summary" *ngIf="selectedLabels.length > 0">
+    <p class="font-semibold mb-2">Zones sélectionnées :</p>
+    <div class="flex flex-wrap">
+      <span *ngFor="let label of selectedLabels" class="badge-part">
+        {{ label }}
+      </span>
+    </div>
+  </div>
+</div>
+
+<ng-template #spinner>
+  <div class="p-8 text-center text-gray-500">
+    Chargement de la carte corporelle...
+  </div>
+</ng-template>
