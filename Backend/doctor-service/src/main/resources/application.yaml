@@ -47,3 +47,15 @@ springdoc:
   config-url: /doctor/v3/api-docs/swagger-config
   operations-sorter: alpha
   tags-sorter: alpha
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    prometheus:
+      access: unrestricted
+  metrics:
+    tags:
+      application: doctor-service
