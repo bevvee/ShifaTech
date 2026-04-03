@@ -1,5 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
+import { Role } from '../../core/models/role.enum';
+import { Store } from '@ngrx/store';
+import { selectUserRole } from '../../core/store/auth/auth.selectors';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
@@ -40,6 +43,8 @@ type Mode = 'create' | 'edit' | 'view';
 export class DossierMedicalFormPageComponent implements OnInit {
   mode: Mode;
   submitted = false;
+  readonly Role = Role;
+  readonly userRole$ = inject(Store).select(selectUserRole);
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);

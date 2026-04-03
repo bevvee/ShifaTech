@@ -95,9 +95,9 @@ public class PatientService {
         Patient patient = patientRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
 
-        // Sécurité : Vérifier que c'est le patient lui-même, un médecin ou un admin
+        // Sécurité : Vérifier que c'est le patient lui-même, un médecin, infirmier, secrétaire ou un admin
         Long currentUserId = jwtUtil.getUserIdFromToken();
-        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() &&
+        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire() &&
                 !patient.getIdUser().equals(currentUserId)) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Accès refusé au dossier de ce patient.");
@@ -111,7 +111,7 @@ public class PatientService {
         log.info("Récupération du patient par User ID: {}", userId);
 
         Long currentUserId = jwtUtil.getUserIdFromToken();
-        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() &&
+        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire() &&
                 !userId.equals(currentUserId)) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Accès refusé au profil de cet utilisateur.");
@@ -124,13 +124,37 @@ public class PatientService {
 
     @Transactional(readOnly = true)
     public List<PatientDTO> getAllPatients(String authHeader) {
-        if (!isAdmin() && !isDocteur() && !isInfirmier()) {
+        if (!isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire()) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Seuls les médecins ou administrateurs peuvent lister tous les patients.");
+                    "Seuls les médecins, infirmiers, secrétaires ou administrateurs peuvent lister tous les patients.");
         }
         log.info("Récupération de tous les patients actifs");
         return patientRepository.findAllActive().stream()
                 .map(p -> mapToDTO(p, authHeader))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Récupération interne pour les autres microservices.
+     * Ignore les vérifications de rôles utilisateur.
+     */
+    @Transactional(readOnly = true)
+    public PatientDTO getPatientDetailsInternal(Long id, String authHeader) {
+        log.info("[INTERNAL] Récupération détaillée du patient ID: {}", id);
+        Patient patient = patientRepository.findActiveById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
+        return mapToDTOInternal(patient, authHeader);
+    }
+
+    /**
+     * Récupération en masse pour les autres microservices.
+     */
+    @Transactional(readOnly = true)
+    public List<PatientDTO> getPatientsBulkInternal(List<Long> ids, String authHeader) {
+        log.info("[INTERNAL] Récupération en masse de {} patients", ids.size());
+        return patientRepository.findAllById(ids).stream()
+                .filter(p -> p.getDeletedAt() == null)
+                .map(p -> mapToDTOInternal(p, authHeader))
                 .collect(Collectors.toList());
     }
 
@@ -140,9 +164,9 @@ public class PatientService {
         Patient patient = patientRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
 
-        if (!isAdmin() && !isDocteur() && !isInfirmier() && !patient.getIdUser().equals(updatedBy)) {
+        if (!isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire() && !patient.getIdUser().equals(updatedBy)) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Vous ne pouvez modifier que votre propre dossier patient (sauf si vous êtes médecin/infirmier).");
+                    "Vous ne pouvez modifier que votre propre dossier patient (sauf si vous êtes personnel médical/admin).");
         }
 
         if (request.getAssurance() != null)
@@ -199,15 +223,7 @@ public class PatientService {
     }
 
     private PatientDTO mapToDTO(Patient patient, String authHeader) {
-        PatientDTO dto = PatientDTO.builder()
-                .idPatient(patient.getIdPatient())
-                .idUser(patient.getIdUser())
-                .numDossier(patient.getNumDossier())
-                .assurance(patient.getAssurance())
-                .numeroAssurance(patient.getNumeroAssurance())
-                .statut(patient.getStatut())
-                .createdAt(patient.getCreatedAt())
-                .build();
+        PatientDTO dto = buildBaseDTO(patient);
 
         if (patient.getIdUser() != null) {
             UserDTO userInfo = null;
@@ -216,33 +232,71 @@ public class PatientService {
             if (authHeader != null) {
                 Long tokenUserId = jwtUtil.getUserIdFromToken();
                 if (tokenUserId != null && tokenUserId.equals(patient.getIdUser())) {
+                    log.info("[DEBUG] Patient {}: Le demandeur est le patient lui-même. Récupération du profil...", patient.getIdPatient());
                     userInfo = authServiceClient.getProfileWithToken(authHeader);
                 }
             }
             
-            // 2. Si non récupéré et que le demandeur est Admin/Docteur, utiliser getUserById
-            if (userInfo == null && (isAdmin() || isDocteur())) {
+            // 2. Si non récupéré et que le demandeur est Admin/Docteur/Infirmier/Secretaire, utiliser getUserById
+            if (userInfo == null && (isAdmin() || isDocteur() || isInfirmier() || isSecretaire())) {
+                log.info("[DEBUG] Patient {}: Le demandeur a des droits d'accès. Récupération via getUserById(idUser: {})...", 
+                        patient.getIdPatient(), patient.getIdUser());
                 userInfo = authServiceClient.getUserById(patient.getIdUser(), authHeader);
             }
 
             if (userInfo != null) {
-                dto.setUserInfo(userInfo);
-                // Aplatir pour le frontend
-                dto.setNom(userInfo.getNom());
-                dto.setPrenom(userInfo.getPrenom());
-                dto.setCin(userInfo.getCin());
-                dto.setEmail(userInfo.getEmail());
-                dto.setSexe(userInfo.getSexe());
-                dto.setDateNaissance(userInfo.getDateNaissance() != null ? userInfo.getDateNaissance().toString() : null);
-                dto.setTelephone(userInfo.getTelephone());
-                dto.setAdresse(userInfo.getAdresse());
-                log.debug("Données utilisateur mappées avec succès pour idUser: {}", patient.getIdUser());
+                enrichWithUserInfo(dto, userInfo, patient.getIdUser());
+                log.info("[DEBUG] Patient {}: Enrichi avec succès -> {} {}", 
+                        patient.getIdPatient(), dto.getNom(), dto.getPrenom());
             } else {
-                log.warn("Impossible de récupérer les infos de l'utilisateur {} pour le DTO", patient.getIdUser());
+                log.warn("[DEBUG] Patient {}: Aucune info utilisateur trouvée (userInfo est NULL).", patient.getIdPatient());
             }
+        } else {
+            log.warn("[DEBUG] Patient {}: idUser est NULL !", patient.getIdPatient());
         }
 
         return dto;
+    }
+
+    /**
+     * Version interne de mapToDTO qui récupère TOUJOURS les infos utilisateur 
+     * sans vérifier les rôles du demandeur actuel (SecurityContext).
+     */
+    private PatientDTO mapToDTOInternal(Patient patient, String authHeader) {
+        PatientDTO dto = buildBaseDTO(patient);
+        if (patient.getIdUser() != null) {
+            UserDTO userInfo = authServiceClient.getUserById(patient.getIdUser(), authHeader);
+            enrichWithUserInfo(dto, userInfo, patient.getIdUser());
+        }
+        return dto;
+    }
+
+    private PatientDTO buildBaseDTO(Patient patient) {
+        return PatientDTO.builder()
+                .idPatient(patient.getIdPatient())
+                .idUser(patient.getIdUser())
+                .numDossier(patient.getNumDossier())
+                .assurance(patient.getAssurance())
+                .numeroAssurance(patient.getNumeroAssurance())
+                .statut(patient.getStatut())
+                .createdAt(patient.getCreatedAt())
+                .build();
+    }
+
+    private void enrichWithUserInfo(PatientDTO dto, UserDTO userInfo, Long idUser) {
+        if (userInfo != null) {
+            dto.setNom(userInfo.getNom());
+            dto.setPrenom(userInfo.getPrenom());
+            dto.setCin(userInfo.getCin());
+            dto.setEmail(userInfo.getEmail());
+            dto.setSexe(userInfo.getSexe());
+            dto.setDateNaissance(userInfo.getDateNaissance() != null ? userInfo.getDateNaissance().toString() : null);
+            dto.setTelephone(userInfo.getTelephone());
+            dto.setAdresse(userInfo.getAdresse());
+            log.debug("Données utilisateur mappées avec succès pour idUser: {}", idUser);
+        } else {
+            log.warn("Impossible de récupérer les infos de l'utilisateur {} pour le DTO", idUser);
+        }
     }
 
     private String generateNumDossier() {
@@ -276,5 +330,14 @@ public class PatientService {
             return false;
         return authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_INFIRMIER"));
+    }
+
+    private boolean isSecretaire() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication();
+        if (authentication == null)
+            return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SECRETAIRE"));
     }
 }

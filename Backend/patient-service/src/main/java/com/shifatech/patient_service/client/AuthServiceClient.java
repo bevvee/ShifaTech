@@ -75,25 +75,41 @@ public class AuthServiceClient {
         if (idUser == null) return null;
         try {
             String url = authServiceUrl + "/user/" + idUser;
-            log.info("Appel Auth Service: GET {}", url);
+            log.info("[DEBUG] Appel Auth Service pour récupérer l'utilisateur ID: {} | URL: {}", idUser, url);
             
             HttpHeaders headers = new HttpHeaders();
             if (authHeader != null) {
                 headers.set("Authorization", authHeader);
+            } else {
+                log.warn("[DEBUG] Aucun Authorization header fourni pour l'appel à Auth Service !");
             }
             HttpEntity<Void> entity = new HttpEntity<>(headers);
             
             ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+            log.info("[DEBUG] Réponse de Auth Service (Status: {}): {}", response.getStatusCode(), response.getBody());
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<?, ?> body = response.getBody();
                 Object user = body.get("user");
                 if (user instanceof Map dataMap) {
-                    return mapToUserDTO(dataMap);
+                    UserDTO dto = mapToUserDTO(dataMap);
+                    if (dto != null) {
+                        log.info("[DEBUG] Utilisateur {} ({}) récupéré avec succès.", idUser, dto.getNom());
+                    } else {
+                        log.error("[DEBUG] Échec du mapping UserDTO pour l'utilisateur {}.", idUser);
+                    }
+                    return dto;
+                } else {
+                    log.error("[DEBUG] Le champ 'user' dans la réponse est absent ou de type incorrect: {}", user);
                 }
+            } else {
+                log.error("[DEBUG] La réponse de Auth Service n'est pas successful ou vide.");
             }
+        } catch (org.springframework.web.client.HttpClientErrorException.Unauthorized e) {
+            log.error("[DEBUG] 401 Unauthorized lors de l'appel à Auth Service. Le token est peut-être expiré ou invalide.");
         } catch (Exception e) {
-            log.error("Erreur lors de la récupération de l'utilisateur {} : {}", idUser, e.getMessage());
+            log.error("[DEBUG] Erreur critique lors de la récupération de l'utilisateur {} : {}", idUser, e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
@@ -153,29 +169,46 @@ public class AuthServiceClient {
 
     private UserDTO mapToUserDTO(Map<?, ?> map) {
         try {
-            Long idUser = map.get("idUser") != null
-                    ? Long.valueOf(map.get("idUser").toString())
-                    : null;
+            log.debug("[DEBUG] Mapping de la map utilisateur: {}", map);
+            
+            // Tentative de récupération flexible pour l'id (idUser ou id_user)
+            Object idObj = map.get("idUser");
+            if (idObj == null) idObj = map.get("id_user");
+            
+            Long idUser = idObj != null ? Long.valueOf(idObj.toString()) : null;
+
+            // Mapping des champs avec logs si null
+            String nom = (String) map.get("nom");
+            String prenom = (String) map.get("prenom");
+            
+            if (nom == null) log.warn("[DEBUG] Le champ 'nom' est null dans le mapping.");
+            if (prenom == null) log.warn("[DEBUG] Le champ 'prenom' est null dans le mapping.");
+
             LocalDate dateNaissance = null;
-            if (map.get("dateNaissance") != null) {
+            Object dob = map.get("dateNaissance");
+            if (dob != null) {
                 try {
-                    dateNaissance = LocalDate.parse(map.get("dateNaissance").toString());
-                } catch (Exception ignored) {}
+                    dateNaissance = LocalDate.parse(dob.toString());
+                } catch (Exception ignored) {
+                    log.warn("[DEBUG] Échec du parsing de la date de naissance: {}", dob);
+                }
             }
+
             return UserDTO.builder()
                     .idUser(idUser)
-                    .nom((String) map.get("nom"))
-                    .prenom((String) map.get("prenom"))
+                    .nom(nom)
+                    .prenom(prenom)
                     .cin((String) map.get("cin"))
                     .email((String) map.get("email"))
                     .role((String) map.get("role"))
                     .sexe((String) map.get("sexe"))
-                    .statut(map.get("statut") != null ? (Boolean) map.get("statut") : null)
+                    .statut(map.get("statut") instanceof Boolean b ? b : null)
                     .dateNaissance(dateNaissance)
                     .telephone((String) map.get("telephone"))
                     .adresse((String) map.get("adresse"))
                     .build();
         } catch (Exception e) {
+            log.error("[DEBUG] Exception inattendue lors du mapping de UserDTO: {}", e.getMessage());
             return null;
         }
     }

@@ -280,7 +280,7 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
-      - NODE_OPTIONS=--max-old-space-size=2048
+      - NODE_OPTIONS=--max-old-space-size=4096
     command: npm start
     networks:
       - shifatech-net
@@ -338,6 +338,35 @@ services:
       - "8025:8025" # Web UI
     networks:
       - shifatech-net
+  ##################################
+  # MONITORING (Prometheus)
+  ##################################
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - shifatech-net
+
+  ##################################
+  # MONITORING (Grafana)
+  ##################################
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - shifatech-net
+
 ##################################
 # NETWORKS & VOLUMES
 ##################################
@@ -355,3 +384,4 @@ volumes:
   rdv-service-logs:
   rdv-service-cache:
   body_mysql_data:
+  grafana-storage:

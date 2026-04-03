@@ -199,18 +199,28 @@ public class DossierMedicalService {
                 .build();
 
         if (dossier.getIdPatient() != null) {
-            patientRepository.findById(dossier.getIdPatient()).ifPresent(patient -> {
+            patientRepository.findById(dossier.getIdPatient()).ifPresentOrElse(patient -> {
                 dto.setNumDossier(patient.getNumDossier());
+                log.info("[DEBUG] Dossier {}: Patient {} trouvé localement (idUser: {}). Tentative d'enrichissement...", 
+                        dossier.getIdDossier(), patient.getIdPatient(), patient.getIdUser());
                 try {
                     if (patient.getIdUser() != null) {
                         var user = authServiceClient.getUserById(patient.getIdUser(), authHeader);
                         if (user != null) {
                             dto.setNomPatient(user.getNom() + " " + user.getPrenom());
+                            log.info("[DEBUG] Dossier {}: Nom récupéré -> {}", dossier.getIdDossier(), dto.getNomPatient());
+                        } else {
+                            log.warn("[DEBUG] Dossier {}: Échec récupération infos user {} depuis Auth Service (retourne null)", 
+                                    dossier.getIdDossier(), patient.getIdUser());
                         }
+                    } else {
+                        log.warn("[DEBUG] Dossier {}: idUser est NULL pour le patient {}", dossier.getIdDossier(), patient.getIdPatient());
                     }
                 } catch (Exception e) {
-                    log.warn("Auth Service indisponible pour idUser {}: {}", patient.getIdUser(), e.getMessage());
+                    log.error("[DEBUG] Dossier {}: Exception lors de l'appel à Auth Service: {}", dossier.getIdDossier(), e.getMessage());
                 }
+            }, () -> {
+                log.error("[DEBUG] Dossier {}: Patient ID {} NON trouvé en base locale !", dossier.getIdDossier(), dossier.getIdPatient());
             });
         }
 
