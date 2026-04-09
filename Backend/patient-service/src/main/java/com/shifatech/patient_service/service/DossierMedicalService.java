@@ -48,9 +48,9 @@ public class DossierMedicalService {
     // =========================================================================
 
     public DossierMedicalDTO createDossier(Long idPatientInput,
-                                           CreateDossierRequest request,
-                                           Long createdBy,
-                                           String authHeader) {
+            CreateDossierRequest request,
+            Long createdBy,
+            String authHeader) {
 
         log.info("Création dossier - ID reçu: {}", idPatientInput);
 
@@ -130,7 +130,7 @@ public class DossierMedicalService {
     // =========================================================================
 
     public DossierMedicalDTO updateDossier(Long idPatientInput, UpdateDossierRequest request, Long updatedBy,
-                                           String authHeader) {
+            String authHeader) {
         if (!isInfirmier() && !isDocteur() && !isAdmin()) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Seul un infirmier ou un médecin peut modifier un dossier médical.");
@@ -139,19 +139,30 @@ public class DossierMedicalService {
         Patient patient = resolvePatient(idPatientInput);
         Long actualIdPatient = patient.getIdPatient();
 
-        DossierMedical dossier = dossierMedicalRepository
-                .findByIdPatientAndStatus(actualIdPatient, DossierMedical.StatusDossier.ACTIVE)
+        DossierMedical dossier = dossierMedicalRepository.findByIdPatient(actualIdPatient)
                 .orElseThrow(() -> new ResourceNotFoundException("DossierMedical", "idPatient", actualIdPatient));
 
-        if (request.getPoids() != null) dossier.setPoids(request.getPoids());
-        if (request.getTaille() != null) dossier.setTaille(request.getTaille());
-        if (request.getGroupeSanguin() != null) dossier.setGroupeSanguin(request.getGroupeSanguin());
-        if (request.getAntecedentsMedicaux() != null) dossier.setAntecedentsMedicaux(request.getAntecedentsMedicaux());
-        if (request.getAllergies() != null) dossier.setAllergies(request.getAllergies());
-        if (request.getPathologiesChroniques() != null) dossier.setPathologiesChroniques(request.getPathologiesChroniques());
-        if (request.getNotes() != null) dossier.setNotes(request.getNotes());
-        if (request.getDiagnostic() != null) dossier.setDiagnostic(request.getDiagnostic());
-        
+        if (dossier.getStatus() != DossierMedical.StatusDossier.ACTIVE) {
+            throw new RuntimeException("Ce dossier médical est archivé ou fermé et ne peut pas être modifié.");
+        }
+
+        if (request.getPoids() != null)
+            dossier.setPoids(request.getPoids());
+        if (request.getTaille() != null)
+            dossier.setTaille(request.getTaille());
+        if (request.getGroupeSanguin() != null)
+            dossier.setGroupeSanguin(request.getGroupeSanguin());
+        if (request.getAntecedentsMedicaux() != null)
+            dossier.setAntecedentsMedicaux(request.getAntecedentsMedicaux());
+        if (request.getAllergies() != null)
+            dossier.setAllergies(request.getAllergies());
+        if (request.getPathologiesChroniques() != null)
+            dossier.setPathologiesChroniques(request.getPathologiesChroniques());
+        if (request.getNotes() != null)
+            dossier.setNotes(request.getNotes());
+        if (request.getDiagnostic() != null)
+            dossier.setDiagnostic(request.getDiagnostic());
+
         dossier.setUpdatedBy(updatedBy);
 
         return mapToDTO(dossierMedicalRepository.save(dossier), authHeader);
@@ -172,7 +183,7 @@ public class DossierMedicalService {
 
         DossierMedical dossier = dossierMedicalRepository.findByIdPatient(actualIdPatient)
                 .orElseThrow(() -> new ResourceNotFoundException("Dossier médical", "idPatient", actualIdPatient));
-        
+
         dossier.setStatus(DossierMedical.StatusDossier.ARCHIVED);
         dossierMedicalRepository.save(dossier);
     }
@@ -201,26 +212,31 @@ public class DossierMedicalService {
         if (dossier.getIdPatient() != null) {
             patientRepository.findById(dossier.getIdPatient()).ifPresentOrElse(patient -> {
                 dto.setNumDossier(patient.getNumDossier());
-                log.info("[DEBUG] Dossier {}: Patient {} trouvé localement (idUser: {}). Tentative d'enrichissement...", 
+                log.info("[DEBUG] Dossier {}: Patient {} trouvé localement (idUser: {}). Tentative d'enrichissement...",
                         dossier.getIdDossier(), patient.getIdPatient(), patient.getIdUser());
                 try {
                     if (patient.getIdUser() != null) {
                         var user = authServiceClient.getUserById(patient.getIdUser(), authHeader);
                         if (user != null) {
                             dto.setNomPatient(user.getNom() + " " + user.getPrenom());
-                            log.info("[DEBUG] Dossier {}: Nom récupéré -> {}", dossier.getIdDossier(), dto.getNomPatient());
+                            log.info("[DEBUG] Dossier {}: Nom récupéré -> {}", dossier.getIdDossier(),
+                                    dto.getNomPatient());
                         } else {
-                            log.warn("[DEBUG] Dossier {}: Échec récupération infos user {} depuis Auth Service (retourne null)", 
+                            log.warn(
+                                    "[DEBUG] Dossier {}: Échec récupération infos user {} depuis Auth Service (retourne null)",
                                     dossier.getIdDossier(), patient.getIdUser());
                         }
                     } else {
-                        log.warn("[DEBUG] Dossier {}: idUser est NULL pour le patient {}", dossier.getIdDossier(), patient.getIdPatient());
+                        log.warn("[DEBUG] Dossier {}: idUser est NULL pour le patient {}", dossier.getIdDossier(),
+                                patient.getIdPatient());
                     }
                 } catch (Exception e) {
-                    log.error("[DEBUG] Dossier {}: Exception lors de l'appel à Auth Service: {}", dossier.getIdDossier(), e.getMessage());
+                    log.error("[DEBUG] Dossier {}: Exception lors de l'appel à Auth Service: {}",
+                            dossier.getIdDossier(), e.getMessage());
                 }
             }, () -> {
-                log.error("[DEBUG] Dossier {}: Patient ID {} NON trouvé en base locale !", dossier.getIdDossier(), dossier.getIdPatient());
+                log.error("[DEBUG] Dossier {}: Patient ID {} NON trouvé en base locale !", dossier.getIdDossier(),
+                        dossier.getIdPatient());
             });
         }
 

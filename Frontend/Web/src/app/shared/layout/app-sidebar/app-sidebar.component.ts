@@ -139,10 +139,10 @@ export class AppSidebarComponent {
   <path d="M12 7v6m-3-3h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
 </svg>`,
       name: "Ordonnances",
-      roles: [Role.DOCTEUR, Role.INFIRMIER, Role.SECRETAIRE],
+      roles: [Role.DOCTEUR, Role.INFIRMIER],
       subItems: [
         { name: "Liste Ordonnances", path: "/ordonnances" },
-        { name: "Nouvelle Ordonnance", path: "/ordonnances/new" },
+        { name: "Nouvelle Ordonnance", path: "/ordonnances/new",roles: [Role.DOCTEUR] },
       ],
     },
     {

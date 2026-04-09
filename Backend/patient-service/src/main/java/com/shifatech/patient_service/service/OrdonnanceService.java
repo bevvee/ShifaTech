@@ -68,7 +68,7 @@ public class OrdonnanceService {
         ordonnance.setInstructions(request.getInstructions());
         ordonnance.setDateValidite(request.getDateValidite());
         ordonnance.setCreatedBy(createdBy);
-        ordonnance.setStatut(true);
+        ordonnance.setStatut(com.shifatech.patient_service.entity.StatusOrdonnance.ACTIVE);
 
         Ordonnance saved = ordonnanceRepository.save(ordonnance);
         log.info("Ordonnance sauvegardée avec ID: {} pour patient: {}", saved.getIdOrdonnance(), actualIdPatient);
@@ -82,14 +82,18 @@ public class OrdonnanceService {
 
     @Transactional(readOnly = true)
     public List<OrdonnanceDTO> getOrdonnancesByPatientId(Long idPatientInput, String authHeader) {
-        log.info("Récupération des ordonnances pour le patient IDInput: {}", idPatientInput);
+        log.info("[DIAGNOSTIC] Récupération des ordonnances pour le patient IDInput: {}", idPatientInput);
 
         Patient patient = resolvePatient(idPatientInput);
         Long actualIdPatient = patient.getIdPatient();
+        log.info("[DIAGNOSTIC] Patient résolu ID: {}", actualIdPatient);
 
         checkReadAccess(patient);
 
-        return ordonnanceRepository.findByIdPatient(actualIdPatient).stream()
+        List<Ordonnance> list = ordonnanceRepository.findByIdPatient(actualIdPatient);
+        log.info("[DIAGNOSTIC] Trouvé {} ordonnances en base pour le patient {}", list.size(), actualIdPatient);
+
+        return list.stream()
                 .map(o -> mapToDTO(o, authHeader))
                 .collect(Collectors.toList());
     }
@@ -146,6 +150,10 @@ public class OrdonnanceService {
         ordonnance.setDureeTraitement(request.getDureeTraitement());
         ordonnance.setInstructions(request.getInstructions());
         ordonnance.setDateValidite(request.getDateValidite());
+        
+        if (request.getStatut() != null) {
+            ordonnance.setStatut(request.getStatut());
+        }
 
         return mapToDTO(ordonnanceRepository.save(ordonnance), authHeader);
     }
@@ -162,7 +170,7 @@ public class OrdonnanceService {
         Ordonnance ordonnance = ordonnanceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ordonnance", "id", id));
         
-        ordonnance.setStatut(false); // Suppression logique
+        ordonnance.setStatut(com.shifatech.patient_service.entity.StatusOrdonnance.CANCELLED); // Suppression logique
         ordonnanceRepository.save(ordonnance);
     }
 

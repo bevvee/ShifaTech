@@ -51,8 +51,9 @@ public class Ordonnance {
     @Column(name = "date_validite")
     private java.time.LocalDate dateValidite;
 
-    @Column(name = "statut")
-    private Boolean statut = true; // Valide/Expiré
+    @Enumerated(EnumType.STRING)
+    @Column(name = "statut", length = 20, nullable = false)
+    private StatusOrdonnance statut = StatusOrdonnance.ACTIVE;
 
     @Column(name = "created_by")
     private Long createdBy;

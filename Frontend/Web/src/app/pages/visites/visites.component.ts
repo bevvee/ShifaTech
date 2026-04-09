@@ -76,12 +76,17 @@ export class VisitesComponent implements OnInit {
   }
   */
 
-  deleteVisite(id: number) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette visite ?')) {
-      this.store.delete(id).subscribe(() => {
-        this.loadVisites();
-      });
-    }
+  async deleteVisite(id: number) {
+    const ok = await this.alerts.confirmDelete('cette visite');
+    if (!ok) return;
+
+    this.store.delete(id).subscribe({
+      next: () => this.loadVisites(),
+      error: (err) => {
+        console.error('Erreur suppression visite', err);
+        void this.alerts.error('Erreur lors de la suppression de la visite.');
+      }
+    });
   }
 
   get filteredVisites(): VisiteDto[] {

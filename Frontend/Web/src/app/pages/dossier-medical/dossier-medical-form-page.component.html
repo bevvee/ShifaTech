@@ -66,21 +66,21 @@
 				<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 					<div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/3">
 						<div class="text-sm font-semibold text-gray-900 dark:text-white">Antécédents médicaux</div>
-						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.antecedentsMedicaux.trim() || '-' }}</p>
+						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.antecedentsMedicaux?.trim() || '-' }}</p>
 					</div>
 					<div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/3">
 						<div class="text-sm font-semibold text-gray-900 dark:text-white">Allergies</div>
-						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.allergies.trim() || '-' }}</p>
+						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.allergies?.trim() || '-' }}</p>
 					</div>
 					<div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/3 lg:col-span-2">
 						<div class="text-sm font-semibold text-gray-900 dark:text-white">Pathologies chroniques</div>
-						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.pathologiesChroniques.trim() || '-' }}</p>
+						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.pathologiesChroniques?.trim() || '-' }}</p>
 					</div>
 					<div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/3 lg:col-span-2">
 						<div class="text-sm font-semibold text-gray-900 dark:text-white">Diagnostic</div>
-						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.diagnostic.trim() || '-' }}</p>
+						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.diagnostic?.trim() || '-' }}</p>
 						<div class="mt-6 text-sm font-semibold text-gray-900 dark:text-white">Notes / Observations</div>
-						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.notes.trim() || '-' }}</p>
+						<p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{{ form.notes?.trim() || '-' }}</p>
 					</div>
 				</div>
 
@@ -102,15 +102,22 @@
 											<tr>
 												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Date</th>
 												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Traitement</th>
-												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Status</th>
+												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Statut</th>
+												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
 											</tr>
 										</thead>
 										<tbody>
 											@for (v of linkedVisites; track v.id) {
-												<tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer" [routerLink]="['/visites', v.id]">
+												<tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
 													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ v.dateCreation | date:'dd/MM/yyyy' }}</td>
 													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300 truncate max-w-xs">{{ v.planTraitement || '-' }}</td>
 													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ v.status || '-' }}</td>
+													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">
+														<app-button size="sm" variant="outline" (btnClick)="viewVisite(v.id)">
+															<svg class="w-4 h-4 me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+															Détails
+														</app-button>
+													</td>
 												</tr>
 											}
 										</tbody>
@@ -135,14 +142,21 @@
 												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Date</th>
 												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Médicaments</th>
 												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Validité</th>
+												<th class="px-5 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
 											</tr>
 										</thead>
 										<tbody>
 											@for (o of linkedOrdonnances; track o.id) {
-												<tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer" [routerLink]="['/ordonnances', o.id]">
+												<tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
 													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ o.dateCreation | date:'dd/MM/yyyy' }}</td>
 													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300 truncate max-w-xs">{{ o.medicaments || '-' }}</td>
 													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ o.dateValidite | date:'dd/MM/yyyy' }}</td>
+													<td class="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">
+														<app-button size="sm" variant="outline" (btnClick)="viewOrdonnance(o.id)">
+															<svg class="w-4 h-4 me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+															Détails
+														</app-button>
+													</td>
 												</tr>
 											}
 										</tbody>

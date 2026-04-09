@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Role } from '../../core/models/role.enum';
 import { Store } from '@ngrx/store';
 import { selectUserRole } from '../../core/store/auth/auth.selectors';
@@ -54,6 +54,7 @@ export class DossierMedicalFormPageComponent implements OnInit {
   private readonly ordonnancesStore = inject(OrdonnanceStore);
   private readonly alerts = inject(AlertService);
 
+  private readonly cdr = inject(ChangeDetectorRef);
   private id: number | null;
 
   dossier: DossierMedicalDto | null = null;
@@ -139,6 +140,7 @@ export class DossierMedicalFormPageComponent implements OnInit {
             this.router.navigate(['/dossier-medical']);
             return;
           }
+          this.dossier = existing;
           this.form = {
             idPatient: String(existing.idPatient),
             status: existing.status,
@@ -152,19 +154,15 @@ export class DossierMedicalFormPageComponent implements OnInit {
             notes: existing.notes,
           };
 
-          // Load History (Mocks for now)
-          /*
-          this.linkedVisites = this.visitesStore.getByDossierId(this.id!);
-          */
+          // Load History
           this.visitesStore.getByDossierId(this.id!).subscribe(list => {
             this.linkedVisites = list;
+            this.cdr.detectChanges();
           });
           
-          /*
-          this.linkedOrdonnances = this.ordonnancesStore.getByPatientId(existing.idPatient);
-          */
           this.ordonnancesStore.getByPatientId(existing.idPatient).subscribe(list => {
             this.linkedOrdonnances = list;
+            this.cdr.detectChanges();
           });
         },
         error: (err) => {
@@ -308,14 +306,17 @@ export class DossierMedicalFormPageComponent implements OnInit {
           }
         });
       } else if (this.id != null) {
-        this.store.update(this.id, payload).subscribe({
+        // On passe l'idPatient explicitement pour aider le store si le cache est vide
+        const idPatient = Number(this.form.idPatient);
+        this.store.update(this.id, payload, idPatient).subscribe({
           next: async () => {
             await this.alerts.success('Dossier médical modifié avec succès.');
             this.router.navigate(['/dossier-medical']);
           },
-          error: async (err) => {
+          error: async (err: any) => {
             console.error('Erreur modification dossier', err);
-            await this.alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+            const msg = err?.error?.message || 'Une erreur est survenue lors de l\'enregistrement.';
+            await this.alerts.error(msg);
           }
         });
       }
@@ -323,5 +324,13 @@ export class DossierMedicalFormPageComponent implements OnInit {
       console.error('Unexpected error', err);
       await this.alerts.error('Une erreur inattendue est survenue.');
     }
+  }
+
+  viewVisite(id: number) {
+    this.router.navigate(['/visites', id]);
+  }
+
+  viewOrdonnance(id: number) {
+    this.router.navigate(['/ordonnances', id]);
   }
 }

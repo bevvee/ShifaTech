@@ -86,7 +86,7 @@ public class VisiteService {
 
     @Transactional(readOnly = true)
     public List<VisiteDTO> getVisitesByDossierId(Long idDossier, String authHeader) {
-        log.info("Récupération des visites pour le dossier ID: {}", idDossier);
+        log.info("[DIAGNOSTIC] Récupération des visites pour le dossier ID: {}", idDossier);
 
         DossierMedical dossier = dossierMedicalRepository.findById(idDossier)
                 .orElseThrow(() -> new ResourceNotFoundException("DossierMedical", "id", idDossier));
@@ -97,7 +97,10 @@ public class VisiteService {
 
         checkReadAccess(patient);
 
-        return visiteRepository.findByIdDossier(idDossier).stream()
+        List<Visite> visits = visiteRepository.findByIdDossier(idDossier);
+        log.info("[DIAGNOSTIC] Trouvé {} visites en base pour le dossier {}", visits.size(), idDossier);
+
+        return visits.stream()
                 .map(v -> mapToDTO(v, authHeader))
                 .collect(Collectors.toList());
     }
@@ -145,6 +148,13 @@ public class VisiteService {
         visite.setTypeVisite(request.getTypeVisite());
         visite.setTypeBlessure(request.getTypeBlessure());
         visite.setIdBodyPart(request.getIdBodyPart());
+
+        if (request.getStatus() != null) {
+            visite.setStatus(request.getStatus());
+            if (request.getStatus() == com.shifatech.patient_service.entity.Visite.StatusVisite.CLOSED) {
+                visite.setDateFermeture(java.time.LocalDateTime.now());
+            }
+        }
 
         // 🛡️ Validation métier identique pour l'update
         if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.BLESSURE && request.getTypeBlessure() == null) {

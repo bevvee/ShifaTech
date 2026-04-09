@@ -213,8 +213,8 @@ export class OrdonnancesFormPageComponent implements OnInit {
 
   get patientSexLabel(): string {
     const s = this.patient?.sexe;
-    if (s === 'M') return 'Male';
-    if (s === 'F') return 'Female';
+    if (s === 'M') return 'Homme';
+    if (s === 'F') return 'Femme';
     return '-';
   }
 
@@ -233,7 +233,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
   }
 
   get prescriptionTitle(): string {
-    return this.form.description?.trim() ? this.form.description.trim() : 'Prescription';
+    return this.form.description?.trim() ? this.form.description.trim() : 'Ordonnance';
   }
 
   get medicationRows(): Array<{

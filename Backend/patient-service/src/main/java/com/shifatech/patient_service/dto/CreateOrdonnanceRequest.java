@@ -27,4 +27,6 @@ public class CreateOrdonnanceRequest {
     @NotNull(message = "La date de validité est obligatoire")
     @FutureOrPresent(message = "La date de validité doit être aujourd'hui ou dans le futur")
     private java.time.LocalDate dateValidite;
+
+    private com.shifatech.patient_service.entity.StatusOrdonnance statut;
 }

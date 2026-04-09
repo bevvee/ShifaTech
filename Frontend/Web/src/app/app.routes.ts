@@ -264,28 +264,28 @@ export const routes: Routes = [
         component: OrdonnancesComponent,
         title: 'Ordonnances | ShifaTech',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: { roles: [Role.DOCTEUR, Role.INFIRMIER] }
       },
       {
         path: 'ordonnances/new',
         component: OrdonnancesFormPageComponent,
         title: 'Nouvelle Ordonnance | ShifaTech',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: { roles: [Role.DOCTEUR] }
       },
       {
         path: 'ordonnances/:id',
         component: OrdonnancesFormPageComponent,
         title: 'Détails Ordonnance | ShifaTech',
         canActivate: [roleGuard],
-        data: { mode: 'view', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: { mode: 'view', roles: [Role.DOCTEUR, Role.INFIRMIER] }
       },
       {
         path: 'ordonnances/:id/edit',
         component: OrdonnancesFormPageComponent,
         title: 'Modifier Ordonnance | ShifaTech',
         canActivate: [roleGuard],
-        data: { mode: 'edit', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: { mode: 'edit', roles: [Role.DOCTEUR] }
       },
       {
         path: "infirmiers",

@@ -72,13 +72,17 @@ export class DossierMedicalComponent implements OnInit {
   }
   */
 
-  deleteDossier(id: number) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')) {
-      this.store.delete(id).subscribe({
-        next: () => this.loadDossiers(),
-        error: (err) => console.error('Erreur suppression dossier', err)
-      });
-    }
+  async deleteDossier(id: number) {
+    const ok = await this.alerts.confirmDelete('ce dossier médical');
+    if (!ok) return;
+
+    this.store.delete(id).subscribe({
+      next: () => this.loadDossiers(),
+      error: (err) => {
+        console.error('Erreur suppression dossier', err);
+        void this.alerts.error('Impossible de supprimer ce dossier.');
+      }
+    });
   }
 
   getStatusBadgeColor(status: DossierStatus): 'success' | 'warning' | 'error' {
