@@ -119,7 +119,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           mode: "edit",
-          roles: [Role.DOCTEUR,Role.INFIRMIER],
+          roles: [Role.DOCTEUR, Role.INFIRMIER],
         },
       },
       {
@@ -213,7 +213,7 @@ export const routes: Routes = [
         component: DossierMedicalFormPageComponent,
         title: 'Nouveau Dossier | ShifaTech',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: { roles: [Role.INFIRMIER] }
       },
       {
         path: 'dossier-medical/:id',
@@ -242,7 +242,7 @@ export const routes: Routes = [
         component: VisitesFormPageComponent,
         title: 'Nouvelle Visite | ShifaTech',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: { roles: [Role.ADMIN, Role.INFIRMIER] }
       },
       {
         path: 'visites/:id',

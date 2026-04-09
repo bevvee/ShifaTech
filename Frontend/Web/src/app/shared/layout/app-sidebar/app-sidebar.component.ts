@@ -118,7 +118,7 @@ export class AppSidebarComponent {
       roles: [Role.INFIRMIER, Role.SECRETAIRE,Role.DOCTEUR],
       subItems: [
         { name: "Liste des Dossiers", path: "/dossier-medical" },
-        { name: "Nouveau Dossier", path: "/dossier-medical/new" },
+        { name: "Nouveau Dossier", path: "/dossier-medical/new",roles: [Role.INFIRMIER], },
       ],
     },
     {

@@ -169,7 +169,9 @@ export class VisitesFormPageComponent implements OnInit {
 
     const payload = {
       ...this.form,
-      idDossier: Number(this.form.idDossier)
+      idDossier: Number(this.form.idDossier),
+      typeBlessure: this.form.typeVisite === 'BLESSURE' ? this.form.typeBlessure : null,
+      idBodyPart: this.form.typeVisite === 'BLESSURE' ? this.form.idBodyPart : null,
     };
 
     /*
