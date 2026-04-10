@@ -38,10 +38,11 @@ public class OrdonnanceController {
     @PreAuthorize("hasAnyRole('DOCTEUR', 'ADMIN', 'INFIRMIER')")
     @GetMapping("/ordonnances")
     public ResponseEntity<ApiResponse<List<OrdonnanceDTO>>> getAllOrdonnances(
+            @RequestParam(name = "id_doctor", required = false) List<Long> ids_doctor,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        log.info("Requête de récupération de toutes les ordonnances");
-        List<OrdonnanceDTO> ordonnances = ordonnanceService.getAllOrdonnances(authHeader);
-        return ResponseEntity.ok(ApiResponse.success(ordonnances, "Toutes les ordonnances récupérées"));
+        log.info("Requête de récupération des ordonnances (Filter ids_doctor: {})", ids_doctor);
+        List<OrdonnanceDTO> ordonnances = ordonnanceService.getAllOrdonnances(ids_doctor, authHeader);
+        return ResponseEntity.ok(ApiResponse.success(ordonnances, "Ordonnances récupérées"));
     }
 
     @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER')")

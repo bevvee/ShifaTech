@@ -10,5 +10,5 @@ import java.util.List;
 public interface AppointmentClient {
 
     @GetMapping("/api/rendez_vouses")
-    List<Object> getAppointmentsByDoctor(@RequestParam("id_docteur") Long idDocteur);
+    Object getAppointmentsByDoctor(@RequestParam("id_docteur") Long idDocteur);
 }

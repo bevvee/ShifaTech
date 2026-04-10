@@ -42,6 +42,21 @@
       </div>
 
       <div>
+        <app-label for="passwordConfirmation">
+          Confirmer le Mot de passe
+          @if (mode === 'create' || form.password !== '') { <span class="font-semibold text-error-500">*</span> }
+        </app-label>
+        <app-input-field
+          id="passwordConfirmation"
+          name="passwordConfirmation"
+          type="password"
+          placeholder="Confirmer mot de passe"
+          [(value)]="form.passwordConfirmation"
+          [error]="submitted && (mode === 'create' || form.password !== '') && form.password !== form.passwordConfirmation"
+        />
+      </div>
+
+      <div>
         <app-label>Sexe</app-label>
         <app-select [options]="sexeOptions" [(value)]="form.sexe" [hasSearch]="false" />
       </div>

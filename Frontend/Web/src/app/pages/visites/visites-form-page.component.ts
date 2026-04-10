@@ -12,6 +12,8 @@ import { VisiteStore } from './visites.store';
 import { DossierMedicalStore } from '../dossier-medical/dossier-medical.store';
 import { VisiteStatus } from '../../core/models/visite.model';
 import { ToastService } from '../../shared/services/toast.service';
+import { BodyMapComponent } from '../../shared/components/body-map/body-map.component';
+import { environment } from '../../../environments/environment';
 
 type Mode = 'create' | 'edit' | 'view';
 
@@ -27,10 +29,13 @@ type Mode = 'create' | 'edit' | 'view';
     TextAreaComponent,
     LabelComponent,
     SelectComponent,
+    BodyMapComponent,
   ],
   templateUrl: './visites-form-page.component.html'
 })
 export class VisitesFormPageComponent implements OnInit {
+  readonly env = environment;
+
   mode: Mode;
   submitted = false;
 
@@ -77,7 +82,7 @@ export class VisitesFormPageComponent implements OnInit {
     status: 'OPEN' as VisiteStatus,
     typeVisite: 'CONSULTATION' as 'CONSULTATION' | 'BLESSURE',
     typeBlessure: '' as string,
-    idBodyPart: null as number | null,
+    bodyParts: [] as string[],
     planTraitement: '',
     observations: '',
   };
@@ -103,7 +108,12 @@ export class VisitesFormPageComponent implements OnInit {
           status: existing.status,
           typeVisite: existing.typeVisite || 'CONSULTATION',
           typeBlessure: existing.typeBlessure || '',
-          idBodyPart: existing.idBodyPart || null,
+          bodyParts: existing.bodyParts
+            ? existing.bodyParts
+                .split(',')
+                .map((s: string) => s.trim())
+                .filter((s: string) => !!s)
+            : [],
           planTraitement: existing.planTraitement,
           observations: existing.observations,
         };
@@ -167,20 +177,16 @@ export class VisitesFormPageComponent implements OnInit {
     this.submitted = true;
     if (!this.isValid) return;
 
-    const payload = {
-      ...this.form,
-      idDossier: Number(this.form.idDossier)
+    const payload: import('../../core/models/visite.model').VisiteCreateDto = {
+      idDossier: Number(this.form.idDossier),
+      idDoctor: this.form.idDoctor,
+      status: this.form.status,
+      typeVisite: this.form.typeVisite,
+      typeBlessure: this.form.typeBlessure || null,
+      bodyParts: this.form.bodyParts.length > 0 ? this.form.bodyParts.join(',') : null,
+      planTraitement: this.form.planTraitement,
+      observations: this.form.observations,
     };
-
-    /*
-    if (this.mode === 'create') {
-      this.store.create(payload);
-    } else if (this.id != null) {
-      this.store.update(this.id, payload);
-    }
-
-    this.router.navigate(['/visites']);
-    */
 
     if (this.mode === 'create') {
       this.store.create(payload).subscribe({

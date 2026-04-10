@@ -1,29 +1,53 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { BodyApiService } from '../../../core/services/api/body-api.service';
 import { BodyPart, BodySection } from '../../../core/models/body-map.model';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-body-map',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './body-map.component.html',
-  styleUrls: ['./body-map.component.css']
+  styleUrls: ['./body-map.component.css'],
 })
-export class BodyMapComponent implements OnInit {
+export class BodyMapComponent implements OnInit, OnChanges {
   private readonly bodyApi = inject(BodyApiService);
 
-  /** IDs des zones sélectionnées (codes sous forme de string venant du backend symfony) */
+  /** Codes sélectionnés : préférence `sectionCode:partCode` (évite collisions si même code dans 2 vues). */
   @Input() selectedCodes: string[] = [];
   @Input() readOnly = false;
+  /** Active des logs console (voir aussi `environment.debugBodyMap`). */
+  @Input() debug = environment.debugBodyMap;
+
   @Output() selectionChange = new EventEmitter<string[]>();
+  @Output() firstPartIdChange = new EventEmitter<number | null>();
 
   sections: BodySection[] = [];
   activeSection: BodySection | null = null;
   loading = true;
 
+  hoveredLabel: string | null = null;
+  tooltipX = 0;
+  tooltipY = 0;
+
   ngOnInit(): void {
     this.loadMap();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedCodes'] && !changes['selectedCodes'].firstChange && this.sections.length > 0) {
+      this.normalizeLegacySelectionKeys(true);
+    }
   }
 
   loadMap(): void {
@@ -34,46 +58,150 @@ export class BodyMapComponent implements OnInit {
         if (this.sections.length > 0) {
           this.activeSection = this.sections[0];
         }
+        if (this.debug) {
+          console.debug(
+            '[body-map] sections chargées',
+            this.sections.map((s) => ({
+              code: s.code,
+              parts: s.parts.length,
+              dims: `${s.width}x${s.height}`,
+            })),
+          );
+        }
         this.loading = false;
+        this.normalizeLegacySelectionKeys(true);
       },
       error: (err) => {
         console.error('Erreur lors du chargement de la carte corporelle', err);
         this.loading = false;
-      }
+      },
     });
   }
 
   selectSection(section: BodySection): void {
     this.activeSection = section;
+    this.hoveredLabel = null;
   }
 
-  isSelected(code: string): boolean {
-    return this.selectedCodes.includes(code);
+  /** Sélection : clé composite ou ancien format `code` seul (dans la section active uniquement). */
+  isSelected(partCode: string, sectionCode: string | undefined): boolean {
+    if (!sectionCode) return false;
+    const key = this.makeKey(sectionCode, partCode);
+    if (this.selectedCodes.includes(key)) return true;
+    return (
+      this.selectedCodes.includes(partCode) &&
+      !!this.activeSection?.parts.some((p) => p.code === partCode && this.activeSection?.code === sectionCode)
+    );
   }
 
   togglePart(part: BodyPart): void {
-    if (this.readOnly || !part.is_clickable) return;
+    if (this.readOnly || !part.is_clickable || !this.activeSection) return;
 
-    const index = this.selectedCodes.indexOf(part.code);
-    if (index > -1) {
-      this.selectedCodes.splice(index, 1);
+    const key = this.makeKey(this.activeSection.code, part.code);
+    const idx = this.selectedCodes.indexOf(key);
+    if (idx > -1) {
+      this.selectedCodes.splice(idx, 1);
     } else {
-      this.selectedCodes.push(part.code);
+      const legacy = this.selectedCodes.indexOf(part.code);
+      if (legacy > -1) this.selectedCodes.splice(legacy, 1);
+      this.selectedCodes.push(key);
     }
 
-    this.selectionChange.emit([...this.selectedCodes]);
+    this.emitSelection();
+
+    const first = this.selectedCodes[0];
+    if (first) {
+      const firstPart = this.findPartByKey(first);
+      this.firstPartIdChange.emit(firstPart?.id ?? null);
+    } else {
+      this.firstPartIdChange.emit(null);
+    }
+  }
+
+  onMouseEnter(part: BodyPart, event: MouseEvent): void {
+    if (!part.is_clickable) return;
+    this.hoveredLabel = part.label;
+    this.updateTooltipPosition(event);
+  }
+
+  onMouseMove(event: MouseEvent): void {
+    this.updateTooltipPosition(event);
+  }
+
+  onMouseLeave(): void {
+    this.hoveredLabel = null;
+  }
+
+  private updateTooltipPosition(event: MouseEvent): void {
+    const svgEl = (event.currentTarget as SVGElement).closest('svg');
+    if (svgEl) {
+      const rect = svgEl.getBoundingClientRect();
+      this.tooltipX = event.clientX - rect.left + 10;
+      this.tooltipY = event.clientY - rect.top - 30;
+    }
+  }
+
+  private findPartByKey(keyOrCode: string): BodyPart | undefined {
+    const { sectionCode, partCode } = this.parseKey(keyOrCode);
+    for (const section of this.sections) {
+      if (sectionCode && section.code !== sectionCode) continue;
+      const part = section.parts.find((p) => p.code === partCode);
+      if (part) return part;
+    }
+    return undefined;
   }
 
   get selectedLabels(): string[] {
     const labels: string[] = [];
-    for (const section of this.sections) {
-      for (const part of section.parts) {
-        if (this.isSelected(part.code)) {
-          labels.push(part.label);
-        }
-      }
+    for (const key of this.selectedCodes) {
+      const found = this.findPartByKey(key);
+      if (found) labels.push(found.label);
     }
-    // Dédoublonnage au cas où une zone apparaît dans plusieurs sections
-    return Array.from(new Set(labels));
+    return labels;
+  }
+
+  private makeKey(sectionCode: string, partCode: string): string {
+    return `${sectionCode}:${partCode}`;
+  }
+
+  private parseKey(keyOrCode: string): { sectionCode: string | null; partCode: string } {
+    const raw = keyOrCode.trim();
+    const i = raw.indexOf(':');
+    if (i === -1) return { sectionCode: null, partCode: raw };
+    return {
+      sectionCode: raw.slice(0, i).trim() || null,
+      partCode: raw.slice(i + 1).trim(),
+    };
+  }
+
+  /**
+   * Convertit les anciennes valeurs `code` seul en `section:code` si une seule section contient ce code.
+   */
+  private normalizeLegacySelectionKeys(emit: boolean): void {
+    if (!this.selectedCodes?.length || !this.sections.length) return;
+
+    const next = this.selectedCodes.map((token) => {
+      const t = token.trim();
+      if (!t) return t;
+      if (t.includes(':')) return t;
+      const withPart = this.sections.filter((s) => s.parts.some((p) => p.code === t));
+      if (withPart.length === 1) {
+        return this.makeKey(withPart[0].code, t);
+      }
+      return t;
+    });
+
+    const changed = next.some((v, i) => v !== this.selectedCodes[i]);
+    if (!changed) return;
+
+    this.selectedCodes.length = 0;
+    this.selectedCodes.push(...next);
+    if (emit) {
+      this.emitSelection();
+    }
+  }
+
+  private emitSelection(): void {
+    this.selectionChange.emit([...this.selectedCodes]);
   }
 }

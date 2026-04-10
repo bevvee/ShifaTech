@@ -12,7 +12,7 @@ export interface VisiteDto {
     status: VisiteStatus;
     typeVisite?: 'CONSULTATION' | 'BLESSURE';
     typeBlessure?: string;
-    idBodyPart?: number;
+    bodyParts?: string; // Codes des zones corporelles séparés par virgule (ex: "ARM_L,LEG_R")
     planTraitement: string;
     observations: string;
 
@@ -26,7 +26,7 @@ export interface VisiteCreateDto {
     status: VisiteStatus;
     typeVisite: 'CONSULTATION' | 'BLESSURE';
     typeBlessure?: string | null;
-    idBodyPart?: number | null;
+    bodyParts?: string | null; // Codes joints par virgule
     planTraitement: string;
     observations: string;
 }

@@ -54,6 +54,12 @@ export class DossierMedicalStore {
     );
   }
 
+  getAllForDoctor(): Observable<DossierMedicalDto[]> {
+    return this.api.getAllForDoctor().pipe(
+      tap(data => this.dossiers = data)
+    );
+  }
+
   getById(id: number): Observable<DossierMedicalDto> {
     // Note: Le backend n'a pas de getById spécifique, on utilise souvent getByPatientId
     return this.api.getAll().pipe(

@@ -14,6 +14,7 @@ public interface OrdonnanceRepository extends JpaRepository<Ordonnance, Long> {
     List<Ordonnance> findByIdPatient(Long idPatient);
 
     List<Ordonnance> findByIdDoctor(Long idDoctor);
+    List<Ordonnance> findByIdDoctorIn(List<Long> idDoctors);
 
     List<Ordonnance> findByIdVisite(Long idVisite);
 

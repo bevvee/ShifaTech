@@ -1,9 +1,10 @@
 <div class="body-map-container" *ngIf="!loading; else spinner">
+
   <!-- Onglets des sections -->
   <div class="sections-tabs" *ngIf="sections.length > 1">
-    <div 
-      *ngFor="let section of sections" 
-      class="section-tab" 
+    <div
+      *ngFor="let section of sections"
+      class="section-tab"
       [class.active]="activeSection?.code === section.code"
       (click)="selectSection(section)"
     >
@@ -11,57 +12,87 @@
     </div>
   </div>
 
-  <!-- Viewport SVG -->
-  <div 
-    class="map-viewport" 
-    [style.width.px]="activeSection?.width" 
+  <!-- Viewport SVG : image ET formes dans le même espace de coordonnées -->
+  <div
+    class="map-viewport"
+    [style.width.px]="activeSection?.width"
     [style.height.px]="activeSection?.height"
   >
-    <!-- On peut optionnellement ajouter l'image de fond ici si elle est fournie par le backend -->
-    <img 
-      *ngIf="activeSection?.background_image" 
-      [src]="activeSection?.background_image" 
-      class="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-20"
-    >
-
-    <svg 
+    <svg
       *ngIf="activeSection"
-      [attr.viewBox]="'0 0 ' + activeSection.width + ' ' + activeSection.height" 
-      class="map-svg relative z-10"
+      [attr.viewBox]="'0 0 ' + activeSection.width + ' ' + activeSection.height"
+      [attr.width]="activeSection.width"
+      [attr.height]="activeSection.height"
+      class="map-svg"
+      style="position: relative; display: block;"
     >
+      <!-- Image de fond DANS le SVG = alignement parfait avec les zones cliquables -->
+      <image
+        *ngIf="activeSection?.background_image"
+        [attr.href]="activeSection!.background_image"
+        x="0"
+        y="0"
+        [attr.width]="activeSection!.width"
+        [attr.height]="activeSection!.height"
+        preserveAspectRatio="none"
+        style="opacity: 0.4; pointer-events: none;"
+      />
+
       <ng-container *ngFor="let part of activeSection.parts">
-        <!-- Rendu si c'est un path -->
-        <path 
+
+        <!-- Path SVG -->
+        <path
           *ngIf="part.shape === 'path'"
           [attr.d]="part.coords.d"
-          [class.selected]="isSelected(part.code)"
+          [class.selected]="isSelected(part.code, activeSection.code)"
           [class.not-clickable]="!part.is_clickable || readOnly"
           class="body-part"
           (click)="togglePart(part)"
-          [attr.title]="part.label"
-        >
-          <title>{{ part.label }}</title>
-        </path>
+          (mouseenter)="onMouseEnter(part, $event)"
+          (mousemove)="onMouseMove($event)"
+          (mouseleave)="onMouseLeave()"
+        />
 
-        <!-- Rendu si c'est une ellipse -->
+        <!-- Ellipse SVG -->
         <ellipse
           *ngIf="part.shape === 'ellipse'"
           [attr.cx]="part.coords.cx"
           [attr.cy]="part.coords.cy"
           [attr.rx]="part.coords.rx"
           [attr.ry]="part.coords.ry"
-          [class.selected]="isSelected(part.code)"
+          [class.selected]="isSelected(part.code, activeSection.code)"
           [class.not-clickable]="!part.is_clickable || readOnly"
           class="body-part"
           (click)="togglePart(part)"
-        >
-          <title>{{ part.label }}</title>
-        </ellipse>
+          (mouseenter)="onMouseEnter(part, $event)"
+          (mousemove)="onMouseMove($event)"
+          (mouseleave)="onMouseLeave()"
+        />
       </ng-container>
+
+      <!-- Tooltip SVG -->
+      <g *ngIf="hoveredLabel" style="pointer-events: none;">
+        <rect
+          [attr.x]="tooltipX"
+          [attr.y]="tooltipY"
+          rx="4" ry="4"
+          width="120" height="28"
+          fill="white"
+          stroke="#d1d5db"
+          stroke-width="1"
+          filter="drop-shadow(0 1px 4px rgba(0,0,0,0.15))"
+        />
+        <text
+          [attr.x]="tooltipX + 8"
+          [attr.y]="tooltipY + 19"
+          font-size="12"
+          fill="#111827"
+        >{{ hoveredLabel }}</text>
+      </g>
     </svg>
   </div>
 
-  <!-- Résumé de la sélection -->
+  <!-- Résumé des zones sélectionnées -->
   <div class="selection-summary" *ngIf="selectedLabels.length > 0">
     <p class="font-semibold mb-2">Zones sélectionnées :</p>
     <div class="flex flex-wrap">

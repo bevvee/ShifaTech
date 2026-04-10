@@ -122,7 +122,7 @@ export class CalendarDayPatientsComponent {
 
               // Backend already filtered to this day via date_rdv[after]/[before]; keep a safety filter.
               const dayRdvs = rdvs.filter((r) => this.toDateKey((r as any).date_rdv) === dateKey);
-              return this.toUniquePatients(dayRdvs, patientNameByUserId, patientNameByPatientId);
+              return this.toUniquePatients(dayRdvs, patients, patientNameByUserId, patientNameByPatientId);
             })
           );
         })
@@ -156,10 +156,11 @@ export class CalendarDayPatientsComponent {
 
   private toUniquePatients(
     rdvs: RdvDto[],
+    patients: PatientDto[],
     patientNameByUserId: Map<number, string>,
     patientNameByPatientId: Map<number, string>
   ): DayPatientItem[] {
-    const byPatient = new Map<number, { name: string; times: Set<string> }>();
+    const byPatient = new Map<number, { name: string; times: Set<string>; sexe?: string }>();
 
     for (const rdv of rdvs) {
       const patientId = Number((rdv as any).id_patient);
@@ -168,20 +169,23 @@ export class CalendarDayPatientsComponent {
         patientNameByPatientId.get(patientId) ??
         `Patient #${patientId}`;
 
-      const startTime = String((rdv as any).heure_debut ?? '').slice(0, 5);
-      const endTime = String((rdv as any).heure_fin ?? '').slice(0, 5);
+      const startTime = this.extractTime((rdv as any).heure_debut);
+      const endTime = this.extractTime((rdv as any).heure_fin);
       const time = this.formatTimeRange(startTime, endTime);
+ 
+      const patientMatch = patients.find(p => Number(p.idUser) === patientId || Number(p.id) === patientId);
+      const sexe = patientMatch?.sexe;
 
-      const entry = byPatient.get(patientId) ?? { name: patientName, times: new Set<string>() };
+      const entry = byPatient.get(patientId) ?? { name: patientName, times: new Set<string>(), sexe };
       if (!byPatient.has(patientId)) byPatient.set(patientId, entry);
       if (time) entry.times.add(time);
     }
-
+ 
     return Array.from(byPatient.entries()).map(([patientId, v]) => ({
       patientId,
       patientName: v.name,
       times: Array.from(v.times.values()).join(', '),
-      avatarUrl: this.getPatientAvatarUrl(patientId),
+      avatarUrl: v.sexe === 'F' ? 'assets/img/patient-female.png' : 'assets/img/patient-male.png',
     }));
   }
 
@@ -191,6 +195,15 @@ export class CalendarDayPatientsComponent {
     if (!s && !e) return '';
     if (s && e) return `${s}-${e}`;
     return s || e;
+  }
+
+  private extractTime(value: unknown): string {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    
+    // Handle "1970-01-01T11:00:00" or "11:00:00"
+    const match = raw.match(/(?:T|\s|^)(\d{2}:\d{2})/);
+    return match ? match[1] : raw.slice(0, 5);
   }
 
   private toDateKey(value: unknown): DateKey | null {

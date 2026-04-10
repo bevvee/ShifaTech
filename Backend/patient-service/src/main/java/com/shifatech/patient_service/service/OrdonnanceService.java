@@ -117,13 +117,22 @@ public class OrdonnanceService {
     // =========================================================================
 
     @Transactional(readOnly = true)
-    public List<OrdonnanceDTO> getAllOrdonnances(String authHeader) {
+    public List<OrdonnanceDTO> getAllOrdonnances(List<Long> idsDoctor, String authHeader) {
         // Harmonisation avec le contrôleur : Autoriser INFIRMIER
         if (!isAdmin() && !isDocteur() && !isInfirmier()) {
             throw new AccessDeniedException("Accès refusé à la liste globale des ordonnances.");
         }
-        log.info("Récupération de toutes les ordonnances");
-        return ordonnanceRepository.findAll().stream()
+
+        log.info("Récupération des ordonnances (Filter idsDoctor: {})", idsDoctor);
+
+        List<Ordonnance> ordonnances;
+        if (idsDoctor != null && !idsDoctor.isEmpty()) {
+            ordonnances = ordonnanceRepository.findByIdDoctorIn(idsDoctor);
+        } else {
+            ordonnances = ordonnanceRepository.findAll();
+        }
+
+        return ordonnances.stream()
                 .map(o -> mapToDTO(o, authHeader))
                 .collect(Collectors.toList());
     }

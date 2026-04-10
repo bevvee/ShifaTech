@@ -17,8 +17,13 @@ export class OrdonnanceApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.api.patient;
 
-  getAll(): Observable<OrdonnanceDto[]> {
-    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/ordonnances`).pipe(
+  getAll(idDoctor?: number | number[]): Observable<OrdonnanceDto[]> {
+    let url = `${this.baseUrl}/ordonnances`;
+    if (idDoctor) {
+      const ids = Array.isArray(idDoctor) ? idDoctor.join(',') : idDoctor;
+      url += `?id_doctor=${ids}`;
+    }
+    return this.http.get<ApiResponse<any[]>>(url).pipe(
       map(res => res.data.map(o => this.mapToDto(o)))
     );
   }

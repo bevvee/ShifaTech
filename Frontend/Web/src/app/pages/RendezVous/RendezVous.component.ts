@@ -150,13 +150,10 @@ export class RendezVousComponent implements OnInit {
         const userId = this.getAuthUserId(user, profile);
         const myDoctorId = isDoctor ? this.resolveDoctorId(userId, doctors) : null;
 
-        // rdv-service commonly stores id_docteur as auth userId (JWT identifier),
-        // but some data sets store the doctor-table idDocteur; support both.
-        const primaryDoctorIdForQuery = isDoctor ? (userId ?? myDoctorId) : null;
-        const secondaryDoctorIdForQuery =
-          isDoctor && primaryDoctorIdForQuery != null && myDoctorId != null && Number(myDoctorId) !== Number(primaryDoctorIdForQuery)
-            ? myDoctorId
-            : null;
+        // Standardization on idDocteur (Doctor table PK).
+        // However, some data may still be indexed by id_user (Auth service ID).
+        const primaryDoctorIdForQuery = isDoctor ? myDoctorId : null;
+        const secondaryDoctorIdForQuery = isDoctor ? userId : null;
 
         const baseParams: Record<string, string | number> = {
           page: this.page,
@@ -216,7 +213,8 @@ export class RendezVousComponent implements OnInit {
       }),
       switchMap(({ rdvRes, isDoctor, secondaryDoctorIdForQuery, selectedDoctorSecondaryId, selectedDoctorIdForQuery, patients, doctors, baseParams, fetchParams }) => {
         const primary = this.extractRdvArray(rdvRes);
-        // Fallback for doctor
+
+        // Fallback for doctor user (if primary ID returns nothing, try secondary ID)
         if (isDoctor && primary.length === 0 && secondaryDoctorIdForQuery != null) {
           return this.rdvService.getAll({ ...fetchParams, id_docteur: secondaryDoctorIdForQuery }).pipe(
             map((altRes) => ({ rdvRes: altRes, patients, doctors })),
@@ -250,18 +248,34 @@ export class RendezVousComponent implements OnInit {
 
         const patientNameByUserId = new Map<number, string>();
         const patientNameByPatientId = new Map<number, string>();
+        const patientSexeById = new Map<number, string>();
+        
         for (const p of patients) {
           const full = `${p.prenom ?? ''} ${p.nom ?? ''}`.trim();
-          if (p.idUser != null) patientNameByUserId.set(Number(p.idUser), full || `Patient ${p.idUser}`);
-          if (p.id != null) patientNameByPatientId.set(Number(p.id), full || `Patient ${p.id}`);
+          if (p.idUser != null) {
+            patientNameByUserId.set(Number(p.idUser), full || `Patient ${p.idUser}`);
+            patientSexeById.set(Number(p.idUser), p.sexe);
+          }
+          if (p.id != null) {
+            patientNameByPatientId.set(Number(p.id), full || `Patient ${p.id}`);
+            patientSexeById.set(Number(p.id), p.sexe);
+          }
         }
 
         const doctorNameByUserId = new Map<number, string>();
         const doctorNameByDoctorId = new Map<number, string>();
+        const doctorSexeById = new Map<number, string>();
+        
         for (const d of doctors) {
           const full = `${d.prenom ?? ''} ${d.nom ?? ''}`.trim();
-          if ((d as any).idUser != null) doctorNameByUserId.set(Number((d as any).idUser), full || `Dr ${(d as any).idUser}`);
-          if ((d as any).idDocteur != null) doctorNameByDoctorId.set(Number((d as any).idDocteur), full || `Dr ${(d as any).idDocteur}`);
+          if ((d as any).idUser != null) {
+            doctorNameByUserId.set(Number((d as any).idUser), full || `Dr ${(d as any).idUser}`);
+            doctorSexeById.set(Number((d as any).idUser), (d as any).sexe);
+          }
+          if ((d as any).idDocteur != null) {
+            doctorNameByDoctorId.set(Number((d as any).idDocteur), full || `Dr ${(d as any).idDocteur}`);
+            doctorSexeById.set(Number((d as any).idDocteur), (d as any).sexe);
+          }
         }
 
         const rows: RendezVousRow[] = (rdvsAfterHeure as RdvCreateDto[]).map((rdv) => {
@@ -278,10 +292,19 @@ export class RendezVousComponent implements OnInit {
             doctorNameByDoctorId.get(doctorId) ??
             `${doctorId}`;
 
+          // Gender-based icons
+          const pSexe = patientSexeById.get(patientId);
+          const patientImage = pSexe === 'F' ? 'assets/img/patient-female.png' : 'assets/img/patient-male.png';
+          
+          const dSexe = doctorSexeById.get(doctorId);
+          const medecinImage = dSexe === 'F' ? 'assets/img/user-pink.png' : 'assets/img/user-grey.png';
+
           return {
             id: String((rdv as any).id ?? 0),
             patient: patientName,
+            patientImage,
             medecin: `Dr ${doctorFullName}`,
+            medecinImage,
             date: this.formatDate((rdv as any).date_rdv),
             heure: `${this.formatTime((rdv as any).heure_debut)}H - ${this.formatTime((rdv as any).heure_fin)}H`,
             statut: this.mapStatus((rdv as any).statut ?? "EN_ATTENTE"),

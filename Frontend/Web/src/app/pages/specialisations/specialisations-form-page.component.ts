@@ -11,6 +11,7 @@ import { Option, SelectComponent } from '../../shared/components/form/select/sel
 import { SpecialityOwner, SpecialityService } from '../../core/services/speciality.service';
 import { ServicesCatalogService } from '../../core/services/services-catalog.service';
 import { Speciality } from '../../core/models/speciality.model';
+import { ToastService } from '../../shared/services/toast.service';
 
 type Mode = 'create' | 'edit';
 
@@ -40,6 +41,7 @@ export class SpecialisationsFormPageComponent {
   private readonly router = inject(Router);
   private readonly specialityService = inject(SpecialityService);
   private readonly servicesCatalog = inject(ServicesCatalogService);
+  private readonly toastService = inject(ToastService);
 
   private id: number | null;
 
@@ -108,8 +110,14 @@ export class SpecialisationsFormPageComponent {
 
     if (this.mode === 'create') {
       this.specialityService.createSpeciality(payload, owner).subscribe({
-        next: () => this.router.navigate(['/specialisations'], { queryParams: { type: owner } }),
-        error: (err: any) => console.error('Error creating speciality', err),
+        next: () => {
+          this.toastService.success('Succès', 'Spécialisation ajoutée avec succès.');
+          this.router.navigate(['/specialisations'], { queryParams: { type: owner } });
+        },
+        error: (err: any) => {
+          this.toastService.error('Erreur', 'Erreur lors de l\'ajout de la spécialisation.');
+          console.error('Error creating speciality', err);
+        },
       });
       return;
     }
@@ -117,8 +125,14 @@ export class SpecialisationsFormPageComponent {
     if (this.id == null) return;
 
     this.specialityService.updateSpeciality(this.id, payload, owner).subscribe({
-      next: () => this.router.navigate(['/specialisations'], { queryParams: { type: owner } }),
-      error: (err: any) => console.error('Error updating speciality', err),
+      next: () => {
+        this.toastService.success('Succès', 'Spécialisation modifiée avec succès.');
+        this.router.navigate(['/specialisations'], { queryParams: { type: owner } });
+      },
+      error: (err: any) => {
+        this.toastService.error('Erreur', 'Erreur lors de la modification de la spécialisation.');
+        console.error('Error updating speciality', err);
+      },
     });
   }
 }

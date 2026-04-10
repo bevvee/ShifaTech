@@ -23,6 +23,12 @@ export class DossierApiService {
     );
   }
 
+  getAllForDoctor(): Observable<DossierMedicalDto[]> {
+    return this.http.get<ApiResponse<any[]>>(`${environment.api.doctor}/my-medical-records`).pipe(
+      map(res => res.data.map(d => this.mapToDto(d)))
+    );
+  }
+
   getByIdPatient(idPatient: number): Observable<DossierMedicalDto> {
     return this.http.get<ApiResponse<any>>(`${this.baseUrl}/${idPatient}/dossier-medical`).pipe(
       map(res => this.mapToDto(res.data))

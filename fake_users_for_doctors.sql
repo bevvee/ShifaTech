@@ -2,7 +2,7 @@
 INSERT INTO users (id_user, nom, prenom, cin, email, mot_de_passe, role, sexe, statut, date_naissance, telephone, adresse, created_at)
 VALUES
 (1001, 'Docteur', 'Test1001', 'CIN1001', 'docteur1001@shifa.tech', '$2a$10$7LOMrI6yVzN8E2xVxjqAouB.gZ7xHj2g5OQ20L3W7R5b0xJzU8v.6', 'DOCTOR', 'M', true, '1980-01-01', '0600001001', 'Adresse Test', CURRENT_TIMESTAMP),
-(2, 'Docteur', 'Test1002', 'CIN1002', 'docteur1002@shifa.tech', '$2a$10$7LOMrI6yVzN8E2xVxjqAouB.gZ7xHj2g5OQ20L3W7R5b0xJzU8v.6', 'DOCTOR', 'M', true, '1980-01-01', '0600001002', 'Adresse Test', CURRENT_TIMESTAMP),
+(1002, 'Docteur', 'Test1002', 'CIN1002', 'docteur1002@shifa.tech', '$2a$10$7LOMrI6yVzN8E2xVxjqAouB.gZ7xHj2g5OQ20L3W7R5b0xJzU8v.6', 'DOCTOR', 'M', true, '1980-01-01', '0600001002', 'Adresse Test', CURRENT_TIMESTAMP),
 (1003, 'Docteur', 'Test1003', 'CIN1003', 'docteur1003@shifa.tech', '$2a$10$7LOMrI6yVzN8E2xVxjqAouB.gZ7xHj2g5OQ20L3W7R5b0xJzU8v.6', 'DOCTOR', 'M', true, '1980-01-01', '0600001003', 'Adresse Test', CURRENT_TIMESTAMP),
 (1004, 'Docteur', 'Test1004', 'CIN1004', 'docteur1004@shifa.tech', '$2a$10$7LOMrI6yVzN8E2xVxjqAouB.gZ7xHj2g5OQ20L3W7R5b0xJzU8v.6', 'DOCTOR', 'M', true, '1980-01-01', '0600001004', 'Adresse Test', CURRENT_TIMESTAMP),
 (1005, 'Docteur', 'Test1005', 'CIN1005', 'docteur1005@shifa.tech', '$2a$10$7LOMrI6yVzN8E2xVxjqAouB.gZ7xHj2g5OQ20L3W7R5b0xJzU8v.6', 'DOCTOR', 'M', true, '1980-01-01', '0600001005', 'Adresse Test', CURRENT_TIMESTAMP),

@@ -35,15 +35,19 @@
 					<app-select [options]="typeBlessureOptions" [(value)]="form.typeBlessure" [hasSearch]="false" [disabled]="isReadOnly" />
 				</div>
 
-				<div class="col-span-1 sm:col-span-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
-					<p class="text-sm text-center text-gray-500">
-						<svg class="w-8 h-8 mx-auto mb-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-						<strong>Schéma Corporel</strong><br>
-						(L'interface de sélection interactive sera intégrée ici)<br>
-						@if (form.idBodyPart) {
-							<span class="text-xs text-primary-600">Zone ID sélectionnée : {{ form.idBodyPart }}</span>
-						}
-					</p>
+				<div class="col-span-1 sm:col-span-2">
+					<app-label>Zones Corporelles Affectées</app-label>
+					<app-body-map
+						[selectedCodes]="form.bodyParts"
+						[readOnly]="isReadOnly"
+						[debug]="env.debugBodyMap"
+						(selectionChange)="form.bodyParts = $event"
+					/>
+					@if (form.bodyParts.length > 0) {
+						<p class="mt-2 text-xs text-gray-500">
+							{{ form.bodyParts.length }} zone(s) sélectionnée(s)
+						</p>
+					}
 				</div>
 			}
 

@@ -40,4 +40,10 @@ public interface PatientClient {
 
     @PostMapping("/ordonnances")
     PrescriptionDTO createPrescription(@RequestBody PrescriptionDTO prescriptionDTO);
+
+    @GetMapping("/visites")
+    ApiResponse<List<Object>> getAllVisites(@RequestHeader("Authorization") String authHeader);
+
+    @GetMapping("/dossiers")
+    ApiResponse<List<Object>> getAllDossiers(@RequestHeader("Authorization") String authHeader);
 }

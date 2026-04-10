@@ -2,21 +2,21 @@
   <app-page-breadcrumb pageTitle="Planning" />
 
   <div>
-    <app-component-card title="Planning" desc="Manage your planning and schedule here.">
+    <app-component-card title="Planning" desc="Gérez votre emploi du temps et vos horaires ici.">
 
       <div *ngIf="!isAuthReady" class="rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200">
         Loading...
       </div>
 
       <div *ngIf="isAuthReady && !isDoctor" class="rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200">
-        This page is available for doctors only.
+        Cette page est réservée uniquement aux docteurs.
       </div>
 
       <div class="space-y-6">
         <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Schedules</h2>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Horaires</h2>
           <div class="text-sm text-gray-500 dark:text-gray-400" *ngIf="doctorId != null">
-            Doctor ID: {{ doctorId }}
+            ID Docteur : {{ doctorId }}
           </div>
         </div>
 
@@ -43,7 +43,7 @@
         </div> -->
 
         <div *ngIf="isLoading" class="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200">
-          Loading planning...
+          Chargement du planning...
         </div>
 
         <div class="space-y-4" [class.opacity-60]="isFormDisabled">
@@ -119,7 +119,17 @@
             [disabled]="isSaving"
             class="inline-flex h-11 items-center justify-center rounded-lg border border-gray-200 bg-white px-5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-white/10 dark:bg-white/3 dark:text-gray-200 dark:hover:bg-white/6"
           >
-            Cancel
+            Annuler
+          </button>
+
+          <button
+            type="button"
+            (click)="deleteSlot(activeDay)"
+            *ngIf="formByDay[activeDay].idPlan"
+            [disabled]="isSaving"
+            class="inline-flex h-11 items-center justify-center rounded-lg border border-red-200 bg-white px-5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-500/30 dark:bg-white/3 dark:text-red-400 dark:hover:bg-red-500/10"
+          >
+            Vider la journée
           </button>
 
           <button
@@ -128,7 +138,7 @@
             [disabled]="isFormDisabled"
             class="inline-flex h-11 items-center justify-center rounded-lg bg-brand-500 px-5 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
           >
-            Save Changes
+            Enregistrer les modifications
           </button>
         </div>
       </div>
