@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f1bdd8eceb5e3639fa6c99896ea72635",
+    "content-hash": "5cfd81abb1310c62aaf8a48eea63d387",
     "packages": [
         {
             "name": "api-platform/doctrine-common",
@@ -4682,16 +4682,16 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v7.4.5",
+            "version": "v7.4.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "84bb634857a893cc146cceb467e31b3f02c5fe9f"
+                "reference": "01933e626c3de76bea1e22641e205e78f6a34342"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/84bb634857a893cc146cceb467e31b3f02c5fe9f",
-                "reference": "84bb634857a893cc146cceb467e31b3f02c5fe9f",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/01933e626c3de76bea1e22641e205e78f6a34342",
+                "reference": "01933e626c3de76bea1e22641e205e78f6a34342",
                 "shasum": ""
             },
             "require": {
@@ -4759,7 +4759,7 @@
                 "http"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v7.4.5"
+                "source": "https://github.com/symfony/http-client/tree/v7.4.8"
             },
             "funding": [
                 {
@@ -4779,7 +4779,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-01-27T16:16:02+00:00"
+            "time": "2026-03-30T12:55:43+00:00"
         },
         {
             "name": "symfony/http-client-contracts",

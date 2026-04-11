@@ -8,6 +8,10 @@ import { DossierMedicalStore } from './dossier-medical.store';
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
 import { DossierMedicalDto, DossierStatus } from '../../core/models/dossier-medical.model';
 import { AlertService } from '../../core/services/alert.service';
+import { Store } from '@ngrx/store';
+import { selectUserRole } from '../../core/store/auth/auth.selectors';
+import { Role } from '../../core/models/role.enum';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-dossier-medical',
@@ -29,9 +33,15 @@ export class DossierMedicalComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly store = inject(DossierMedicalStore);
   private readonly alerts = inject(AlertService);
+  private readonly ngrxStore = inject(Store);
+
+  role: Role | null = null;
 
   ngOnInit(): void {
     this.loadDossiers();
+    this.ngrxStore.select(selectUserRole).pipe(take(1)).subscribe(r => {
+      this.role = r;
+    });
   }
 
   /*
@@ -71,7 +81,10 @@ export class DossierMedicalComponent implements OnInit {
     this.loadDossiers();
   }
   */
-
+  get isInfirmier(): boolean {
+    return String(this.role ?? '').toUpperCase() === 'INFIRMIER';
+  }
+  
   deleteDossier(id: number) {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')) {
       this.store.delete(id).subscribe({

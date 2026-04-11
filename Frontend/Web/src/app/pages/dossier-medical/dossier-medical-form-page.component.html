@@ -2,6 +2,12 @@
 	<app-page-breadcrumb pageTitle="Dossier Médical" />
 
 	<app-component-card [title]="title">
+		<div
+	    	*ngIf="isInfirmier && mode === 'edit'"
+	    	class="rounded-lg border border-error-200 bg-error-50 p-4 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400"
+	  	>
+	    	Vous n'avez pas les droits pour modifier un dossier médical.
+	  	</div>
 		@if (mode === 'view') {
 			<div class="space-y-8">
 				<!-- Patient / Dossier header strip -->
@@ -218,7 +224,9 @@
 
 			<div class="mt-8 flex items-center justify-end gap-3">
 				<app-button size="sm" variant="outline" (btnClick)="cancel()">Annuler</app-button>
-				<app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
+				<app-button size="sm" (btnClick)="save()" [disabled]="!isValid || isSaving">
+				  {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
+				</app-button>
 			</div>
 		}
 	</app-component-card>

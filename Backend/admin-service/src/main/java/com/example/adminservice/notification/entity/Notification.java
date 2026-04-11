@@ -1,13 +1,16 @@
 package com.example.adminservice.notification.entity;
 
+import com.example.adminservice.Enum.TypeNotif;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notification")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Notification {
     @Id
@@ -22,20 +25,15 @@ public class Notification {
     @Column(name = "message", columnDefinition = "TEXT", nullable = false)
     private String message;
 
-    @Column(name = "datePlanifiee")
-    private LocalDateTime datePlanifiee;   // quand envoyer
-
     @Column(name = "dateEnvoi")
-    private LocalDateTime dateEnvoi;       // quand réellement envoyé
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "statut", length = 20, nullable = false)
-    @Builder.Default
-    private StatutNotif statut = StatutNotif.PLANIFIE;
+    private LocalDateTime dateEnvoi;
 
     @Column(name = "id_user", nullable = false)
     private Integer idUser;
 
     @Column(name = "emailDestinataire")
     private String emailDestinataire;
+
+    @Builder.Default
+    private boolean lu = false;
 }

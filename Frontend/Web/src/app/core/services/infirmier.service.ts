@@ -45,7 +45,9 @@ export class InfirmierService extends ApiService {
         const userId = authResponse?.user?.idUser;
         return this.post<any>(`${this.base}`, {
           id_utilisateur: userId,
-          id_specialite: `/api/infirmier_specialites/${dto.idSpecialite}`,
+          id_specialite: dto.idSpecialite,
+          id_service: dto.id_service ?? 1,
+          statut: dto.statut ?? true,
         });
       })
     );

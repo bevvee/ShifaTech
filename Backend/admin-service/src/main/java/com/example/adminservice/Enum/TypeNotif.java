@@ -1,4 +1,4 @@
-package com.example.adminservice.notification.entity;
+package com.example.adminservice.Enum;
 
 public enum TypeNotif {
     RAPPEL,

@@ -72,39 +72,48 @@ export class InfirmiersFormPageComponent implements OnInit {
     idSpecialite: '',
   };
 
+  private extractErrorMessage(err: any): string {
+    const body = typeof err?.error === 'string'
+      ? (() => { try { return JSON.parse(err.error); } catch { return {}; } })()
+      : err?.error ?? {};
+
+    return body?.message
+      || body?.detail
+      || body?.['hydra:description']
+      || err?.message
+      || 'Une erreur est survenue.';
+  }
+
   ngOnInit() {
-      this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
-      const idParam = this.route.snapshot.paramMap.get('id');
-      this.id = idParam ? Number(idParam) : null;
+    this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
+    const idParam = this.route.snapshot.paramMap.get('id');
+    this.id = idParam ? Number(idParam) : null;
 
-      this.loadSpecialites();
+    this.loadSpecialites();
 
-      if (this.mode === 'edit' && this.id != null) {
-        this.infirmierService.getById(this.id).subscribe({
-          next: (existing: any) => {
-            console.log('existing reçu:', existing); 
-            this.form = {
-              nom: existing.nom ?? '',
-              prenom: existing.prenom ?? '',
-              cin: existing.cin ?? '',
-              email: existing.email ?? '',
-              password: '',
-              sexe: existing.sexe ?? 'M',
-              statutValue: existing.statut ? 'true' : 'false',
-              dateNaissance: existing.dateNaissance ?? '',
-              telephone: existing.telephone ?? '',
-              adresse: existing.adresse ?? '',
-              idSpecialite: String(existing.id_specialite ?? ''),
-            };
-          },
-          error: (err) => {
-            this.loading = false;
-            const message = err?.error?.message || 'Une erreur est survenue.';
-            this.toastService.error('Erreur', message);
-          }
-        });
-      }
+    if (this.mode === 'edit' && this.id != null) {
+      this.infirmierService.getById(this.id).subscribe({
+        next: (existing: any) => {
+          this.form = {
+            nom: existing.nom ?? '',
+            prenom: existing.prenom ?? '',
+            cin: existing.cin ?? '',
+            email: existing.email ?? '',
+            password: '',
+            sexe: existing.sexe ?? 'M',
+            statutValue: existing.statut ? 'true' : 'false',
+            dateNaissance: existing.dateNaissance ?? '',
+            telephone: existing.telephone ?? '',
+            adresse: existing.adresse ?? '',
+            idSpecialite: String(existing.id_specialite ?? ''),
+          };
+        },
+        error: (err) => {
+          this.toastService.error('Erreur', this.extractErrorMessage(err));
+        }
+      });
     }
+  }
 
   loadSpecialites() {
     this.infirmierService.getSpecialites().subscribe({
@@ -115,7 +124,9 @@ export class InfirmiersFormPageComponent implements OnInit {
           label: s.label
         }));
       },
-      error: () => {}
+      error: (err) => {
+        this.toastService.error('Erreur', this.extractErrorMessage(err));
+      }
     });
   }
 
@@ -136,17 +147,11 @@ export class InfirmiersFormPageComponent implements OnInit {
     );
   }
 
-  testToast() {
-    this.toastService.error('Erreur', 'Test message erreur');
-  }
-  
   cancel() {
     this.router.navigate(['/infirmiers']);
   }
 
   save() {
-    console.log('save appelé, mode:', this.mode, 'id:', this.id);
-    console.log('isValid:', this.isValid);
     this.submitted = true;
     if (!this.isValid) return;
 
@@ -169,24 +174,20 @@ export class InfirmiersFormPageComponent implements OnInit {
       }).subscribe({
         next: () => {
           this.loading = false;
-          this.toastService.success('Succès', 'Infirmier créé avec succès.');
-          this.router.navigate(['/infirmiers']);
+          this.router.navigate(['/infirmiers']).then(() => {
+            this.toastService.success('Succès', 'Infirmier créé avec succès.');
+          });
         },
-       error: (err) => {
+        error: (err) => {
           this.loading = false;
-          const message = err?.error?.message || 'Une erreur est survenue.';
-          this.toastService.error('Erreur', message);
+          this.toastService.error('Erreur', this.extractErrorMessage(err));
         }
       });
       return;
     }
 
-    if (this.id == null) {
-        console.log('id est null, return');
-        return;
-    }
-    console.log('id ok, lancement update');
-    
+    if (this.id == null) return;
+
     const updateDto: any = {
       nom: this.form.nom.trim(),
       prenom: this.form.prenom.trim(),
@@ -200,18 +201,17 @@ export class InfirmiersFormPageComponent implements OnInit {
       id_specialite: `/api/infirmier_specialites/${this.form.idSpecialite}`,
     };
     if (this.form.password.trim()) updateDto.motDePasse = this.form.password.trim();
-    console.log('avant update, id:', this.id, 'dto:', updateDto);
+
     this.infirmierService.update(this.id, updateDto).subscribe({
-      next: (res) => {
+      next: () => {
         this.loading = false;
-        this.toastService.success('Succès', 'Infirmier modifié avec succès.');
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigate(['/infirmiers']);
+        this.router.navigate(['/infirmiers']).then(() => {
+          this.toastService.success('Succès', 'Infirmier modifié avec succès.');
         });
       },
       error: (err) => {
-        console.log('PUT error reçu:', err);
         this.loading = false;
+        this.toastService.error('Erreur', this.extractErrorMessage(err));
       }
     });
   }

@@ -6,7 +6,7 @@ spring:
     name: admin-service
 
   datasource:
-    url: jdbc:mysql://admin-db:3306/admindb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://admin-db:3306/admindb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
     username: adminuser
     password: adminpass
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -14,8 +14,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQL8Dialect 
     show-sql: true
     properties:
+      hibernate:
         format_sql: true
 
   mail:

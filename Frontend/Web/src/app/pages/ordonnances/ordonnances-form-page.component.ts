@@ -39,6 +39,7 @@ type Mode = 'create' | 'edit' | 'view';
 export class OrdonnancesFormPageComponent implements OnInit {
   mode: Mode;
   submitted = false;
+  isSaving = false;
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -298,40 +299,42 @@ export class OrdonnancesFormPageComponent implements OnInit {
     this.router.navigate(['/ordonnances']);
   };
 
-  save = async () => {
+  save = () => {
     this.submitted = true;
-    if (!this.isValid) return;
+    if (!this.isValid || this.isSaving) return;
+    if (this.isReadOnly) { this.cancel(); return; }
 
-    if (this.isReadOnly) {
-      this.cancel();
-      return;
-    }
-
-    const form = this.form!;
-    const mode = this.mode!;
-    const store = this.store!;
-    const alerts = this.alerts!;
-    const router = this.router!;
-    const id = this.id;
-
+    this.isSaving = true;
     const payload = {
-      ...form,
-      idPatient: Number(form.idPatient),
-      idVisite: form.idVisite ? Number(form.idVisite) : undefined
+      ...this.form,
+      idPatient: Number(this.form.idPatient),
+      idVisite: this.form.idVisite ? Number(this.form.idVisite) : undefined,
     };
 
-    try {
-      if (mode === 'create') {
-        store.create(payload as any); // Use any for now as other stores aren't async yet
-        await alerts.success('Ordonnance ajoutée avec succès.');
-      } else if (id != null) {
-        store.update(id, payload as any);
-        await alerts.success('Ordonnance modifiée avec succès.');
-      }
-
-      router.navigate(['/ordonnances']);
-    } catch {
-      await alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+    if (this.mode === 'create') {
+      this.store.create(payload as any).subscribe({
+        next: async () => {
+          await this.alerts.success('Ordonnance ajoutée avec succès.');
+          this.isSaving = false;
+          this.router.navigate(['/ordonnances']);
+        },
+        error: async () => {
+          await this.alerts.error('Erreur lors de la création.');
+          this.isSaving = false;
+        }
+      });
+    } else if (this.id != null) {
+      this.store.update(this.id, payload as any).subscribe({
+        next: async () => {
+          await this.alerts.success('Ordonnance modifiée avec succès.');
+          this.isSaving = false;
+          this.router.navigate(['/ordonnances']);
+        },
+        error: async () => {
+          await this.alerts.error('Erreur lors de la modification.');
+          this.isSaving = false;
+        }
+      });
     }
   };
 }

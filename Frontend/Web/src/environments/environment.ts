@@ -8,5 +8,6 @@ export const environment = {
     infirmierSpecialite: '/infirmier/api/infirmier_specialites',
     rdv: '/rdv/api/rendez_vouses',
     visites:'/patient/api/visites',
+    admin: '/admin/api',
   }
 };

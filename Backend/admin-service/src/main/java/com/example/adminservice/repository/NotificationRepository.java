@@ -1,29 +1,20 @@
 package com.example.adminservice.repository;
 
-
+import com.example.adminservice.Enum.TypeNotif;
 import com.example.adminservice.notification.entity.Notification;
-import com.example.adminservice.notification.entity.StatutNotif;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Integer> {
 
-    // Pour le scheduler : toutes les notifs planifiées dont la date est passée
-    List<Notification> findByStatutAndDatePlanifieeBefore(
-            StatutNotif statut,
-            LocalDateTime now
-    );
+    List<Notification> findByIdUserOrderByDateEnvoiDesc(Integer idUser);
 
-    // Historique par utilisateur
-    List<Notification> findByIdUserOrderByDatePlanifieeDesc(Integer idUser);
+    List<Notification> findByIdUserAndTypeNotif(Integer idUser, TypeNotif typeNotif);
 
-    // Filtrer par type
-    List<Notification> findByIdUserAndTypeNotif(
-            Integer idUser,
-            com.example.adminservice.notification.entity.TypeNotif typeNotif
-    );
+    boolean existsByIdUserAndMessageContaining(Integer idUser, String messageFragment);
+
+    boolean existsByIdUserAndMessage(Integer idUser, String message);
+
 }

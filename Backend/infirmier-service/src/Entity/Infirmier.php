@@ -2,13 +2,17 @@
 
 namespace App\Entity;
 
-
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\InfirmierRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: InfirmierRepository::class)]
-class Infirmier implements UserInterface
+class Infirmier
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -17,6 +21,9 @@ class Infirmier implements UserInterface
 
     #[ORM\Column]
     private ?int $id_utilisateur = null;
+
+    #[ORM\Column]
+    private ?int $id_service = null;
 
     #[ORM\ManyToOne(targetEntity: InfirmierSpecialite::class, inversedBy: 'infirmiers')]
     #[ORM\JoinColumn(name: 'id_specialite', referencedColumnName: 'id_specialite', nullable: false)]
@@ -28,7 +35,7 @@ class Infirmier implements UserInterface
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updated_at = null;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $deleted_at = null;
 
     public function getId(): ?int
@@ -48,6 +55,18 @@ class Infirmier implements UserInterface
         return $this;
     }
 
+    public function getIdService(): ?int
+    {
+        return $this->id_service;
+    }
+
+    public function setIdService(?int $id_service): static
+    {
+        $this->id_service = $id_service;
+
+        return $this;
+    }
+
     public function getIdSpecialite(): ?InfirmierSpecialite
     {
         return $this->id_specialite;
@@ -59,51 +78,12 @@ class Infirmier implements UserInterface
 
         return $this;
     }
-    public function getUserIdentifier(): string
-    {
-        return (string) $this->id;
-    }
+    public function getCreatedAt(): ?\DateTimeImmutable { return $this->created_at; }
+    public function setCreatedAt(?\DateTimeImmutable $created_at): static { $this->created_at = $created_at; return $this; }
 
-    public function getRoles(): array
-    {
-        return ['ROLE_INFIRMIER'];
-    }
+    public function getUpdatedAt(): ?\DateTimeImmutable { return $this->updated_at; }
+    public function setUpdatedAt(?\DateTimeImmutable $updated_at): static { $this->updated_at = $updated_at; return $this; }
 
-    public function eraseCredentials(): void {}
-
-    public function getCreatedAt(): ?\DateTimeImmutable
-    {
-        return $this->created_at;
-    }
-
-    public function setCreatedAt(?\DateTimeImmutable $created_at): static
-    {
-        $this->created_at = $created_at;
-
-        return $this;
-    }
-
-    public function getUpdatedAt(): ?\DateTimeImmutable
-    {
-        return $this->updated_at;
-    }
-
-    public function setUpdatedAt(?\DateTimeImmutable $updated_at): static
-    {
-        $this->updated_at = $updated_at;
-
-        return $this;
-    }
-
-    public function getDeletedAt(): ?\DateTimeImmutable
-    {
-        return $this->deleted_at;
-    }
-
-    public function setDeletedAt(\DateTimeImmutable $deleted_at): static
-    {
-        $this->deleted_at = $deleted_at;
-
-        return $this;
-    }
+    public function getDeletedAt(): ?\DateTimeImmutable { return $this->deleted_at; }
+    public function setDeletedAt(?\DateTimeImmutable $deleted_at): static { $this->deleted_at = $deleted_at; return $this; }
 }

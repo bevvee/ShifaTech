@@ -36,13 +36,13 @@ export class PlanningComponent {
   selectedDoctorId: number | null = null;
 
   readonly days: Array<{ key: DayKey; label: string }> = [
-    { key: 'MONDAY', label: 'Monday' },
-    { key: 'TUESDAY', label: 'Tuesday' },
-    { key: 'WEDNESDAY', label: 'Wednesday' },
-    { key: 'THURSDAY', label: 'Thursday' },
-    { key: 'FRIDAY', label: 'Friday' },
-    { key: 'SATURDAY', label: 'Saturday' },
-    { key: 'SUNDAY', label: 'Sunday' },
+    { key: 'MONDAY',    label: 'Lundi' },
+    { key: 'TUESDAY',   label: 'Mardi' },
+    { key: 'WEDNESDAY', label: 'Mercredi' },
+    { key: 'THURSDAY',  label: 'Jeudi' },
+    { key: 'FRIDAY',    label: 'Vendredi' },
+    { key: 'SATURDAY',  label: 'Samedi' },
+    { key: 'SUNDAY',    label: 'Dimanche' },
   ];
 
   activeDay: DayKey = 'MONDAY';
@@ -62,6 +62,27 @@ export class PlanningComponent {
 
   get activeDayLabel(): string {
     return this.days.find((d) => d.key === this.activeDay)?.label ?? this.activeDay;
+  }
+  get availabilityByDay(): Record<string, { heureDebut: string; heureFin: string; pauseDebut: string; pauseFin: string }[]> {
+    const result: Record<string, any[]> = {};
+    for (const d of this.days) {
+      const form = this.formByDay[d.key];
+      if (form.heureDebut && form.heureFin) {
+        result[d.key] = [{ 
+          heureDebut: form.heureDebut, 
+          heureFin: form.heureFin,
+          pauseDebut: form.pauseDebut,
+          pauseFin: form.pauseFin
+        }];
+      }
+    }
+    return result;
+  }
+
+  get hasAvailability(): boolean {
+    return this.days.some(d => 
+      this.formByDay[d.key].heureDebut && this.formByDay[d.key].heureFin
+    );
   }
 
   // One slot per day for now (matches the requested DB columns).
@@ -304,8 +325,23 @@ export class PlanningComponent {
       SATURDAY: 'SATURDAY', SAMEDI: 'SATURDAY',
       SUNDAY: 'SUNDAY', DIMANCHE: 'SUNDAY',
     };
+    if (map[s]) return map[s];
 
-    return map[s] ?? null;
+  // Gérer les dates au format DD-MM-YYYY (ex: "06-04-2026")
+  try {
+    let dateStr = raw;
+    if (/^\d{2}-\d{2}-\d{4}$/.test(raw)) {
+      const [dd, mm, yyyy] = raw.split('-');
+      dateStr = `${yyyy}-${mm}-${dd}`; // → YYYY-MM-DD
+    }
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      const dayNames: DayKey[] = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+      return dayNames[date.getDay()];
+    }
+  } catch {}
+
+  return null;
   }
 }
 
