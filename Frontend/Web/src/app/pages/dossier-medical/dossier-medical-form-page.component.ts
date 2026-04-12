@@ -68,6 +68,23 @@ export class DossierMedicalFormPageComponent implements OnInit {
   linkedOrdonnances: OrdonnanceDto[] = [];
 
   patientOptions: Option[] = [];
+  groupeSanguinOptions: Option[] = [
+    { value: 'A+', label: 'A+' },
+    { value: 'A-', label: 'A-' },
+    { value: 'B+', label: 'B+' },
+    { value: 'B-', label: 'B-' },
+    { value: 'AB+', label: 'AB+' },
+    { value: 'AB-', label: 'AB-' },
+    { value: 'O+', label: 'O+' },
+    { value: 'O-', label: 'O-' },
+  ];
+
+  statusOptions: Option[] = [
+    { value: 'ACTIVE', label: 'Actif' },
+    { value: 'ARCHIVED', label: 'Archivé' },
+    { value: 'DECEASED', label: 'Décédé' },
+  ];
+
 
   form = {
     idPatient: '',
@@ -152,8 +169,69 @@ export class DossierMedicalFormPageComponent implements OnInit {
     });
   }
 
+  get title(): string {
+    if (this.mode === 'create') return 'Nouveau Dossier Médical';
+    if (this.mode === 'view') return 'Détails du Dossier Médical';
+    return 'Modifier le Dossier Médical';
+  }
+
   get isReadOnly(): boolean {
     return this.mode === 'view';
+  }
+
+  get isInfirmier(): boolean {
+    return this.role === Role.INFIRMIER;
+  }
+
+  get weightError(): string {
+    if (this.submitted && this.form.poids <= 0) return 'Le poids doit être supérieur à 0.';
+    return '';
+  }
+
+  get heightError(): string {
+    if (this.submitted && this.form.taille <= 0) return 'La taille doit être supérieure à 0.';
+    return '';
+  }
+
+  get bmiDisplay(): string {
+    if (this.form.poids > 0 && this.form.taille > 0) {
+      const hM = this.form.taille / 100;
+      return (this.form.poids / (hM * hM)).toFixed(1);
+    }
+    return '-';
+  }
+
+  get patientDisplayName(): string {
+    return this.dossier?.nomPatient || '-';
+  }
+
+  get patientInitials(): string {
+    const name = this.patientDisplayName;
+    if (!name || name === '-') return '?';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  get dossierNumber(): string {
+    return this.dossier?.numDossier || '-';
+  }
+
+  get createdAtIso(): string | undefined {
+    return this.dossier?.dateCreation;
+  }
+
+  getStatusPillClass(status: string): string {
+    switch (status) {
+      case 'ACTIVE': return 'bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400';
+      case 'ARCHIVED': return 'bg-gray-100 text-gray-700 dark:bg-white/5 dark:text-gray-400';
+      case 'DECEASED': return 'bg-error-50 text-error-700 dark:bg-error-500/10 dark:text-error-400';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  }
+
+  createVisite() {
+    if (this.id) {
+      this.router.navigate(['/visites/new'], { queryParams: { dossierId: this.id } });
+    }
   }
 
   get isValid(): boolean {

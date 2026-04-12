@@ -26,9 +26,9 @@
       class="map-svg"
       style="position: relative; display: block;"
     >
-      <!-- Image de fond DANS le SVG = alignement parfait avec les zones cliquables -->
       <image
-        *ngIf="activeSection?.background_image"
+        *ngIf="activeSection.background_image"
+
         [attr.href]="activeSection!.background_image"
         x="0"
         y="0"

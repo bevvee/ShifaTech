@@ -1,5 +1,6 @@
 export const environment = {
   production: false,
+  debugBodyMap: false,
   api: {
     auth: '/auth',
     patient: '/patient',
@@ -12,3 +13,4 @@ export const environment = {
     admin: '/admin/api',
   }
 };
+
