@@ -109,7 +109,10 @@ export class DossierMedicalComponent implements OnInit {
 
     this.store.delete(id).subscribe({
       next: () => this.loadDossiers(),
-      error: (err) => console.error('Erreur suppression dossier', err)
+      error: (err) => {
+        console.error('Erreur suppression dossier', err);
+        void this.alerts.error('Impossible de supprimer ce dossier.');
+      }
     });
   }
 

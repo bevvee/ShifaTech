@@ -95,19 +95,16 @@ export class VisitesComponent implements OnInit {
   }
   */
 
-  deleteVisite(id: number) {
-    void this.confirmAndDeleteVisite(id);
-  }
-
-  private async confirmAndDeleteVisite(id: number) {
+  async deleteVisite(id: number) {
     const ok = await this.alerts.confirmDelete('cette visite');
     if (!ok) return;
 
     this.store.delete(id).subscribe({
-      next: () => {
-        this.loadVisites();
-      },
-      error: (err) => console.error('Erreur suppression visite', err)
+      next: () => this.loadVisites(),
+      error: (err) => {
+        console.error('Erreur suppression visite', err);
+        void this.alerts.error('Erreur lors de la suppression de la visite.');
+      }
     });
   }
 

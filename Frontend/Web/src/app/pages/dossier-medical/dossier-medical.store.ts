@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { DossierMedicalDto, DossierMedicalCreateDto } from '../../core/models/dossier-medical.model';
 import { PatientsStore } from '../patients/patients.store';
 import { DossierApiService } from '../../core/services/api/dossier-api.service';
-import { Observable, tap, of, map } from 'rxjs';
+import { Observable, tap, of, map, switchMap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class DossierMedicalStore {
@@ -117,11 +117,36 @@ export class DossierMedicalStore {
     );
   }
 
-  update(id: number, patch: Partial<DossierMedicalCreateDto>): Observable<DossierMedicalDto> {
-    // On doit d'abord trouver le dossier pour avoir l'idPatient
-    const dossier = this.dossiers.find(d => d.id === id);
-    if (!dossier) throw new Error('Dossier non trouvé localement');
+  update(id: number, patch: Partial<DossierMedicalCreateDto>, idPatient?: number): Observable<DossierMedicalDto> {
+    const actualIdPatient = idPatient ?? Number(patch.idPatient);
     
+    // Si on a l'idPatient directement (passé en argument ou dans le patch)
+    if (actualIdPatient && !isNaN(actualIdPatient)) {
+      return this.api.update(actualIdPatient, patch).pipe(
+        tap(updatedDossier => {
+          const index = this.dossiers.findIndex(d => d.id === id);
+          if (index !== -1) {
+            this.dossiers[index] = updatedDossier;
+          }
+        })
+      );
+    }
+
+    // Sinon on tente de le trouver dans le cache (ancien comportement)
+    const dossier = this.dossiers.find(d => d.id === id);
+    if (!dossier) {
+      // Cas extrême: on doit fetch la liste pour retrouver le dossier
+      return this.api.getAll().pipe(
+        map(list => list.find(d => d.id === id)),
+        tap(found => { if (!found) throw new Error('Dossier non trouvé sur le serveur'); }),
+        map(found => found!),
+        switchMap(found => {
+          this.dossiers = [found, ...this.dossiers];
+          return this.update(id, patch);
+        })
+      );
+    }
+
     return this.api.update(dossier.idPatient, patch).pipe(
       tap(updatedDossier => {
         const index = this.dossiers.findIndex(d => d.id === id);
@@ -132,21 +157,25 @@ export class DossierMedicalStore {
     );
   }
 
-  delete(id: number): Observable<void> {
-    const dossier = this.dossiers.find(d => d.id === id);
-    if (!dossier) throw new Error('Dossier non trouvé localement');
-    return this.api.delete(dossier.idPatient).pipe(
-      tap(() => {
-        this.dossiers = this.dossiers.filter(d => d.id !== id);
-      })
-    );
-  }
-
   deleteByPatientId(idPatient: number): Observable<void> {
     return this.api.delete(idPatient).pipe(
       tap(() => {
         this.dossiers = this.dossiers.filter(d => d.idPatient !== idPatient);
       })
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    const dossier = this.dossiers.find(d => d.id === id);
+    if (dossier) {
+       return this.deleteByPatientId(dossier.idPatient);
+    }
+    // Si non trouvé en cache, on ne peut pas deviner l'idPatient sans fetch
+    return this.getAll().pipe(
+      map(list => list.find(d => d.id === id)),
+      tap(found => { if (!found) throw new Error('Dossier non trouvé'); }),
+      map(found => found!),
+      switchMap(found => this.deleteByPatientId(found.idPatient))
     );
   }
 }

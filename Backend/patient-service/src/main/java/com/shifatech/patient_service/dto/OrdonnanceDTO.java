@@ -23,7 +23,7 @@ public class OrdonnanceDTO {
     private String dureeTraitement;
     private String instructions;
     private java.time.LocalDate dateValidite;
-    private Boolean statut;
+    private com.shifatech.patient_service.entity.StatusOrdonnance statut;
 
     // Infos pour l'affichage
     private String nomPatient;

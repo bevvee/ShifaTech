@@ -134,6 +134,108 @@ export class OrdonnancesFormPageComponent implements OnInit {
     });
   }
 
+  get title(): string {
+    if (this.mode === 'create') return 'Nouvelle Ordonnance';
+    if (this.mode === 'view') return 'Patient Details';
+    return 'Modifier l\'Ordonnance';
+  }
+
+  get patientDisplayName(): string {
+    const p = this.patient;
+    if (!p) {
+      const fallback = (this.ordonnance?.nomPatient ?? '').trim();
+      return fallback || '-';
+    }
+    const prenom = (p.prenom ?? '').trim();
+    const nom = (p.nom ?? '').trim();
+    if (!prenom && !nom) return '-';
+
+    const prefix = p.sexe === 'M' ? 'M.' : p.sexe === 'F' ? 'Mme.' : '';
+    return `${prefix}${prefix ? '' : ''}${prenom ? prenom + ' ' : ''}${nom}`.trim();
+  }
+
+  get patientAgeYears(): number | null {
+    const raw = this.patient?.dateNaissance;
+    if (!raw) return null;
+    const dob = new Date(raw);
+    if (Number.isNaN(dob.getTime())) return null;
+    const today = new Date();
+    let years = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) years -= 1;
+    return years >= 0 ? years : null;
+  }
+
+  get patientSexLabel(): string {
+    const s = this.patient?.sexe;
+    if (s === 'M') return 'Homme';
+    if (s === 'F') return 'Femme';
+    return '-';
+  }
+
+  get patientBloodGroup(): string {
+    const raw = String((this.dossier?.groupeSanguin as string) || '').trim();
+    if (!raw) return '-';
+    // Render like "O+ve" to match the screenshot style.
+    if (raw.endsWith('+') || raw.endsWith('-')) return `${raw}ve`;
+    return raw;
+  }
+
+  get patientPrettyId(): string {
+    const id = this.patient?.id ?? Number(this.form.idPatient);
+    if (!Number.isFinite(id) || !id) return '-';
+    return `PT${String(id).padStart(4, '0')}`;
+  }
+
+  get prescriptionTitle(): string {
+    return this.form.description?.trim() ? this.form.description.trim() : 'Ordonnance';
+  }
+
+  get medicationRows(): Array<{
+    sno: string;
+    medicineName: string;
+    dosage: string;
+    frequency: string;
+    duration: string;
+    timings: string;
+  }> {
+    const meds = String(this.form.medicaments ?? '')
+      .split(',')
+      .map((m) => m.trim())
+      .filter(Boolean);
+
+    const duration = this.form.dureeTraitement?.trim() || '-';
+    const timings = this.form.instructions?.trim() || '-';
+
+    return meds.map((medicineName, idx) => {
+      const sno = String(idx + 1).padStart(2, '0');
+      const { dosage, frequency } = this.extractDosageAndFrequency(medicineName, this.form.posologie);
+      return {
+        sno,
+        medicineName,
+        dosage,
+        frequency,
+        duration,
+        timings,
+      };
+    });
+  }
+
+  private extractDosageAndFrequency(medicine: string, posologie: string): { dosage: string; frequency: string } {
+    const med = String(medicine ?? '').trim();
+    const pos = String(posologie ?? '').trim();
+
+    // Try to find a dosage token like "75MG" / "90 mg" / "2.5 ml" in either medicine name or posologie.
+    const dosageMatch = (med + ' ' + pos).match(/\b\d+(?:[.,]\d+)?\s*(?:MG|G|MCG|ML|IU)\b/i);
+    const dosage = dosageMatch ? dosageMatch[0].replace(/\s+/g, ' ').trim() : '-';
+
+    // Try to extract frequency pattern like 1-0-1.
+    const freqMatch = pos.match(/\b\d\s*-\s*\d\s*-\s*\d\b/);
+    const frequency = freqMatch ? freqMatch[0].replace(/\s+/g, '') : (pos ? pos : '-');
+
+    return { dosage, frequency };
+  }
+
   get isReadOnly(): boolean {
     return this.mode === 'view';
   }

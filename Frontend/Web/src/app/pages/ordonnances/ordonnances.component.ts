@@ -149,12 +149,17 @@ export class OrdonnancesComponent implements OnInit {
   }
   */
 
-  deleteOrdonnance(id: number) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette ordonnance ?')) {
-      this.store.delete(id).subscribe(() => {
-        this.loadOrdonnances();
-      });
-    }
+  async deleteOrdonnance(id: number) {
+    const ok = await this.alerts.confirmDelete('cette ordonnance');
+    if (!ok) return;
+
+    this.store.delete(id).subscribe({
+      next: () => this.loadOrdonnances(),
+      error: (err) => {
+        console.error('Erreur suppression ordonnance', err);
+        void this.alerts.error('Erreur lors de la suppression de l\'ordonnance.');
+      }
+    });
   }
 
   getStatusBadgeColor(status: OrdonnanceStatut): 'success' | 'warning' | 'error' {

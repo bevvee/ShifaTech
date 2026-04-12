@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Role } from '../../core/models/role.enum';
 import { Store } from '@ngrx/store';
 import { selectUserRole } from '../../core/store/auth/auth.selectors';
@@ -42,6 +42,7 @@ type Mode = 'create' | 'edit' | 'view';
   templateUrl: './dossier-medical-form-page.component.html'
 })
 export class DossierMedicalFormPageComponent implements OnInit {
+
   mode: Mode;
   submitted = false;
   readonly Role = Role;
@@ -55,30 +56,18 @@ export class DossierMedicalFormPageComponent implements OnInit {
   private readonly ordonnancesStore = inject(OrdonnanceStore);
   private readonly alerts = inject(AlertService);
   private readonly ngrxStore = inject(Store);
+
   role: Role | null = null;
   isSaving = false;
 
+  private readonly cdr = inject(ChangeDetectorRef);
   private id: number | null;
 
   dossier: DossierMedicalDto | null = null;
-  
   linkedVisites: VisiteDto[] = [];
   linkedOrdonnances: OrdonnanceDto[] = [];
 
   patientOptions: Option[] = [];
-
-  statusOptions: Option[] = [
-    { value: 'ACTIVE', label: 'ACTIVE' },
-    { value: 'ARCHIVED', label: 'ARCHIVED' },
-    { value: 'DECEASED', label: 'DECEASED' },
-  ];
-
-  groupeSanguinOptions: Option[] = [
-    { value: 'A+', label: 'A+' }, { value: 'A-', label: 'A-' },
-    { value: 'B+', label: 'B+' }, { value: 'B-', label: 'B-' },
-    { value: 'AB+', label: 'AB+' }, { value: 'AB-', label: 'AB-' },
-    { value: 'O+', label: 'O+' }, { value: 'O-', label: 'O-' },
-  ];
 
   form = {
     idPatient: '',
@@ -98,51 +87,26 @@ export class DossierMedicalFormPageComponent implements OnInit {
     const idParam = this.route.snapshot.paramMap.get('id');
     this.id = idParam ? Number(idParam) : null;
 
-    // Handle Query Params for pre-selection
     const qPatientId = this.route.snapshot.queryParamMap.get('patientId');
     if (this.mode === 'create' && qPatientId) {
       this.form.idPatient = qPatientId;
     }
-
-    /*
-    if (this.mode !== 'create' && this.id != null) {
-      const existing = this.store.getById(this.id);
-      if (!existing) {
-        this.router.navigate(['/dossier-medical']);
-        return;
-      }
-
-      this.dossier = existing;
-      this.form = {
-        idPatient: String(existing.idPatient),
-        status: existing.status,
-        poids: existing.poids,
-        taille: existing.taille,
-        groupeSanguin: existing.groupeSanguin,
-        antecedentsMedicaux: existing.antecedentsMedicaux,
-        allergies: existing.allergies,
-        pathologiesChroniques: existing.pathologiesChroniques,
-        diagnostic: existing.diagnostic,
-        notes: existing.notes,
-      };
-
-      // Load History
-      this.linkedVisites = this.visitesStore.getByDossierId(this.id);
-      this.linkedOrdonnances = this.ordonnancesStore.getByPatientId(existing.idPatient);
-    }
-    */
 
     this.loadPatients();
   }
 
   ngOnInit() {
     if (this.mode !== 'create' && this.id != null) {
+
       this.store.getById(this.id).subscribe({
         next: (existing) => {
           if (!existing) {
             this.router.navigate(['/dossier-medical']);
             return;
           }
+
+          this.dossier = existing;
+
           this.form = {
             idPatient: String(existing.idPatient),
             status: existing.status,
@@ -156,25 +120,23 @@ export class DossierMedicalFormPageComponent implements OnInit {
             notes: existing.notes,
           };
 
-          // Load History (Mocks for now)
-          /*
-          this.linkedVisites = this.visitesStore.getByDossierId(this.id!);
-          */
           this.visitesStore.getByDossierId(this.id!).subscribe(list => {
             this.linkedVisites = list;
+            this.cdr.detectChanges();
           });
+
+          this.ordonnancesStore.getByPatientId(existing.idPatient).subscribe(list => {
+            this.linkedOrdonnances = list;
+            this.cdr.detectChanges();
+          });
+
           this.ngrxStore.select(selectUserRole).pipe(take(1)).subscribe(r => {
             this.role = r;
           });
-          /*
-          this.linkedOrdonnances = this.ordonnancesStore.getByPatientId(existing.idPatient);
-          */
-          this.ordonnancesStore.getByPatientId(existing.idPatient).subscribe(list => {
-            this.linkedOrdonnances = list;
-          });
         },
+
         error: (err) => {
-          console.error('Erreur chargement dossier', err);
+          console.error(err);
           this.router.navigate(['/dossier-medical']);
         }
       });
@@ -190,100 +152,16 @@ export class DossierMedicalFormPageComponent implements OnInit {
     });
   }
 
-  createVisite() {
-    this.router.navigate(['/visites/new'], { queryParams: { dossierId: this.id } });
-  }
-
-  get title(): string {
-    if (this.mode === 'create') return 'Nouveau Dossier Médical';
-    if (this.mode === 'view') return 'Détails du Dossier';
-    return 'Modifier le Dossier';
-  }
-
   get isReadOnly(): boolean {
     return this.mode === 'view';
   }
 
-  get weightError(): string {
-    if (this.form.poids === null || this.form.poids === undefined) return '';
-    if (this.form.poids <= 0.5) return 'Le poids doit être supérieur à 0.5 kg';
-    if (this.form.poids > 500) return 'Le poids doit être inférieur à 500 kg';
-    return '';
-  }
-
-  get heightError(): string {
-    if (this.form.taille === null || this.form.taille === undefined) return '';
-    if (this.form.taille <= 30) return 'La taille doit être supérieure à 30 cm';
-    if (this.form.taille > 250) return 'La taille doit être inférieure à 250 cm';
-    return '';
-  }
-
   get isValid(): boolean {
-    if (this.isReadOnly) return true;
     return (
-      this.form.idPatient !== '' && 
-      this.weightError === '' && 
-      this.heightError === '' &&
-      this.form.poids > 0 && 
+      this.form.idPatient !== '' &&
+      this.form.poids > 0 &&
       this.form.taille > 0
     );
-  }
-
-  get patientDisplayName(): string {
-    const name = this.dossier?.nomPatient?.toString().trim();
-    if (name) return name;
-    const patientId = this.form.idPatient ? Number(this.form.idPatient) : this.dossier?.idPatient;
-    return patientId ? `Patient #${patientId}` : 'Patient';
-  }
-
-  get patientInitials(): string {
-    const parts = this.patientDisplayName
-      .split(' ')
-      .map(p => p.trim())
-      .filter(Boolean);
-    const a = parts[0]?.[0] ?? '';
-    const b = parts[1]?.[0] ?? '';
-    const initials = `${a}${b}`.toUpperCase();
-    return initials || 'P';
-  }
-  get isInfirmier(): boolean {
-    return String(this.role ?? '').toUpperCase() === 'INFIRMIER';
-  }
-
-  get dossierNumber(): string {
-    return this.dossier?.numDossier?.toString().trim() || '-';
-  }
-
-  get patientIdDisplay(): string {
-    const id = this.dossier?.idPatient ?? (this.form.idPatient ? Number(this.form.idPatient) : null);
-    return id != null && !Number.isNaN(id) ? String(id) : '-';
-  }
-
-  get createdAtIso(): string | null {
-    return this.dossier?.dateCreation ?? null;
-  }
-
-  get bmiDisplay(): string {
-    const weightKg = Number(this.form.poids);
-    const heightCm = Number(this.form.taille);
-    if (!Number.isFinite(weightKg) || !Number.isFinite(heightCm) || weightKg <= 0 || heightCm <= 0) return '-';
-    const heightM = heightCm / 100;
-    const bmi = weightKg / (heightM * heightM);
-    if (!Number.isFinite(bmi)) return '-';
-    return bmi.toFixed(1);
-  }
-
-  getStatusPillClass(status: DossierStatus): string {
-    switch (status) {
-      case 'ACTIVE':
-        return 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-500';
-      case 'ARCHIVED':
-        return 'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-orange-400';
-      case 'DECEASED':
-        return 'bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-500';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-white/5 dark:text-gray-300';
-    }
   }
 
   cancel() {
@@ -292,52 +170,62 @@ export class DossierMedicalFormPageComponent implements OnInit {
 
   async save() {
     this.submitted = true;
-    if (!this.isValid || this.isSaving) return;
-    if (this.isReadOnly) { this.cancel(); return; }
 
-    if (this.isInfirmier && this.mode === 'edit') {
-      void this.alerts.error('Vous n\'avez pas les droits pour modifier un dossier.');
+    if (!this.isValid || this.isSaving) return;
+    if (this.isReadOnly) {
+      this.cancel();
       return;
     }
 
     this.isSaving = true;
-    const payload = { ...this.form, idPatient: Number(this.form.idPatient) };
 
-try {
-  this.isSaving = true;
+    const payload = {
+      ...this.form,
+      idPatient: Number(this.form.idPatient)
+    };
 
-  if (this.mode === 'create') {
-    this.store.create(payload).subscribe({
-      next: async () => {
-        await this.alerts.success('Dossier médical ajouté avec succès.');
-        this.isSaving = false;
-        this.router.navigate(['/dossier-medical']);
-      },
-      error: async (err) => {
-        console.error('Erreur creation dossier', err);
-        await this.alerts.error('Une erreur est survenue lors de l\'enregistrement.');
-        this.isSaving = false;
+    try {
+      if (this.mode === 'create') {
+        this.store.create(payload).subscribe({
+          next: async () => {
+            await this.alerts.success('Dossier médical ajouté avec succès.');
+            this.isSaving = false;
+            this.router.navigate(['/dossier-medical']);
+          },
+          error: async (err) => {
+            console.error(err);
+            await this.alerts.error('Erreur lors de l’enregistrement.');
+            this.isSaving = false;
+          }
+        });
+
+      } else if (this.id != null) {
+        this.store.update(this.id, payload).subscribe({
+          next: async () => {
+            await this.alerts.success('Dossier médical modifié avec succès.');
+            this.isSaving = false;
+            this.router.navigate(['/dossier-medical']);
+          },
+          error: async (err) => {
+            console.error(err);
+            await this.alerts.error('Erreur lors de l’enregistrement.');
+            this.isSaving = false;
+          }
+        });
       }
-    });
-  } else if (this.id != null) {
-    this.store.update(this.id, payload).subscribe({
-      next: async () => {
-        await this.alerts.success('Dossier médical modifié avec succès.');
-        this.isSaving = false;
-        this.router.navigate(['/dossier-medical']);
-      },
-      error: async (err) => {
-        console.error('Erreur modification dossier', err);
-        await this.alerts.error('Une erreur est survenue lors de l\'enregistrement.');
-        this.isSaving = false;
-      }
-    });
-  }
-} catch (err) {
-  console.error('Unexpected error', err);
-  await this.alerts.error('Une erreur inattendue est survenue.');
-  this.isSaving = false;
-}
+
+    } catch (err) {
+      console.error(err);
+      await this.alerts.error('Erreur inattendue.');
+      this.isSaving = false;
     }
   }
 
+  viewVisite(id: number) {
+    this.router.navigate(['/visites', id]);
+  }
+
+  viewOrdonnance(id: number) {
+    this.router.navigate(['/ordonnances', id]);
+  }
+}

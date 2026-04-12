@@ -25,7 +25,7 @@ public class VisiteController {
     private final VisiteService visiteService;
     private final JwtUtil jwtUtil;
 
-    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR')")
+    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @GetMapping("/dossier/{idDossier}/visites")
     public ResponseEntity<ApiResponse<List<VisiteDTO>>> getVisitesByDossier(
             @PathVariable Long idDossier,
@@ -36,7 +36,7 @@ public class VisiteController {
                 String.format("%d visite(s) trouvée(s)", visites.size())));
     }
 
-    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR')")
+    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @GetMapping("/visites")
     public ResponseEntity<ApiResponse<List<VisiteDTO>>> getAllVisites(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -45,7 +45,7 @@ public class VisiteController {
         return ResponseEntity.ok(ApiResponse.success(visites, "Toutes les visites récupérées"));
     }
 
-    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR')")
+    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
     @GetMapping("/visites/{id}")
     public ResponseEntity<ApiResponse<VisiteDTO>> getVisiteById(
             @PathVariable Long id,

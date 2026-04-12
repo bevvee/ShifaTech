@@ -33,8 +33,8 @@ public class VisiteService {
     private final JwtUtil jwtUtil;
 
     public VisiteDTO createVisite(CreateVisiteRequest request, Long createdBy, String authHeader) {
-        if (!isInfirmier() && !isDocteur() && !isAdmin()) {
-            throw new AccessDeniedException("Seul un infirmier ou un médecin peut créer une visite.");
+        if (!isInfirmier() && !isAdmin()) {
+            throw new AccessDeniedException("Seul un infirmier ou un administrateur peut créer une visite.");
         }
         log.info("Création d'une visite pour le dossier ID: {}", request.getIdDossier());
 
@@ -53,11 +53,11 @@ public class VisiteService {
         Patient patient = patientRepository.findById(idPatient)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", idPatient));
 
-        // Seuls les médecins ou admins peuvent créer des visites
+        // Seuls les infirmiers ou admins peuvent créer des visites
         // Exception pour le patient lui-même (Pour Testing)
-        if (!hasWriteAccess() && !patient.getIdUser().equals(createdBy)) {
+        if (!isAdmin() && !isInfirmier() && !patient.getIdUser().equals(createdBy)) {
             throw new AccessDeniedException(
-                    "Seul un médecin ou un administrateur peut créer une visite.");
+                    "Seul un infirmier ou un administrateur peut créer une visite.");
         }
 
         Visite visite = new Visite();
@@ -71,8 +71,12 @@ public class VisiteService {
         if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.BLESSURE && request.getTypeBlessure() == null) {
             throw new IllegalArgumentException("Le type de blessure est obligatoire pour une visite de type BLESSURE.");
         }
-        if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.CONSULTATION && request.getTypeBlessure() != null) {
-            throw new IllegalArgumentException("Le type de blessure doit être nul pour une CONSULTATION.");
+        // Assouplissement : on ignore si typeBlessure est présent pour une CONSULTATION au lieu de lancer une exception, 
+        // ou on le force à null si c'est ce que l'on veut.
+        if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.CONSULTATION) {
+            visite.setTypeBlessure(null);
+        } else {
+            visite.setTypeBlessure(request.getTypeBlessure());
         }
 
         visite.setPlanTraitement(request.getPlanTraitement());
@@ -86,7 +90,7 @@ public class VisiteService {
 
     @Transactional(readOnly = true)
     public List<VisiteDTO> getVisitesByDossierId(Long idDossier, String authHeader) {
-        log.info("Récupération des visites pour le dossier ID: {}", idDossier);
+        log.info("[DIAGNOSTIC] Récupération des visites pour le dossier ID: {}", idDossier);
 
         DossierMedical dossier = dossierMedicalRepository.findById(idDossier)
                 .orElseThrow(() -> new ResourceNotFoundException("DossierMedical", "id", idDossier));
@@ -97,7 +101,10 @@ public class VisiteService {
 
         checkReadAccess(patient);
 
-        return visiteRepository.findByIdDossier(idDossier).stream()
+        List<Visite> visits = visiteRepository.findByIdDossier(idDossier);
+        log.info("[DIAGNOSTIC] Trouvé {} visites en base pour le dossier {}", visits.size(), idDossier);
+
+        return visits.stream()
                 .map(v -> mapToDTO(v, authHeader))
                 .collect(Collectors.toList());
     }
@@ -146,12 +153,16 @@ public class VisiteService {
         visite.setTypeBlessure(request.getTypeBlessure());
         visite.setIdBodyPart(request.getIdBodyPart());
 
+        if (request.getStatus() != null) {
+            visite.setStatus(request.getStatus());
+            if (request.getStatus() == com.shifatech.patient_service.entity.Visite.StatusVisite.CLOSED) {
+                visite.setDateFermeture(java.time.LocalDateTime.now());
+            }
+        }
+
         // 🛡️ Validation métier identique pour l'update
         if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.BLESSURE && request.getTypeBlessure() == null) {
             throw new IllegalArgumentException("Le type de blessure est obligatoire pour une visite de type BLESSURE.");
-        }
-        if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.CONSULTATION && request.getTypeBlessure() != null) {
-            throw new IllegalArgumentException("Le type de blessure doit être nul pour une CONSULTATION.");
         }
 
         return mapToDTO(visiteRepository.save(visite), authHeader);

@@ -18,11 +18,11 @@ public interface OrdonnanceRepository extends JpaRepository<Ordonnance, Long> {
 
     List<Ordonnance> findByIdVisite(Long idVisite);
 
-    List<Ordonnance> findByStatut(Boolean statut);
+    List<Ordonnance> findByStatut(com.shifatech.patient_service.entity.StatusOrdonnance statut);
 
     @Query("SELECT o FROM Ordonnance o WHERE o.idPatient = :idPatient ORDER BY o.dateCreation DESC")
     List<Ordonnance> findByIdPatientOrderByDateDesc(Long idPatient);
 
-    @Query("SELECT o FROM Ordonnance o WHERE o.dateValidite < :now AND o.statut = true")
-    List<Ordonnance> findExpiredOrdonnances(LocalDateTime now);
+    @Query("SELECT o FROM Ordonnance o WHERE o.dateValidite < :now AND o.statut = com.shifatech.patient_service.entity.StatusOrdonnance.ACTIVE")
+    List<Ordonnance> findExpiredOrdonnances(java.time.LocalDateTime now);
 }

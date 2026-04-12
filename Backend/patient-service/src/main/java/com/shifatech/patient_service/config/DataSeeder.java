@@ -103,7 +103,7 @@ public class DataSeeder implements CommandLineRunner {
                     ordonnance.setPosologie("1 fois par jour après le repas.");
                     ordonnance.setDureeTraitement("10 jours");
                     ordonnance.setDescription("Ordonnance générée suite à la visite de contrôle.");
-                    ordonnance.setStatut(true);
+                    ordonnance.setStatut(com.shifatech.patient_service.entity.StatusOrdonnance.ACTIVE);
                     ordonnance.setCreatedBy(1L);
 
                     ordonnanceRepository.save(ordonnance);
