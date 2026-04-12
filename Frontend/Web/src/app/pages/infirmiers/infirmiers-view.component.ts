@@ -7,8 +7,8 @@ import { ButtonComponent } from '../../shared/components/ui/button/button.compon
 import { InputFieldComponent } from '../../shared/components/form/input/input-field.component';
 import { TextAreaComponent } from '../../shared/components/form/input/text-area.component';
 import { LabelComponent } from '../../shared/components/form/label/label.component';
-import { InfirmierRow } from '../../core/models/infirmier.model';
-import { InfirmiersCatalogService } from '../../core/services/infirmiers-catalog.service';
+import { InfirmierDto } from '../../core/models/infirmier.model';
+import { InfirmierService } from '../../core/services/infirmier.service';
 
 @Component({
   selector: 'app-infirmiers-view',
@@ -28,11 +28,11 @@ import { InfirmiersCatalogService } from '../../core/services/infirmiers-catalog
 export class InfirmiersViewComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly infirmiersCatalog = inject(InfirmiersCatalogService);
+  private readonly infirmierService = inject(InfirmierService);
 
-  infirmier: InfirmierRow | null = null;
+  infirmier: InfirmierDto | null = null;
 
-  constructor() {
+  ngOnInit() {
     const idParam = this.route.snapshot.paramMap.get('id');
     const id = idParam ? Number(idParam) : NaN;
 
@@ -41,11 +41,12 @@ export class InfirmiersViewComponent {
       return;
     }
 
-    this.infirmier = this.infirmiersCatalog.getById(id);
-
-    if (!this.infirmier) {
-      this.router.navigate(['/infirmiers']);
-    }
+    this.infirmierService.getById(id).subscribe({
+      next: (data) => {
+        this.infirmier = data;
+      },
+      error: () => this.router.navigate(['/infirmiers'])
+    });
   }
 
   close() {

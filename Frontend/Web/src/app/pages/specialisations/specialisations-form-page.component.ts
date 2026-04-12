@@ -73,7 +73,7 @@ export class SpecialisationsFormPageComponent {
             serviceIdValue: existing.idService != null ? String(existing.idService) : '',
           };
         },
-        error: () => this.router.navigate(['/specialisations']),
+        error: () => this.router.navigate(['/specialisations'], { queryParams: { type: this.owner } }),
       });
     }
   }

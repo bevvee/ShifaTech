@@ -20,6 +20,7 @@ import { DossierStatus, GroupeSanguin, DossierMedicalDto } from '../../core/mode
 import { VisiteDto } from '../../core/models/visite.model';
 import { OrdonnanceDto } from '../../core/models/ordonnance.model';
 import { AlertService } from '../../core/services/alert.service';
+import { take } from 'rxjs/operators';
 
 type Mode = 'create' | 'edit' | 'view';
 
@@ -53,6 +54,9 @@ export class DossierMedicalFormPageComponent implements OnInit {
   private readonly visitesStore = inject(VisiteStore);
   private readonly ordonnancesStore = inject(OrdonnanceStore);
   private readonly alerts = inject(AlertService);
+  private readonly ngrxStore = inject(Store);
+  role: Role | null = null;
+  isSaving = false;
 
   private id: number | null;
 
@@ -159,7 +163,9 @@ export class DossierMedicalFormPageComponent implements OnInit {
           this.visitesStore.getByDossierId(this.id!).subscribe(list => {
             this.linkedVisites = list;
           });
-          
+          this.ngrxStore.select(selectUserRole).pipe(take(1)).subscribe(r => {
+            this.role = r;
+          });
           /*
           this.linkedOrdonnances = this.ordonnancesStore.getByPatientId(existing.idPatient);
           */
@@ -240,6 +246,9 @@ export class DossierMedicalFormPageComponent implements OnInit {
     const initials = `${a}${b}`.toUpperCase();
     return initials || 'P';
   }
+  get isInfirmier(): boolean {
+    return String(this.role ?? '').toUpperCase() === 'INFIRMIER';
+  }
 
   get dossierNumber(): string {
     return this.dossier?.numDossier?.toString().trim() || '-';
@@ -283,45 +292,52 @@ export class DossierMedicalFormPageComponent implements OnInit {
 
   async save() {
     this.submitted = true;
-    if (!this.isValid) return;
+    if (!this.isValid || this.isSaving) return;
+    if (this.isReadOnly) { this.cancel(); return; }
 
-    if (this.isReadOnly) {
-      this.cancel();
+    if (this.isInfirmier && this.mode === 'edit') {
+      void this.alerts.error('Vous n\'avez pas les droits pour modifier un dossier.');
       return;
     }
 
-    const payload = {
-      ...this.form,
-      idPatient: Number(this.form.idPatient)
-    };
+    this.isSaving = true;
+    const payload = { ...this.form, idPatient: Number(this.form.idPatient) };
 
-    try {
-      if (this.mode === 'create') {
-        this.store.create(payload).subscribe({
-          next: async () => {
-            await this.alerts.success('Dossier médical ajouté avec succès.');
-            this.router.navigate(['/dossier-medical']);
-          },
-          error: async (err) => {
-            console.error('Erreur creation dossier', err);
-            await this.alerts.error('Une erreur est survenue lors de l\'enregistrement.');
-          }
-        });
-      } else if (this.id != null) {
-        this.store.update(this.id, payload).subscribe({
-          next: async () => {
-            await this.alerts.success('Dossier médical modifié avec succès.');
-            this.router.navigate(['/dossier-medical']);
-          },
-          error: async (err) => {
-            console.error('Erreur modification dossier', err);
-            await this.alerts.error('Une erreur est survenue lors de l\'enregistrement.');
-          }
-        });
+try {
+  this.isSaving = true;
+
+  if (this.mode === 'create') {
+    this.store.create(payload).subscribe({
+      next: async () => {
+        await this.alerts.success('Dossier médical ajouté avec succès.');
+        this.isSaving = false;
+        this.router.navigate(['/dossier-medical']);
+      },
+      error: async (err) => {
+        console.error('Erreur creation dossier', err);
+        await this.alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+        this.isSaving = false;
       }
-    } catch (err) {
-      console.error('Unexpected error', err);
-      await this.alerts.error('Une erreur inattendue est survenue.');
+    });
+  } else if (this.id != null) {
+    this.store.update(this.id, payload).subscribe({
+      next: async () => {
+        await this.alerts.success('Dossier médical modifié avec succès.');
+        this.isSaving = false;
+        this.router.navigate(['/dossier-medical']);
+      },
+      error: async (err) => {
+        console.error('Erreur modification dossier', err);
+        await this.alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+        this.isSaving = false;
+      }
+    });
+  }
+} catch (err) {
+  console.error('Unexpected error', err);
+  await this.alerts.error('Une erreur inattendue est survenue.');
+  this.isSaving = false;
+}
     }
   }
-}
+

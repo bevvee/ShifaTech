@@ -80,9 +80,7 @@ export class SignInComponent {
             ) {
               this.router.navigate(['/dashboard']);
             } else if (userRole === 'PATIENT') {
-               this.errorMessage = "Email ou mot de passe incorrect.";
-              this.authService.logout();
-
+              this.router.navigate(['/patient']);
             } else {
                   this.errorMessage = "Email ou mot de passe incorrect.";
               this.authService.logout();

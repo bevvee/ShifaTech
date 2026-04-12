@@ -1,13 +1,14 @@
 export const environment = {
   production: false,
-  /** Logs console des sections / nombre de zones (développement). */
-  debugBodyMap: false,
   api: {
     auth: '/auth',
     patient: '/patient',
     doctor: '/doctor',
-    infirmier: '/infirmier',
+    infirmier: '/infirmier/api/infirmier',
+    infirmierSpecialite: '/infirmier/api/infirmier_specialites',
     rdv: '/rdv/api/rendez_vouses',
-    body: '/body'
+    visites:'/patient/api/visites',
+    body: '/body',
+    admin: '/admin/api',
   }
-};
+};

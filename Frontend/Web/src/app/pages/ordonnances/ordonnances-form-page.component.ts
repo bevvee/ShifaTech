@@ -37,8 +37,10 @@ type Mode = 'create' | 'edit' | 'view';
   templateUrl: './ordonnances-form-page.component.html'
 })
 export class OrdonnancesFormPageComponent implements OnInit {
+
   mode: Mode;
   submitted = false;
+  isSaving = false;
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -51,13 +53,11 @@ export class OrdonnancesFormPageComponent implements OnInit {
   private id: number | null;
 
   patientOptions: Option[] = [];
+  visiteOptions: Option[] = [];
 
   patient: PatientDto | null = null;
   dossier: DossierMedicalDto | null = null;
-
   ordonnance: OrdonnanceDto | null = null;
-
-  visiteOptions: Option[] = [];
 
   statutOptions: Option[] = [
     { value: 'ACTIVE', label: 'Active' },
@@ -82,39 +82,6 @@ export class OrdonnancesFormPageComponent implements OnInit {
     this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
     const idParam = this.route.snapshot.paramMap.get('id');
     this.id = idParam ? Number(idParam) : null;
-
-    /*
-    if (this.mode !== 'create' && this.id != null) {
-      const existing = this.store.getById(this.id);
-      if (!existing) {
-        this.router.navigate(['/ordonnances']);
-        return;
-      }
-
-      this.ordonnance = existing;
-
-      this.form = {
-        idPatient: String(existing.idPatient),
-        idDoctor: existing.idDoctor,
-        idVisite: String(existing.idVisite),
-        description: existing.description,
-        medicaments: existing.medicaments,
-        posologie: existing.posologie,
-        dureeTraitement: existing.dureeTraitement,
-        instructions: existing.instructions,
-        dateValidite: existing.dateValidite,
-        statut: existing.statut,
-      };
-
-      const patientId = Number(existing.idPatient);
-      this.dossier = Number.isFinite(patientId) ? (this.dossierStore.getByPatientId(patientId) ?? null) : null;
-    } else if (this.mode === 'create') {
-      const qPatientId = this.route.snapshot.queryParamMap.get('patientId');
-      const qVisiteId = this.route.snapshot.queryParamMap.get('visiteId');
-      if (qPatientId) this.form.idPatient = qPatientId;
-      if (qVisiteId) this.form.idVisite = qVisiteId;
-    }
-    */
   }
 
   ngOnInit() {
@@ -127,6 +94,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
           this.router.navigate(['/ordonnances']);
           return;
         }
+
         this.form = {
           idPatient: String(existing.idPatient),
           idDoctor: existing.idDoctor,
@@ -140,7 +108,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
           statut: existing.statut,
         };
       });
-    } else if (this.mode === 'create') {
+    } else {
       const qPatientId = this.route.snapshot.queryParamMap.get('patientId');
       const qVisiteId = this.route.snapshot.queryParamMap.get('visiteId');
       if (qPatientId) this.form.idPatient = qPatientId;
@@ -152,7 +120,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
     this.visitesStore.getAll().subscribe(list => {
       this.visiteOptions = list.map(v => ({
         value: String(v.id),
-        label: `Visite du ${v.dateCreation ? v.dateCreation.substring(0, 10) : 'Date inconnue'} - ${v.nomPatient}`
+        label: `Visite du ${v.dateCreation?.substring(0, 10) ?? 'Date inconnue'} - ${v.nomPatient}`
       }));
     });
   }
@@ -163,122 +131,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
         value: String(p.id),
         label: `${p.nom} ${p.prenom} (${p.numDossier})`
       }));
-
-      const idPatient = Number(this.form.idPatient);
-      this.patient = Number.isFinite(idPatient) ? (list.find((p) => p.id === idPatient) ?? null) : null;
-
-      if (!this.patient) {
-        this.dossier = null;
-        return;
-      }
-
-      this.dossierStore.getByPatientId(this.patient.id).subscribe({
-        next: (dossier) => (this.dossier = dossier ?? null),
-        error: () => (this.dossier = null),
-      });
     });
-  }
-
-  get title(): string {
-    if (this.mode === 'create') return 'Nouvelle Ordonnance';
-    if (this.mode === 'view') return 'Patient Details';
-    return 'Modifier l\'Ordonnance';
-  }
-
-  get patientDisplayName(): string {
-    const p = this.patient;
-    if (!p) {
-      const fallback = (this.ordonnance?.nomPatient ?? '').trim();
-      return fallback || '-';
-    }
-    const prenom = (p.prenom ?? '').trim();
-    const nom = (p.nom ?? '').trim();
-    if (!prenom && !nom) return '-';
-
-    const prefix = p.sexe === 'M' ? 'M.' : p.sexe === 'F' ? 'Mme.' : '';
-    return `${prefix}${prefix ? '' : ''}${prenom ? prenom + ' ' : ''}${nom}`.trim();
-  }
-
-  get patientAgeYears(): number | null {
-    const raw = this.patient?.dateNaissance;
-    if (!raw) return null;
-    const dob = new Date(raw);
-    if (Number.isNaN(dob.getTime())) return null;
-    const today = new Date();
-    let years = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) years -= 1;
-    return years >= 0 ? years : null;
-  }
-
-  get patientSexLabel(): string {
-    const s = this.patient?.sexe;
-    if (s === 'M') return 'Male';
-    if (s === 'F') return 'Female';
-    return '-';
-  }
-
-  get patientBloodGroup(): string {
-    const raw = String((this.dossier?.groupeSanguin as string) || '').trim();
-    if (!raw) return '-';
-    // Render like "O+ve" to match the screenshot style.
-    if (raw.endsWith('+') || raw.endsWith('-')) return `${raw}ve`;
-    return raw;
-  }
-
-  get patientPrettyId(): string {
-    const id = this.patient?.id ?? Number(this.form.idPatient);
-    if (!Number.isFinite(id) || !id) return '-';
-    return `PT${String(id).padStart(4, '0')}`;
-  }
-
-  get prescriptionTitle(): string {
-    return this.form.description?.trim() ? this.form.description.trim() : 'Prescription';
-  }
-
-  get medicationRows(): Array<{
-    sno: string;
-    medicineName: string;
-    dosage: string;
-    frequency: string;
-    duration: string;
-    timings: string;
-  }> {
-    const meds = String(this.form.medicaments ?? '')
-      .split(',')
-      .map((m) => m.trim())
-      .filter(Boolean);
-
-    const duration = this.form.dureeTraitement?.trim() || '-';
-    const timings = this.form.instructions?.trim() || '-';
-
-    return meds.map((medicineName, idx) => {
-      const sno = String(idx + 1).padStart(2, '0');
-      const { dosage, frequency } = this.extractDosageAndFrequency(medicineName, this.form.posologie);
-      return {
-        sno,
-        medicineName,
-        dosage,
-        frequency,
-        duration,
-        timings,
-      };
-    });
-  }
-
-  private extractDosageAndFrequency(medicine: string, posologie: string): { dosage: string; frequency: string } {
-    const med = String(medicine ?? '').trim();
-    const pos = String(posologie ?? '').trim();
-
-    // Try to find a dosage token like "75MG" / "90 mg" / "2.5 ml" in either medicine name or posologie.
-    const dosageMatch = (med + ' ' + pos).match(/\b\d+(?:[.,]\d+)?\s*(?:MG|G|MCG|ML|IU)\b/i);
-    const dosage = dosageMatch ? dosageMatch[0].replace(/\s+/g, ' ').trim() : '-';
-
-    // Try to extract frequency pattern like 1-0-1.
-    const freqMatch = pos.match(/\b\d\s*-\s*\d\s*-\s*\d\b/);
-    const frequency = freqMatch ? freqMatch[0].replace(/\s+/g, '') : (pos ? pos : '-');
-
-    return { dosage, frequency };
   }
 
   get isReadOnly(): boolean {
@@ -286,7 +139,6 @@ export class OrdonnancesFormPageComponent implements OnInit {
   }
 
   get isValid(): boolean {
-    if (this.isReadOnly) return true;
     return (
       this.form.idPatient !== '' &&
       this.form.medicaments.trim().length > 0 &&
@@ -298,55 +150,55 @@ export class OrdonnancesFormPageComponent implements OnInit {
     this.router.navigate(['/ordonnances']);
   };
 
-  save = async () => {
+  save = () => {
     this.submitted = true;
-    if (!this.isValid) return;
 
+    if (!this.isValid || this.isSaving) return;
     if (this.isReadOnly) {
       this.cancel();
       return;
     }
 
-    const form = this.form!;
-    const mode = this.mode!;
-    const store = this.store!;
-    const alerts = this.alerts!;
-    const router = this.router!;
-    const id = this.id;
+    this.isSaving = true;
 
     const payload = {
-      ...form,
-      idPatient: Number(form.idPatient),
-      idVisite: form.idVisite ? Number(form.idVisite) : undefined
+      ...this.form,
+      idPatient: Number(this.form.idPatient),
+      idVisite: this.form.idVisite ? Number(this.form.idVisite) : undefined,
     };
 
     try {
-      if (mode === 'create') {
-        store.create(payload as any).subscribe({
+      if (this.mode === 'create') {
+        this.store.create(payload as any).subscribe({
           next: async () => {
-            await alerts.success('Ordonnance ajoutée avec succès.');
-            router.navigate(['/ordonnances']);
+            await this.alerts.success('Ordonnance ajoutée avec succès.');
+            this.isSaving = false;
+            this.router.navigate(['/ordonnances']);
           },
           error: async (err) => {
-            console.error('Erreur creation ordonnance', err);
-            await alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+            console.error(err);
+            await this.alerts.error('Erreur lors de l’enregistrement.');
+            this.isSaving = false;
           }
         });
-      } else if (id != null) {
-        store.update(id, payload as any).subscribe({
+      } else if (this.id != null) {
+        this.store.update(this.id, payload as any).subscribe({
           next: async () => {
-            await alerts.success('Ordonnance modifiée avec succès.');
-            router.navigate(['/ordonnances']);
+            await this.alerts.success('Ordonnance modifiée avec succès.');
+            this.isSaving = false;
+            this.router.navigate(['/ordonnances']);
           },
           error: async (err) => {
-            console.error('Erreur modification ordonnance', err);
-            await alerts.error('Une erreur est survenue lors de l\'enregistrement.');
+            console.error(err);
+            await this.alerts.error('Erreur lors de l’enregistrement.');
+            this.isSaving = false;
           }
         });
       }
     } catch (err) {
-      console.error('Unexpected error', err);
-      await alerts.error('Une erreur inattendue est survenue.');
+      console.error(err);
+      this.alerts.error('Erreur inattendue.');
+      this.isSaving = false;
     }
   };
 }

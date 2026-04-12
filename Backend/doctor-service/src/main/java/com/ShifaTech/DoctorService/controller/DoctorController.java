@@ -23,7 +23,7 @@ public class DoctorController {
     // --- CRUD Operations ---
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT', 'DOCTEUR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT', 'INFIRMIER', 'SECRETAIRE')")
     public ResponseEntity<List<DoctorDTO>> getAllDoctors() {
         return ResponseEntity.ok(doctorService.getAllDoctors());
     }
@@ -82,7 +82,7 @@ public class DoctorController {
     }
 
     @GetMapping("/{id:[0-9]+}/rdv")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'INFIRMIER', 'SECRETAIRE')")
     public ResponseEntity<List<Object>> getAppointmentsForDoctor(@PathVariable Long id) {
         DoctorDTO doctor = doctorService.getDoctorProfile(id);
 

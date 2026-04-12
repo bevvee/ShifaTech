@@ -69,7 +69,7 @@ export class AppSidebarComponent {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 2C7.41421 2 7.75 2.33579 7.75 2.75V3.5H16.25V2.75C16.25 2.33579 16.5858 2 17 2C17.4142 2 17.75 2.33579 17.75 2.75V3.5H18.5C19.7426 3.5 20.75 4.50736 20.75 5.75V18.25C20.75 19.4926 19.7426 20.5 18.5 20.5H5.5C4.25736 20.5 3.25 19.4926 3.25 18.25V5.75C3.25 4.50736 4.25736 3.5 5.5 3.5H6.25V2.75C6.25 2.33579 6.58579 2 7 2ZM4.75 8.5V18.25C4.75 18.6642 5.08579 19 5.5 19H18.5C18.9142 19 19.25 18.6642 19.25 18.25V8.5H4.75ZM5.5 5C5.08579 5 4.75 5.33579 4.75 5.75V7H19.25V5.75C19.25 5.33579 18.9142 5 18.5 5H17H7H5.5Z" fill="currentColor"/></svg>`,
       name: "Planning",
       path: "/planning",
-      roles: [Role.DOCTEUR],
+      roles: [Role.DOCTEUR, Role.INFIRMIER],
     },
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

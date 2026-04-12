@@ -11,6 +11,8 @@ import { RdvService } from '../../../../core/services/rdv.service';
 import { SpecialityService } from '../../../../core/services/speciality.service';
 import { PatientApiService } from '../../../../core/services/api/patient-api.service';
 import { VisiteStore } from '../../../../pages/visites/visites.store';
+import { InfirmierService } from '../../../../core/services/infirmier.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-ecommerce-metrics',
@@ -26,10 +28,13 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
   private readonly specialityService = inject(SpecialityService);
   private readonly patientApi = inject(PatientApiService);
   private readonly visiteStore = inject(VisiteStore);
+  private readonly infirmierService = inject(InfirmierService);
+
 
   private readonly subscription = new Subscription();
 
   role: Role | null = null;
+  today = new Date();
 
   metrics: Array<{
     key: string;
@@ -61,10 +66,20 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
 
       case 'specialisations':
         return 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500';
+      
+      case 'rdv_today':
+        return 'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-500';
+
+      case 'rdv_attente':
+        return 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500';
 
       default:
         return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-white/90';
     }
+  }
+
+  getMetricValue(key: string): number {
+    return this.metrics.find(m => m.key === key)?.value ?? 0;
   }
 
   ngOnInit(): void {
@@ -140,8 +155,13 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
       )
       .subscribe((count) => this.setMetricValue('doctors', count));
 
-    // NOTE: Infirmiers/Services APIs are not wired in this frontend yet.
-    // Keeping values at 0 until endpoints/stores are available.
+    this.infirmierService
+      .getAll()
+      .pipe(
+        map((res) => this.countFromResponse(res)),
+        catchError(() => of(0)),
+      )
+      .subscribe((count) => this.setMetricValue('infirmiers', count));
 
     this.specialityService
       .getSpecialities()
@@ -251,6 +271,8 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
   }
 
   private loadInfirmierMetrics(): void {
+    const today = new Date().toISOString().slice(0, 10);
+
     this.metrics = [
       {
         key: 'patients',
@@ -259,29 +281,26 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
         icon: this.icons.groupIcon,
       },
       {
-        key: 'rdv',
-        label: 'Total RDV',
+        key: 'rdv_today',
+        label: "RDV Aujourd'hui",
+        value: 0,
+        icon: this.icons.boxIconLine,
+      },
+      {
+        key: 'rdv_attente',
+        label: 'RDV En Attente',
         value: 0,
         icon: this.icons.boxIconLine,
       },
       {
         key: 'visites',
-        label: 'Total Visites',
+        label: 'Visites Ce Mois',
         value: 0,
         icon: this.icons.boxIconLine,
       },
     ];
 
-    this.subscription.add(
-      this.visiteStore
-        .getAll()
-        .pipe(
-          map((rows) => (Array.isArray(rows) ? rows.length : 0)),
-          catchError(() => of(0)),
-        )
-        .subscribe((count) => this.setMetricValue('visites', count)),
-    );
-
+    // Total patients
     this.patientApi
       .getAll()
       .pipe(
@@ -290,13 +309,51 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
       )
       .subscribe((count) => this.setMetricValue('patients', count));
 
+    // RDV aujourd'hui
     this.rdvService
-      .getAll()
+      .getAll({
+        'date_rdv[after]': today,
+        'date_rdv[before]': today,
+      })
       .pipe(
         map((res) => this.countFromResponse(res)),
         catchError(() => of(0)),
       )
-      .subscribe((count) => this.setMetricValue('rdv', count));
+      .subscribe((count) => this.setMetricValue('rdv_today', count));
+
+    // RDV en attente aujourd'hui
+    this.rdvService
+      .getAll({
+        'date_rdv[after]': today,
+        'date_rdv[before]': today,
+        statut: 'EN_ATTENTE',
+      })
+      .pipe(
+        map((res) => this.countFromResponse(res)),
+        catchError(() => of(0)),
+      )
+      .subscribe((count) => this.setMetricValue('rdv_attente', count));
+
+    // Visites ce mois
+    const firstDay = new Date();
+    firstDay.setDate(1);
+    const firstDayStr = firstDay.toISOString().slice(0, 10);
+
+    this.subscription.add(
+      this.visiteStore
+        .getAll()
+        .pipe(
+          map((rows) => {
+            if (!Array.isArray(rows)) return 0;
+            return rows.filter((v: any) => {
+              const d = v.dateVisite ?? v.date_visite ?? v.createdAt ?? v.created_at;
+              return d && d >= firstDayStr;
+            }).length;
+          }),
+          catchError(() => of(0)),
+        )
+        .subscribe((count) => this.setMetricValue('visites', count)),
+    );
   }
 
   private setMetricValue(key: string, value: number): void {
@@ -304,6 +361,9 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
   }
 
   private countFromResponse(res: any): number {
+    if (res && typeof res['totalItems'] === 'number') return res['totalItems'];
+    if (res && Array.isArray(res['hydra:member'])) return res['hydra:member'].length;
+    if (res && Array.isArray(res.member)) return res.member.length;
     if (Array.isArray(res)) return res.length;
     if (res && Array.isArray(res.data)) return res.data.length;
     if (res && Array.isArray(res.items)) return res.items.length;
