@@ -289,7 +289,37 @@ services:
     command: npm start
     networks:
       - shifatech-net
-
+  ##################################
+  # MINIO STORAGE
+  ##################################
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - shifatech-net
+  ##################################
+  # MINIO STORAGE
+  ##################################
+  wound-image-service:
+    build: ./Backend/wound-image-service
+    container_name: wound-image-service
+    restart: always
+    depends_on:
+      - minio
+    expose:
+      - "8000"
+    networks:
+      - shifatech-net
   ##################################
   # NGINX GATEWAY
   ##################################
@@ -390,3 +420,4 @@ volumes:
   rdv-service-cache:
   body_mysql_data:
   grafana-storage:
+  minio_data:
