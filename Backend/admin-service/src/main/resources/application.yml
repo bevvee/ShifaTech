@@ -1,0 +1,19 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: admin-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/admindb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: adminuser
+    password: adminpass
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
