@@ -146,6 +146,8 @@ public class AuthService {
             if (request.getAdresse() != null) user.setAdresse(request.getAdresse());
             if (request.getSexe() != null) user.setSexe(SexeEnum.valueOf(request.getSexe()));
             if (request.getDateNaissance() != null) user.setDateNaissance(request.getDateNaissance());
+            if (request.getStatut() != null) user.setStatut(request.getStatut());
+            if (request.getRole() != null) user.setRole(com.shifatech.authservice.Enum.RoleEnum.valueOf(request.getRole()));
 
             // Set audit fields
             user.setUpdatedAt(LocalDateTime.now());

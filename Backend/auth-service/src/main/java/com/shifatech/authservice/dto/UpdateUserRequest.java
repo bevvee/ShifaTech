@@ -17,4 +17,5 @@ public class UpdateUserRequest {
     private String role;
     private String sexe;
     private LocalDate dateNaissance;
+    private Boolean statut;
 }

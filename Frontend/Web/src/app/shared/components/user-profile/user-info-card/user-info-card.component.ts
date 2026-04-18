@@ -69,7 +69,8 @@ export class UserInfoCardComponent {
       adresse: this.editedUser.adresse,
       sexe: this.editedUser.sexe,
       role: this.editedUser.role,
-      dateNaissance: this.editedUser.dateNaissance
+      dateNaissance: this.editedUser.dateNaissance,
+      statut: this.editedUser.statut
     };
 
     this.authService.updateUser(userId, payload).subscribe({
