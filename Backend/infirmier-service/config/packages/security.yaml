@@ -7,7 +7,7 @@ security:
     providers:
         jwt_user_provider:
             lexik_jwt:
-                class: App\Security\SecurityUser
+                class: App\Dto\SecurityUser
         #app_user_provider:
          #   entity:
          #       class: App\Entity\Infirmier

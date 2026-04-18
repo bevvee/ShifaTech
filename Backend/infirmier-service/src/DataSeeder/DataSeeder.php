@@ -64,31 +64,31 @@ class DataSeeder
             '0673456780', '0684567891', '0695678902', '0656789013',
         ];
 
-        foreach ($users as $index => $data) {
-            $id       = $index + 9;
-            $cin      = 'F' . rand(100000, 999999);
-            $email    = strtolower($data['prenom'] . '.' . str_replace(' ', '', $data['nom'])) . $id . '@hopital.ma';
-            $password = password_hash('password123', PASSWORD_BCRYPT);
+        // foreach ($users as $index => $data) {
+        //     $id       = $index + 9;
+        //     $cin      = 'F' . rand(100000, 999999);
+        //     $email    = strtolower($data['prenom'] . '.' . str_replace(' ', '', $data['nom'])) . $id . '@hopital.ma';
+        //     $password = password_hash('password123', PASSWORD_BCRYPT);
 
-            $connection->executeStatement("
-                INSERT INTO users
-                    (id_user, cin, nom, prenom, email, mot_de_passe, role, telephone, adresse, date_naissance, sexe, statut, created_at)
-                VALUES
-                    (:id, :cin, :nom, :prenom, :email, :password, 'INFIRMIER', :tel, :adresse, :dob, :sexe, 1, NOW())
-                ON DUPLICATE KEY UPDATE id_user = id_user
-            ", [
-                'id'       => $id,
-                'cin'      => $cin,
-                'nom'      => $data['nom'],
-                'prenom'   => $data['prenom'],
-                'email'    => $email,
-                'password' => $password,
-                'tel'      => $phones[$index],
-                'adresse'  => 'Casablanca, Maroc',
-                'dob'      => $data['dob'],
-                'sexe'     => $data['sexe'],
-            ]);
-        }
+        //     $connection->executeStatement("
+        //         INSERT INTO users
+        //             (id_user, cin, nom, prenom, email, mot_de_passe, role, telephone, adresse, date_naissance, sexe, statut, created_at)
+        //         VALUES
+        //             (:id, :cin, :nom, :prenom, :email, :password, 'INFIRMIER', :tel, :adresse, :dob, :sexe, 1, NOW())
+        //         ON DUPLICATE KEY UPDATE id_user = id_user
+        //     ", [
+        //         'id'       => $id,
+        //         'cin'      => $cin,
+        //         'nom'      => $data['nom'],
+        //         'prenom'   => $data['prenom'],
+        //         'email'    => $email,
+        //         'password' => $password,
+        //         'tel'      => $phones[$index],
+        //         'adresse'  => 'Casablanca, Maroc',
+        //         'dob'      => $data['dob'],
+        //         'sexe'     => $data['sexe'],
+        //     ]);
+        // }
 
         $specialites = [
             ['label' => 'Cardiologie', 'id_service' => 1],
