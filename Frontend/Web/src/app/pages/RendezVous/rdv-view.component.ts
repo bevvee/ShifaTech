@@ -5,6 +5,12 @@ import { RdvService } from '../../core/services/rdv.service';
 import { PageBreadcrumbComponent } from "../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { LabelComponent } from '../../shared/components/form/label/label.component';
+import { PatientApiService } from '../../core/services/api/patient-api.service';
+import { DoctorService } from '../../core/services/doctor.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
+import { RdvCreateDto } from '../../core/models/rdv.model';
+import { PatientDto } from '../../core/models/patient.model';
 
 @Component({
   selector: 'app-rdv-view',
@@ -27,9 +33,14 @@ export class RdvViewComponent implements OnInit {
   doctorLabel = '';
   doctorInitials = '';
 
+  patientIcon = '';
+  doctorIcon = '';
+
   constructor(
     private route: ActivatedRoute,
-    private rdvService: RdvService
+    private rdvService: RdvService,
+    private patientApi: PatientApiService,
+    private doctorService: DoctorService
   ) {}
 
   ngOnInit() {
@@ -38,8 +49,8 @@ export class RdvViewComponent implements OnInit {
     const id = Number(idParam);
     if (!Number.isFinite(id)) return;
 
-    this.rdvService.getById(id).subscribe({
-      next: (data) => {
+    this.rdvService.getById(id).pipe(
+      switchMap((data: RdvCreateDto) => {
         this.rdv = data;
         this.rdvSlotLabel = this.formatSlot(
           data?.date_rdv,
@@ -47,13 +58,27 @@ export class RdvViewComponent implements OnInit {
           data?.heure_fin,
         );
 
-        const patient = this.buildPerson(data, 'patient');
-        this.patientLabel = patient.label;
-        this.patientInitials = patient.initials;
+        const patientId = data?.id_patient;
+        const doctorId = data?.id_docteur;
 
-        const doctor = this.buildPerson(data, 'doctor');
-        this.doctorLabel = doctor.label;
-        this.doctorInitials = doctor.initials;
+        return forkJoin({
+          patient: patientId ? this.patientApi.getById(patientId).pipe(catchError(() => of(null as PatientDto | null))) : of(null as PatientDto | null),
+          doctor: doctorId ? this.doctorService.getDoctor(doctorId).pipe(catchError(() => of(null as any))) : of(null as any)
+        });
+      })
+    ).subscribe({
+      next: ({ patient, doctor }: { patient: PatientDto | null, doctor: any }) => {
+        // Resolve Patient
+        const pLabel = patient ? `${patient.prenom} ${patient.nom}`.trim() : `Patient #${this.rdv?.id_patient}`;
+        this.patientLabel = pLabel;
+        this.patientInitials = this.initialsFromName(pLabel);
+        this.patientIcon = patient?.sexe === 'F' ? 'assets/img/patient-female.png' : 'assets/img/patient-male.png';
+
+        // Resolve Doctor
+        const dLabel = doctor ? `Dr ${doctor.prenom} ${doctor.nom}`.trim() : `Docteur #${this.rdv?.id_docteur}`;
+        this.doctorLabel = dLabel;
+        this.doctorInitials = this.initialsFromName(dLabel);
+        this.doctorIcon = (doctor as any)?.sexe === 'F' ? 'assets/img/user-pink.png' : 'assets/img/user-grey.png';
       },
       error: err => console.error(err)
     });
@@ -99,8 +124,8 @@ export class RdvViewComponent implements OnInit {
 
     const raw = String(value).trim();
 
-    // Accepts "HH:mm" or "HH:mm:ss" or ISO strings containing "HH:mm"
-    const match = raw.match(/\b(\d{1,2}):(\d{2})\b/);
+    // Matches the FIRST occurrence of HH:mm at the start OR after a standard separator like 'T' or ' '
+    const match = raw.match(/(?:^|[T\s])(\d{1,2}):(\d{2})\b/);
     if (!match) return raw;
 
     const hh = String(Number(match[1])).padStart(2, '0');

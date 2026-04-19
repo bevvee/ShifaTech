@@ -8,16 +8,13 @@
 				<div>
 					<div class="rounded-md bg-gray-100 px-6 py-4 dark:bg-white/5">
 						<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-							<div class="text-xl font-semibold text-gray-900 dark:text-white">{{ patientDisplayName }}</div>
+							<div class="text-xl font-semibold text-gray-900 dark:text-white">Détails du Patient : {{ patientDisplayName }}</div>
 							<div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-700 dark:text-gray-300">
 								<div>
-									{{ patientAgeYears ?? '-' }}Y / {{ patientSexLabel }}
+									Âge : {{ patientAgeYears ?? '-' }} ans / {{ patientSexLabel }}
 								</div>
 								<div>
-									Blood : {{ patientBloodGroup }}
-								</div>
-								<div class="font-semibold text-gray-900 dark:text-white">
-									Patient ID {{ patientPrettyId }}
+									Groupe Sanguin : {{ patientBloodGroup }}
 								</div>
 							</div>
 						</div>
@@ -35,12 +32,12 @@
 						<table class="min-w-full">
 							<thead class="bg-gray-50 dark:bg-white/5">
 								<tr class="border-b border-gray-200 dark:border-white/10">
-									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">SNO</th>
-									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Medecine Name</th>
+									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">N°</th>
+									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Médicament</th>
 									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Dosage</th>
-									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Frequency</th>
-									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Duration</th>
-									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Timings</th>
+									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Fréquence</th>
+									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Durée</th>
+									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Instructions</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -61,9 +58,9 @@
 
 				<!-- Advice -->
 				<div class="space-y-2">
-					<div class="text-lg font-semibold text-gray-900 dark:text-white">Advice</div>
+					<div class="text-lg font-semibold text-gray-900 dark:text-white">Conseils & Instructions</div>
 					<p class="text-sm leading-6 text-gray-700 dark:text-gray-300">
-						{{ form.instructions || form.description || '-' }}
+						{{ form.instructions || '-' }}
 					</p>
 				</div>
 

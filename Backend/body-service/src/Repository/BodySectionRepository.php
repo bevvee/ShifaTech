@@ -19,6 +19,7 @@ class BodySectionRepository extends ServiceEntityRepository
             ->leftJoin('s.parts', 'p')
             ->addSelect('p')
             ->orderBy('s.order', 'ASC')
+            ->addOrderBy('p.id', 'ASC')
             ->getQuery()
             ->getResult();
     }

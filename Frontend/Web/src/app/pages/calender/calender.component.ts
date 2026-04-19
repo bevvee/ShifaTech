@@ -118,7 +118,8 @@ export class CalenderComponent {
       eventDurationEditable: false,
       events: [],
       dateClick: (arg) => this.handleDateClick(arg),
-      dayCellDidMount: (arg) => this.decorateDayCell(arg)
+      dayCellDidMount: (arg) => this.decorateDayCell(arg),
+      eventContent: (arg) => this.renderEventContent(arg)
     };
 
     this.loadDoctorDayAppointments();
@@ -158,10 +159,10 @@ export class CalenderComponent {
           const userIdNum = userId != null ? Number(userId) : null;
           const myDoctorId = isDoctor ? this.resolveDoctorId(userIdNum, doctors) : null;
 
-          const primaryDoctorIdForQuery = isDoctor ? (userIdNum ?? myDoctorId) : null;
+          const primaryDoctorIdForQuery = isDoctor ? (myDoctorId ?? userIdNum) : null;
           const secondaryDoctorIdForQuery =
-            isDoctor && primaryDoctorIdForQuery != null && myDoctorId != null && Number(myDoctorId) !== Number(primaryDoctorIdForQuery)
-              ? myDoctorId
+            isDoctor && primaryDoctorIdForQuery != null && userIdNum != null && Number(userIdNum) !== Number(primaryDoctorIdForQuery)
+              ? userIdNum
               : null;
 
           const baseParams: Record<string, string | number> = {
@@ -193,16 +194,45 @@ export class CalenderComponent {
 
           const patientNameByUserId = new Map<number, string>();
           const patientNameByPatientId = new Map<number, string>();
+          const patientSexeById = new Map<number, string>();
           for (const p of patients) {
             const full = `${p.prenom ?? ''} ${p.nom ?? ''}`.trim();
-            if (p.idUser != null) patientNameByUserId.set(Number(p.idUser), full || `Patient #${p.idUser}`);
-            if (p.id != null) patientNameByPatientId.set(Number(p.id), full || `Patient #${p.id}`);
+            if (p.idUser != null) {
+              patientNameByUserId.set(Number(p.idUser), full || `Patient #${p.idUser}`);
+              patientSexeById.set(Number(p.idUser), p.sexe ?? 'M');
+            }
+            if (p.id != null) {
+              patientNameByPatientId.set(Number(p.id), full || `Patient #${p.id}`);
+              patientSexeById.set(Number(p.id), p.sexe ?? 'M');
+            }
           }
 
-          return { rdvs, patientNameByUserId, patientNameByPatientId };
+          return { rdvs, patientNameByUserId, patientNameByPatientId, patientSexeById, patients };
         })
-      ).subscribe(({ rdvs, patientNameByUserId, patientNameByPatientId }) => {
-        this.appointmentsByDate = this.buildDayAppointmentsMap(rdvs, patientNameByUserId, patientNameByPatientId);
+      ).subscribe(({ rdvs, patientNameByUserId, patientNameByPatientId, patientSexeById, patients }) => {
+        // Filter only confirmed appointments for the calendar
+        const confirmedRdvs = rdvs.filter(r => (r as any).statut === 'CONFIRME');
+        this.appointmentsByDate = this.buildDayAppointmentsMap(confirmedRdvs, patients, patientNameByUserId, patientNameByPatientId);
+        
+        // Populate FullCalendar events for TimeGrid (Week/Day) views
+        this.calendarOptions.events = confirmedRdvs.map(r => {
+          const date = this.toDateKey((r as any).date_rdv);
+          const startT = this.extractTime((r as any).heure_debut) || '00:00:00';
+          const endT = this.extractTime((r as any).heure_fin) || '00:00:00';
+          const start = `${date}T${startT}`;
+          const end = `${date}T${endT}`;
+          const patientId = Number((r as any).id_patient);
+          const patientName = patientNameByUserId.get(patientId) ?? patientNameByPatientId.get(patientId) ?? `Patient #${patientId}`;
+          const sexe = patientSexeById.get(patientId) || 'M';
+          
+          return {
+            title: patientName,
+            start,
+            end,
+            extendedProps: { patientId, patientName, sexe }
+          };
+        });
+
         this.requestCalendarRerender();
       })
     );
@@ -225,10 +255,16 @@ export class CalenderComponent {
 
   private buildDayAppointmentsMap(
     rdvs: RdvDto[],
+    patients: PatientDto[],
     patientNameByUserId: Map<number, string>,
     patientNameByPatientId: Map<number, string>
   ): Map<DateKey, DayAppointment[]> {
     const mapByDate = new Map<DateKey, DayAppointment[]>();
+    const patientSexeById = new Map<number, string>();
+    for (const p of patients) {
+      if (p.id != null) patientSexeById.set(Number(p.id), p.sexe ?? 'M');
+      if (p.idUser != null) patientSexeById.set(Number(p.idUser), p.sexe ?? 'M');
+    }
 
     for (const rdv of rdvs) {
       const dateKey = this.toDateKey((rdv as any).date_rdv);
@@ -240,8 +276,9 @@ export class CalenderComponent {
         patientNameByPatientId.get(patientId) ??
         `Patient #${patientId}`;
 
-      const startTime = String((rdv as any).heure_debut ?? '').slice(0, 5);
-      const endTime = String((rdv as any).heure_fin ?? '').slice(0, 5);
+      const startTime = this.extractTime((rdv as any).heure_debut).slice(0, 5);
+      const endTime = this.extractTime((rdv as any).heure_fin).slice(0, 5);
+      const sexe = patientSexeById.get(patientId);
 
       const list = mapByDate.get(dateKey) ?? [];
       if (!mapByDate.has(dateKey)) mapByDate.set(dateKey, list);
@@ -251,7 +288,8 @@ export class CalenderComponent {
         patientName,
         startTime,
         endTime,
-      });
+        sexe: sexe || 'M'
+      } as any);
     }
 
     for (const [k, list] of mapByDate.entries()) {
@@ -263,6 +301,8 @@ export class CalenderComponent {
   }
 
   private decorateDayCell(arg: DayCellMountArg): void {
+    if (arg.view.type !== 'dayGridMonth') return;
+    
     const dateKey = this.toDateKey(arg.date);
     if (!dateKey) return;
 
@@ -333,21 +373,21 @@ export class CalenderComponent {
   }
 
   private toUniquePatients(list: DayAppointment[]): DayPatientItem[] {
-    const byPatient = new Map<number, { name: string; times: Set<string> }>();
-
+    const byPatient = new Map<number, { name: string; times: Set<string>; sexe?: string }>();
+ 
     for (const a of list) {
-      const entry = byPatient.get(a.patientId) ?? { name: a.patientName, times: new Set<string>() };
+      const entry = byPatient.get(a.patientId) ?? { name: a.patientName, times: new Set<string>(), sexe: (a as any).sexe };
       if (!byPatient.has(a.patientId)) byPatient.set(a.patientId, entry);
-
+ 
       const time = this.formatTimeRange(a.startTime, a.endTime);
       if (time) entry.times.add(time);
     }
-
+ 
     return Array.from(byPatient.entries()).map(([patientId, v]) => ({
       patientId,
       patientName: v.name,
       times: Array.from(v.times.values()).join(', '),
-      avatarUrl: this.getPatientAvatarUrl(patientId),
+      avatarUrl: v.sexe === 'F' ? 'assets/img/patient-female.png' : 'assets/img/patient-male.png',
     }));
   }
 
@@ -384,17 +424,62 @@ export class CalenderComponent {
   private toDateKey(value: unknown): DateKey | null {
     if (value == null) return null;
     if (value instanceof Date) {
-      return value.toISOString().slice(0, 10);
+      const y = value.getFullYear();
+      const m = String(value.getMonth() + 1).padStart(2, '0');
+      const d = String(value.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
     }
 
     const raw = String(value);
     if (!raw) return null;
 
-    // Accept ISO strings and backend date formats like 'YYYY-MM-DD'.
-    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+    // Handle "1970-01-01T11:00:00" etc.
+    const dateMatch = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (dateMatch) return dateMatch[1];
 
     const parsed = new Date(raw);
     if (isNaN(parsed.getTime())) return null;
-    return parsed.toISOString().slice(0, 10);
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+    const d = String(parsed.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  private extractTime(value: unknown): string {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    
+    // Handle "1970-01-01T11:00:00" or "11:00:00"
+    const match = raw.match(/(?:T|\s|^)(\d{2}:\d{2}(?::\d{2})?)/);
+    return match ? match[1] : raw.slice(0, 8);
+  }
+
+  private renderEventContent(arg: any): any {
+    const { patientName, sexe } = arg.event.extendedProps;
+    const avatarUrl = sexe === 'F' ? 'assets/img/patient-female.png' : 'assets/img/patient-male.png';
+    const isShort = arg.view.type === 'dayGridMonth';
+
+    if (isShort) {
+       return {
+         html: `
+           <div class="flex items-center gap-1 overflow-hidden px-1 py-0.5">
+             <img src="${avatarUrl}" class="h-3 w-3 rounded-full object-cover shrink-0" />
+             <span class="truncate text-[10px]">${patientName}</span>
+           </div>
+         `
+       };
+    }
+
+    return {
+      html: `
+        <div class="flex items-center gap-1.5 p-1 h-full w-full overflow-hidden">
+          <img src="${avatarUrl}" class="h-5 w-5 rounded-full object-cover ring-1 ring-white/10 shrink-0" />
+          <div class="min-w-0 flex-1">
+            <div class="truncate text-[11px] font-semibold text-white">${patientName}</div>
+            <div class="truncate text-[9px] opacity-80 text-white">${arg.timeText}</div>
+          </div>
+        </div>
+      `
+    };
   }
 }

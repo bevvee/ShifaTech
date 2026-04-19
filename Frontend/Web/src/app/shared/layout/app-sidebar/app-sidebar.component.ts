@@ -96,15 +96,17 @@ export class AppSidebarComponent {
   <path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`,
       name: "Patients",
-      roles: [Role.SECRETAIRE],
+      roles: [Role.SECRETAIRE, Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER],
       subItems: [
         {
           name: "Liste des Patients",
           path: "/patients",
+          roles: [Role.SECRETAIRE, Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER],
         },
         {
           name: "Ajouter Patient",
           path: "/patients/new",
+          roles: [Role.SECRETAIRE],
         },
       ],
     },
@@ -116,7 +118,7 @@ export class AppSidebarComponent {
       roles: [Role.INFIRMIER, Role.SECRETAIRE,Role.DOCTEUR],
       subItems: [
         { name: "Liste des Dossiers", path: "/dossier-medical" },
-        { name: "Nouveau Dossier", path: "/dossier-medical/new" },
+        { name: "Nouveau Dossier", path: "/dossier-medical/new",roles: [Role.INFIRMIER], },
       ],
     },
     {
@@ -125,10 +127,10 @@ export class AppSidebarComponent {
   <path d="M12 12v6m-3-3h6M6 7h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`,
       name: "Visites",
-      roles: [Role.INFIRMIER, Role.SECRETAIRE],
+      roles: [Role.INFIRMIER, Role.SECRETAIRE, Role.DOCTEUR],
       subItems: [
         { name: "Historique Visites", path: "/visites" },
-        { name: "Nouvelle Visite", path: "/visites/new" },
+        { name: "Nouvelle Visite", path: "/visites/new", roles: [Role.INFIRMIER, Role.SECRETAIRE] },
       ],
     },
     {
@@ -137,10 +139,10 @@ export class AppSidebarComponent {
   <path d="M12 7v6m-3-3h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
 </svg>`,
       name: "Ordonnances",
-      roles: [Role.DOCTEUR, Role.INFIRMIER, Role.SECRETAIRE],
+      roles: [Role.DOCTEUR, Role.INFIRMIER],
       subItems: [
         { name: "Liste Ordonnances", path: "/ordonnances" },
-        { name: "Nouvelle Ordonnance", path: "/ordonnances/new" },
+        { name: "Nouvelle Ordonnance", path: "/ordonnances/new",roles: [Role.DOCTEUR] },
       ],
     },
     {

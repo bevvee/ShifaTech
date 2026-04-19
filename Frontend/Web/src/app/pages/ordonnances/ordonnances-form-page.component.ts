@@ -37,6 +37,7 @@ type Mode = 'create' | 'edit' | 'view';
   templateUrl: './ordonnances-form-page.component.html'
 })
 export class OrdonnancesFormPageComponent implements OnInit {
+
   mode: Mode;
   submitted = false;
   isSaving = false;
@@ -52,13 +53,11 @@ export class OrdonnancesFormPageComponent implements OnInit {
   private id: number | null;
 
   patientOptions: Option[] = [];
+  visiteOptions: Option[] = [];
 
   patient: PatientDto | null = null;
   dossier: DossierMedicalDto | null = null;
-
   ordonnance: OrdonnanceDto | null = null;
-
-  visiteOptions: Option[] = [];
 
   statutOptions: Option[] = [
     { value: 'ACTIVE', label: 'Active' },
@@ -83,39 +82,6 @@ export class OrdonnancesFormPageComponent implements OnInit {
     this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
     const idParam = this.route.snapshot.paramMap.get('id');
     this.id = idParam ? Number(idParam) : null;
-
-    /*
-    if (this.mode !== 'create' && this.id != null) {
-      const existing = this.store.getById(this.id);
-      if (!existing) {
-        this.router.navigate(['/ordonnances']);
-        return;
-      }
-
-      this.ordonnance = existing;
-
-      this.form = {
-        idPatient: String(existing.idPatient),
-        idDoctor: existing.idDoctor,
-        idVisite: String(existing.idVisite),
-        description: existing.description,
-        medicaments: existing.medicaments,
-        posologie: existing.posologie,
-        dureeTraitement: existing.dureeTraitement,
-        instructions: existing.instructions,
-        dateValidite: existing.dateValidite,
-        statut: existing.statut,
-      };
-
-      const patientId = Number(existing.idPatient);
-      this.dossier = Number.isFinite(patientId) ? (this.dossierStore.getByPatientId(patientId) ?? null) : null;
-    } else if (this.mode === 'create') {
-      const qPatientId = this.route.snapshot.queryParamMap.get('patientId');
-      const qVisiteId = this.route.snapshot.queryParamMap.get('visiteId');
-      if (qPatientId) this.form.idPatient = qPatientId;
-      if (qVisiteId) this.form.idVisite = qVisiteId;
-    }
-    */
   }
 
   ngOnInit() {
@@ -128,6 +94,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
           this.router.navigate(['/ordonnances']);
           return;
         }
+
         this.form = {
           idPatient: String(existing.idPatient),
           idDoctor: existing.idDoctor,
@@ -141,7 +108,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
           statut: existing.statut,
         };
       });
-    } else if (this.mode === 'create') {
+    } else {
       const qPatientId = this.route.snapshot.queryParamMap.get('patientId');
       const qVisiteId = this.route.snapshot.queryParamMap.get('visiteId');
       if (qPatientId) this.form.idPatient = qPatientId;
@@ -153,7 +120,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
     this.visitesStore.getAll().subscribe(list => {
       this.visiteOptions = list.map(v => ({
         value: String(v.id),
-        label: `Visite du ${v.dateCreation ? v.dateCreation.substring(0, 10) : 'Date inconnue'} - ${v.nomPatient}`
+        label: `Visite du ${v.dateCreation?.substring(0, 10) ?? 'Date inconnue'} - ${v.nomPatient}`
       }));
     });
   }
@@ -164,19 +131,6 @@ export class OrdonnancesFormPageComponent implements OnInit {
         value: String(p.id),
         label: `${p.nom} ${p.prenom} (${p.numDossier})`
       }));
-
-      const idPatient = Number(this.form.idPatient);
-      this.patient = Number.isFinite(idPatient) ? (list.find((p) => p.id === idPatient) ?? null) : null;
-
-      if (!this.patient) {
-        this.dossier = null;
-        return;
-      }
-
-      this.dossierStore.getByPatientId(this.patient.id).subscribe({
-        next: (dossier) => (this.dossier = dossier ?? null),
-        error: () => (this.dossier = null),
-      });
     });
   }
 
@@ -214,8 +168,8 @@ export class OrdonnancesFormPageComponent implements OnInit {
 
   get patientSexLabel(): string {
     const s = this.patient?.sexe;
-    if (s === 'M') return 'Male';
-    if (s === 'F') return 'Female';
+    if (s === 'M') return 'Homme';
+    if (s === 'F') return 'Femme';
     return '-';
   }
 
@@ -234,7 +188,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
   }
 
   get prescriptionTitle(): string {
-    return this.form.description?.trim() ? this.form.description.trim() : 'Prescription';
+    return this.form.description?.trim() ? this.form.description.trim() : 'Ordonnance';
   }
 
   get medicationRows(): Array<{
@@ -287,7 +241,6 @@ export class OrdonnancesFormPageComponent implements OnInit {
   }
 
   get isValid(): boolean {
-    if (this.isReadOnly) return true;
     return (
       this.form.idPatient !== '' &&
       this.form.medicaments.trim().length > 0 &&
@@ -301,40 +254,53 @@ export class OrdonnancesFormPageComponent implements OnInit {
 
   save = () => {
     this.submitted = true;
+
     if (!this.isValid || this.isSaving) return;
-    if (this.isReadOnly) { this.cancel(); return; }
+    if (this.isReadOnly) {
+      this.cancel();
+      return;
+    }
 
     this.isSaving = true;
+
     const payload = {
       ...this.form,
       idPatient: Number(this.form.idPatient),
       idVisite: this.form.idVisite ? Number(this.form.idVisite) : undefined,
     };
 
-    if (this.mode === 'create') {
-      this.store.create(payload as any).subscribe({
-        next: async () => {
-          await this.alerts.success('Ordonnance ajoutée avec succès.');
-          this.isSaving = false;
-          this.router.navigate(['/ordonnances']);
-        },
-        error: async () => {
-          await this.alerts.error('Erreur lors de la création.');
-          this.isSaving = false;
-        }
-      });
-    } else if (this.id != null) {
-      this.store.update(this.id, payload as any).subscribe({
-        next: async () => {
-          await this.alerts.success('Ordonnance modifiée avec succès.');
-          this.isSaving = false;
-          this.router.navigate(['/ordonnances']);
-        },
-        error: async () => {
-          await this.alerts.error('Erreur lors de la modification.');
-          this.isSaving = false;
-        }
-      });
+    try {
+      if (this.mode === 'create') {
+        this.store.create(payload as any).subscribe({
+          next: async () => {
+            await this.alerts.success('Ordonnance ajoutée avec succès.');
+            this.isSaving = false;
+            this.router.navigate(['/ordonnances']);
+          },
+          error: async (err) => {
+            console.error(err);
+            await this.alerts.error('Erreur lors de l’enregistrement.');
+            this.isSaving = false;
+          }
+        });
+      } else if (this.id != null) {
+        this.store.update(this.id, payload as any).subscribe({
+          next: async () => {
+            await this.alerts.success('Ordonnance modifiée avec succès.');
+            this.isSaving = false;
+            this.router.navigate(['/ordonnances']);
+          },
+          error: async (err) => {
+            console.error(err);
+            await this.alerts.error('Erreur lors de l’enregistrement.');
+            this.isSaving = false;
+          }
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      this.alerts.error('Erreur inattendue.');
+      this.isSaving = false;
     }
   };
 }

@@ -121,12 +121,47 @@ export class PatientsFormPageComponent {
     return this.mode === 'view';
   }
 
+  isValidEmail(email: string): boolean {
+    if (!email) return true; // Optional field
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return re.test(email);
+  }
+
+  isValidPhone(phone: string): boolean {
+    if (!phone) return true; // Optional field
+    const re = /^(06|07|05)\d{8}$/;
+    return re.test(phone.replace(/\s/g, ''));
+  }
+
+  isValidCIN(cin: string): boolean {
+    if (!cin) return false;
+    const re = /^[A-Z]{1,2}\d{4,7}$/;
+    return re.test(cin.trim().toUpperCase());
+  }
+
+  get emailError(): string {
+    if (!this.form.email) return '';
+    return this.isValidEmail(this.form.email) ? '' : 'Format d\'email invalide (ex: nom@domaine.com)';
+  }
+
+  get phoneError(): string {
+    if (!this.form.telephone) return '';
+    return this.isValidPhone(this.form.telephone) ? '' : 'Format invalide (ex: 0612345678)';
+  }
+
+  get cinError(): string {
+    if (!this.form.cin) return 'Le CIN est obligatoire';
+    return this.isValidCIN(this.form.cin) ? '' : 'Format CIN invalide (ex: BE123456)';
+  }
+
   get isValid(): boolean {
     if (this.isReadOnly) return true;
     return (
       this.form.nom.trim().length > 0 &&
       this.form.prenom.trim().length > 0 &&
-      this.form.cin.trim().length > 0 &&
+      this.isValidCIN(this.form.cin) &&
+      this.isValidEmail(this.form.email) &&
+      this.isValidPhone(this.form.telephone) &&
       this.form.numeroAssurance.trim().length > 0
     );
   }

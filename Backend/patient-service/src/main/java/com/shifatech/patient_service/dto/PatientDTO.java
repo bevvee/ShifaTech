@@ -31,6 +31,4 @@ public class PatientDTO {
     private String telephone;
     private String adresse;
 
-    // Informations de l'utilisateur (provenant du service Auth)
-    private UserDTO userInfo;
 }

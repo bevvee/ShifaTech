@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import com.ShifaTech.DoctorService.dto.ApiResponse;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -126,19 +127,80 @@ public class DoctorService {
 
 	@Transactional
 	public void deleteDoctor(Long idDoctor) {
-		if (!doctorRepository.existsById(idDoctor)) {
-			throw new ResourceNotFoundException("Doctor not found");
+		Doctor doctor = doctorRepository.findById(idDoctor)
+				.orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
+		
+		try {
+			java.util.Map<String, Object> request = new java.util.HashMap<>();
+			request.put("statut", false);
+			authClient.updateUser(doctor.getIdUser(), request);
+            
+            doctorRepository.delete(doctor);
+		} catch (Exception e) {
+			log.error("Failed to update user status in auth-service for userId: " + doctor.getIdUser(), e);
+			throw new RuntimeException("Erreur lors de la désactivation (Update statut a échoué)");
 		}
-		doctorRepository.deleteById(idDoctor);
 	}
 
 	public List<Object> getAppointmentsByDoctor(Long idDoctor) {
-		return appointmentClient.getAppointmentsByDoctor(idDoctor);
+		return extractAppointments(appointmentClient.getAppointmentsByDoctor(idDoctor));
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<Object> extractAppointments(Object response) {
+		if (response == null)
+			return List.of();
+		if (response instanceof List)
+			return (List<Object>) response;
+		if (response instanceof java.util.Map) {
+			java.util.Map<String, Object> map = (java.util.Map<String, Object>) response;
+			if (map.containsKey("hydra:member") && map.get("hydra:member") instanceof List) {
+				return (List<Object>) map.get("hydra:member");
+			}
+			if (map.containsKey("member") && map.get("member") instanceof List) {
+				return (List<Object>) map.get("member");
+			}
+			if (map.containsKey("data") && map.get("data") instanceof List) {
+				return (List<Object>) map.get("data");
+			}
+		}
+		return List.of();
 	}
 
 	@SuppressWarnings("unchecked")
 	public List<PatientDTO> getMyPatients(Long idDoctor, String authHeader) {
-		List<Object> appointments = appointmentClient.getAppointmentsByDoctor(idDoctor);
+		List<Object> appointments = extractAppointments(appointmentClient.getAppointmentsByDoctor(idDoctor));
+
+		// Fallback logic because rdv-service (PHP) might store either id_docteur (PK) or id_user (Auth ID)
+		if (appointments == null || appointments.isEmpty()) {
+			log.warn("No appointments found for idDoctor {}. Checking doctor profile for fallback...", idDoctor);
+			Doctor doctor = doctorRepository.findById(idDoctor).orElse(null);
+			if (doctor != null && doctor.getIdUser() != null && !doctor.getIdUser().equals(idDoctor)) {
+				log.info("Trying fallback with idUser {} for doctor {}.", doctor.getIdUser(), idDoctor);
+				List<Object> fallbackApps = extractAppointments(appointmentClient.getAppointmentsByDoctor(doctor.getIdUser()));
+				if (fallbackApps != null && !fallbackApps.isEmpty()) {
+					log.info("Found {} appointments using idUser fallback.", fallbackApps.size());
+					appointments = fallbackApps;
+				} else {
+					log.warn("No appointments found even with idUser fallback.");
+				}
+			} else {
+				log.warn("Doctor profile not found or idUser matches idDoctor. No fallback possible.");
+			}
+		} else {
+			log.info("Found {} appointments for idDoctor {}.", appointments.size(), idDoctor);
+		}
+
+		if (appointments == null || appointments.isEmpty()) {
+			return List.of();
+		}
+
+		// Debug: show keys of the first appointment map to verify id_patient mapping
+		if (!appointments.isEmpty() && appointments.get(0) instanceof java.util.Map) {
+			java.util.Map<String, Object> first = (java.util.Map<String, Object>) appointments.get(0);
+			log.info("Appointment keys found: {}", first.keySet());
+		}
+
 		return appointments.stream()
 				.filter(obj -> obj instanceof java.util.Map)
 				.map(obj -> (java.util.Map<String, Object>) obj)
@@ -151,17 +213,129 @@ public class DoctorService {
 					return pid;
 				})
 				.filter(java.util.Objects::nonNull)
-				.map(id -> Long.valueOf(id.toString()))
-				.distinct()
-				.map(patientId -> {
+				.map(id -> {
 					try {
-						return patientClient.getPatientById(patientId, authHeader).getData();
-					} catch (Exception e) {
-						log.error("Failed to fetch patient info for ID: " + patientId, e);
+						return Long.valueOf(id.toString());
+					} catch (NumberFormatException e) {
 						return null;
 					}
 				})
 				.filter(java.util.Objects::nonNull)
+				.distinct()
+				.map(patientId -> {
+					log.debug("Fetching patient details for ID: {}", patientId);
+					try {
+						Object rawResponse = patientClient.getPatientById(patientId, authHeader);
+						if (rawResponse instanceof ApiResponse<?> response) {
+							Object data = response.getData();
+							if (data == null) {
+								log.warn("Patient details missing in response for ID: {}", patientId);
+								return null;
+							}
+							
+							// If it's already a PatientDTO (lucky case)
+							if (data instanceof PatientDTO) {
+								return (PatientDTO) data;
+							}
+							
+							// If it's a Map (Jackson generic fallback), we need to extract fields.
+							// This is likely why we have 500 errors (ClassCastException).
+							if (data instanceof java.util.Map) {
+								java.util.Map<String, Object> mapData = (java.util.Map<String, Object>) data;
+								PatientDTO p = new PatientDTO();
+								p.setIdPatient(mapData.get("idPatient") != null ? Long.valueOf(mapData.get("idPatient").toString()) : null);
+								p.setIdUser(mapData.get("idUser") != null ? Long.valueOf(mapData.get("idUser").toString()) : null);
+								p.setNumDossier((String) mapData.get("numDossier"));
+								p.setAssurance((String) mapData.get("assurance"));
+								p.setNumeroAssurance((String) mapData.get("numeroAssurance"));
+								p.setStatut(mapData.get("statut") instanceof Boolean ? (Boolean) mapData.get("statut") : (mapData.get("statut") != null && mapData.get("statut").toString().equalsIgnoreCase("true")));
+
+								// Extract userInfo if present, OR map from flat fields (Patient-Service format)
+								com.ShifaTech.DoctorService.dto.UserDTO u = new com.ShifaTech.DoctorService.dto.UserDTO();
+								if (mapData.get("userInfo") instanceof java.util.Map) {
+									java.util.Map<String, Object> uMap = (java.util.Map<String, Object>) mapData.get("userInfo");
+									u.setNom((String) uMap.get("nom"));
+									u.setPrenom((String) uMap.get("prenom"));
+									u.setSexe((String) uMap.get("sexe"));
+								} else {
+									// Fallback to flat structure
+									u.setNom((String) mapData.get("nom"));
+									u.setPrenom((String) mapData.get("prenom"));
+									u.setSexe((String) mapData.get("sexe"));
+								}
+								p.setUserInfo(u);
+								return p;
+							}
+						}
+						log.warn("Unexpected response format from patient-service for ID: {}", patientId);
+						return null;
+					} catch (Exception e) {
+						log.error("Failed to fetch patient info for ID: " + patientId + ". Error: " + e.getMessage(), e);
+						return null;
+					}
+				})
+				.filter(java.util.Objects::nonNull)
+				.collect(Collectors.toList());
+	}
+
+	public List<Object> getMyVisits(Long idDoctor, String authHeader) {
+		log.info("Fetching proxy visits for doctor ID: {}", idDoctor);
+		List<PatientDTO> myPatients = getMyPatients(idDoctor, authHeader);
+		java.util.Set<Long> myPatientIds = myPatients.stream()
+				.map(PatientDTO::getIdPatient)
+				.filter(java.util.Objects::nonNull)
+				.collect(Collectors.toSet());
+
+		ApiResponse<List<Object>> response = patientClient.getAllVisites(authHeader);
+		if (response == null || !response.isSuccess() || response.getData() == null) {
+			return List.of();
+		}
+
+		return response.getData().stream()
+				.filter(obj -> obj instanceof java.util.Map)
+				.map(obj -> (java.util.Map<String, Object>) obj)
+				.filter(map -> {
+					Object visitDocId = map.get("idDoctor");
+					if (visitDocId == null)
+						visitDocId = map.get("id_doctor");
+
+					Object visitPatId = map.get("idDossierPatient");
+					if (visitPatId == null)
+						visitPatId = map.get("idPatient");
+					if (visitPatId == null)
+						visitPatId = map.get("id_patient");
+
+					boolean isMyDoctorId = visitDocId != null && Long.valueOf(visitDocId.toString()).equals(idDoctor);
+					boolean isMyPatient = visitPatId != null && myPatientIds.contains(Long.valueOf(visitPatId.toString()));
+
+					return isMyDoctorId || isMyPatient;
+				})
+				.collect(Collectors.toList());
+	}
+
+	public List<Object> getMyDossiers(Long idDoctor, String authHeader) {
+		log.info("Fetching proxy medical records for doctor ID: {}", idDoctor);
+		List<PatientDTO> myPatients = getMyPatients(idDoctor, authHeader);
+		java.util.Set<Long> myPatientIds = myPatients.stream()
+				.map(PatientDTO::getIdPatient)
+				.filter(java.util.Objects::nonNull)
+				.collect(Collectors.toSet());
+
+		ApiResponse<List<Object>> response = patientClient.getAllDossiers(authHeader);
+		if (response == null || !response.isSuccess() || response.getData() == null) {
+			return List.of();
+		}
+
+		return response.getData().stream()
+				.filter(obj -> obj instanceof java.util.Map)
+				.map(obj -> (java.util.Map<String, Object>) obj)
+				.filter(map -> {
+					Object dossierPatId = map.get("idPatient");
+					if (dossierPatId == null)
+						dossierPatId = map.get("id_patient");
+
+					return dossierPatId != null && myPatientIds.contains(Long.valueOf(dossierPatId.toString()));
+				})
 				.collect(Collectors.toList());
 	}
 

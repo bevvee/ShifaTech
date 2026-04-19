@@ -39,13 +39,16 @@
           <!-- Patient -->
           <td class="px-5 py-4">
             <div class="flex items-center gap-3">
+              <img
+                [src]="item.patientImage || 'assets/img/patient-male.png'"
+                class="w-10 h-10 rounded-full object-cover"
+                [alt]="item.patient"
+              />
 
               <div>
                 <p class="font-medium text-gray-800 dark:text-white">
                   {{ item.patient }}
                 </p>
-
-                <p class="text-sm text-gray-500">Patient ID {{ item.id }}</p>
               </div>
             </div>
           </td>
@@ -53,6 +56,11 @@
           <!-- Doctor -->
           <td class="px-5 py-4">
             <div class="flex items-center gap-3">
+              <img
+                [src]="item.medecinImage || 'assets/img/user-grey.png'"
+                class="w-10 h-10 rounded-full object-cover"
+                [alt]="item.medecin"
+              />
 
               <div>
                 <p class="font-medium text-gray-800 dark:text-white">

@@ -11,7 +11,7 @@ import { AlertService } from '../../core/services/alert.service';
 import { ServiceRow } from '../../core/models/service.model';
 import { ServicesCatalogService } from '../../core/services/services-catalog.service';
 import { ActivatedRoute } from '@angular/router';
-import { ToastService } from 'src/app/shared/services/toast.service';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   selector: 'app-specialisations',
@@ -117,12 +117,12 @@ export class SpecialisationsComponent {
 
     this.specialityService.deleteSpeciality(id, this.owner).subscribe({
       next: () => {
-        this.specialisations = this.specialisations.filter(s => s.idSpecialite !== id);
         this.toastService.success('Succès', 'Spécialité supprimée avec succès.');
+        this.loadSpecialities();
       },
       error: (err: any) => {
-        const message = err?.error?.message || 'Impossible de supprimer cette spécialité.';
-        this.toastService.error('Erreur', message);
+        this.toastService.error('Erreur', 'Erreur lors de la suppression de la spécialité.');
+        console.error('Error deleting speciality', err);
       }
     });
   }

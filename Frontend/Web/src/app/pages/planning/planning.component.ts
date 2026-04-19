@@ -6,13 +6,14 @@ import { ComponentCardComponent } from '../../shared/components/common/component
 import { Store } from '@ngrx/store';
 import { combineLatest, forkJoin, of } from 'rxjs';
 import { catchError, filter, map, switchMap, take } from 'rxjs/operators';
-
 import { selectAuthUser, selectUserProfile, selectUserRole } from '../../core/store/auth/auth.selectors';
 import { Role } from '../../core/models/role.enum';
 import { DoctorService } from '../../core/services/doctor.service';
 import { PlanningService } from '../../core/services/planning.service';
 import { PlanningDto } from '../../core/models/planning.model';
 import { Doctor } from '../../core/models/doctor.model';
+import { ToastService } from '../../shared/services/toast.service';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-planning',
@@ -23,6 +24,8 @@ export class PlanningComponent {
   private readonly store = inject(Store);
   private readonly doctorService = inject(DoctorService);
   private readonly planningService = inject(PlanningService);
+  private readonly toastService = inject(ToastService);
+  private readonly alerts = inject(AlertService);
 
   role: Role | null = null;
   isAuthReady = false;
@@ -36,13 +39,13 @@ export class PlanningComponent {
   selectedDoctorId: number | null = null;
 
   readonly days: Array<{ key: DayKey; label: string }> = [
-    { key: 'MONDAY',    label: 'Lundi' },
-    { key: 'TUESDAY',   label: 'Mardi' },
+    { key: 'MONDAY', label: 'Lundi' },
+    { key: 'TUESDAY', label: 'Mardi' },
     { key: 'WEDNESDAY', label: 'Mercredi' },
-    { key: 'THURSDAY',  label: 'Jeudi' },
-    { key: 'FRIDAY',    label: 'Vendredi' },
-    { key: 'SATURDAY',  label: 'Samedi' },
-    { key: 'SUNDAY',    label: 'Dimanche' },
+    { key: 'THURSDAY', label: 'Jeudi' },
+    { key: 'FRIDAY', label: 'Vendredi' },
+    { key: 'SATURDAY', label: 'Samedi' },
+    { key: 'SUNDAY', label: 'Dimanche' },
   ];
 
   activeDay: DayKey = 'MONDAY';
@@ -137,8 +140,14 @@ export class PlanningComponent {
       }
     }
   saveChanges() {
-    if (this.role !== Role.DOCTEUR) return;
-    if (this.doctorId == null) return;
+    if (this.role !== Role.DOCTEUR) {
+      this.toastService.error('Erreur', 'Seuls les docteurs peuvent modifier leur planning.');
+      return;
+    }
+    if (this.doctorId == null) {
+      this.toastService.error('Erreur', 'Impossible de trouver votre profil docteur. Veuillez contacter l\'administration.');
+      return;
+    }
 
     this.isSaving = true;
     this.errorMessage = '';
@@ -163,16 +172,49 @@ export class PlanningComponent {
         next: (results: any[]) => {
           const hasError = results.some((r) => r && (r as any).__error);
           if (hasError) {
-            this.errorMessage = 'Some slots failed to save. Please try again.';
+            this.toastService.error('Erreur', 'Certains créneaux ont échoué à s\'enregistrer.');
+          } else {
+            this.toastService.success('Succès', 'Planning mis à jour avec succès.');
           }
           this.isSaving = false;
           this.load();
         },
         error: () => {
           this.isSaving = false;
-          this.errorMessage = 'Failed to save planning.';
+          // this.errorMessage = 'Failed to save planning.';
+          this.toastService.error('Erreur', 'Erreur lors de l\'enregistrement du planning.');
         },
       });
+  }
+
+  deleteSlot(day: DayKey) {
+    const idPlan = this.formByDay[day].idPlan;
+    if (!idPlan) {
+      this.formByDay[day] = this.emptyForm(day);
+      if (this.activeDay === day) this.activeForm = this.formByDay[day];
+      return;
+    }
+
+    void this.confirmAndDeleteSlot(day, idPlan);
+  }
+
+  private async confirmAndDeleteSlot(day: DayKey, idPlan: number) {
+    const ok = await this.alerts.confirmDelete('cet horaire');
+    if (!ok) return;
+
+    this.isSaving = true;
+    this.planningService.deletePlan(idPlan).subscribe({
+      next: () => {
+        this.toastService.success('Supprimé', 'Horaire supprimé.');
+        this.formByDay[day] = this.emptyForm(day);
+        if (this.activeDay === day) this.activeForm = this.formByDay[day];
+        this.isSaving = false;
+      },
+      error: () => {
+        this.toastService.error('Erreur', 'Impossible de supprimer.');
+        this.isSaving = false;
+      }
+    });
   }
 
   private load() {
@@ -236,7 +278,8 @@ export class PlanningComponent {
           this.activeForm = this.formByDay[this.activeDay];
 
           if (this.isDoctor && this.doctorId == null) {
-            this.errorMessage = 'No doctor profile found for this account.';
+            this.errorMessage = 'Aucun profil docteur trouvé pour ce compte. Veuillez contacter l\'administration.';
+            this.toastService.error('Profil manquant', this.errorMessage);
           }
 
           this.isLoading = false;

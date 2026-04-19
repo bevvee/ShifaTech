@@ -8,6 +8,11 @@ import { PatientsStore } from './patients.store';
 import { DossierMedicalStore } from '../dossier-medical/dossier-medical.store';
 import { PatientDto } from '../../core/models/patient.model';
 import { AlertService } from '../../core/services/alert.service';
+import { Role } from '../../core/models/role.enum';
+import { Store } from '@ngrx/store';
+import { selectUserRole } from '../../core/store/auth/auth.selectors';
+import { DoctorService } from '../../core/services/doctor.service';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-patients',
@@ -29,15 +34,29 @@ export class PatientsComponent implements OnInit {
   private readonly store = inject(PatientsStore);
   private readonly dossierStore = inject(DossierMedicalStore);
   private readonly alerts = inject(AlertService);
+  private readonly authStore = inject(Store);
+  private readonly doctorService = inject(DoctorService);
+  
+  userRole$ = this.authStore.select(selectUserRole);
+  readonly Role = Role;
 
   ngOnInit(): void {
     this.loadPatients();
   }
 
   loadPatients() {
-    this.store.getAll().subscribe({
-      next: (data) => this.patients = data,
-      error: (err) => console.error('Erreur chargement patients', err)
+    this.userRole$.pipe(take(1)).subscribe((role) => {
+      if (role === Role.DOCTEUR) {
+        this.doctorService.getMyPatients().subscribe({
+          next: (data) => this.patients = data,
+          error: (err) => console.error('Erreur chargement mes patients', err)
+        });
+      } else {
+        this.store.getAll().subscribe({
+          next: (data) => this.patients = data,
+          error: (err) => console.error('Erreur chargement patients', err)
+        });
+      }
     });
   }
 

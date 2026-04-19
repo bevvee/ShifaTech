@@ -11,6 +11,10 @@ export class VisiteStore {
     return this.visiteApi.getAll();
   }
 
+  getAllForDoctor(): Observable<VisiteDto[]> {
+    return this.visiteApi.getAllForDoctor();
+  }
+
   getById(id: number): Observable<VisiteDto | undefined> {
     return this.visiteApi.getById(id);
   }

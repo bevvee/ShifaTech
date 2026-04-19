@@ -7,7 +7,9 @@ import { Role } from '../../../../core/models/role.enum';
 export type RendezVousRow = {
   id: string;
   patient: string;
+  patientImage?: string;
   medecin: string;
+  medecinImage?: string;
   date: string;
   heure: string;
   statut: 'Confirmé' | 'En attente' | 'Annulé' | 'Terminé';

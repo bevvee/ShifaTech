@@ -1,5 +1,6 @@
 package com.ShifaTech.DoctorService.controller;
 
+import com.ShifaTech.DoctorService.dto.ApiResponse;
 import com.ShifaTech.DoctorService.dto.DoctorDTO;
 import com.ShifaTech.DoctorService.dto.PatientDTO;
 import com.ShifaTech.DoctorService.service.DoctorService;
@@ -98,6 +99,12 @@ public class DoctorController {
         return ResponseEntity.ok(doctorService.getAppointmentsByDoctor(id));
     }
 
+    @GetMapping("/user/{idUser:[0-9]+}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT','INFIRMIER')")
+    public ResponseEntity<DoctorDTO> getDoctorByUserId(@PathVariable Long idUser) {
+        return ResponseEntity.ok(doctorService.getDoctorProfileByUserId(idUser));
+    }
+
     @GetMapping("/my-patients")
     @PreAuthorize("hasRole('DOCTEUR')")
     public ResponseEntity<List<PatientDTO>> getMyPatients(
@@ -107,6 +114,36 @@ public class DoctorController {
         // Assuming currentUserId is the idUser
         DoctorDTO doctor = doctorService.getDoctorProfileByUserId(Long.valueOf(currentUserId));
         return ResponseEntity.ok(doctorService.getMyPatients(doctor.getIdDocteur(), authHeader));
+    }
+
+    @GetMapping("/my-visits")
+    @PreAuthorize("hasRole('DOCTEUR')")
+    public ResponseEntity<ApiResponse<List<Object>>> getMyVisits(
+            @RequestHeader("Authorization") String authHeader) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = auth.getName();
+        DoctorDTO doctor = doctorService.getDoctorProfileByUserId(Long.valueOf(currentUserId));
+        List<Object> visits = doctorService.getMyVisits(doctor.getIdDocteur(), authHeader);
+        return ResponseEntity.ok(ApiResponse.<List<Object>>builder()
+                .success(true)
+                .message("Visits fetched successfully")
+                .data(visits)
+                .build());
+    }
+
+    @GetMapping("/my-medical-records")
+    @PreAuthorize("hasRole('DOCTEUR')")
+    public ResponseEntity<ApiResponse<List<Object>>> getMyMedicalRecords(
+            @RequestHeader("Authorization") String authHeader) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = auth.getName();
+        DoctorDTO doctor = doctorService.getDoctorProfileByUserId(Long.valueOf(currentUserId));
+        List<Object> dossiers = doctorService.getMyDossiers(doctor.getIdDocteur(), authHeader);
+        return ResponseEntity.ok(ApiResponse.<List<Object>>builder()
+                .success(true)
+                .message("Medical records fetched successfully")
+                .data(dossiers)
+                .build());
     }
 
     @GetMapping("/health")
