@@ -13,6 +13,9 @@ import { DoctorService } from '../../core/services/doctor.service';
 import { SpecialityService } from '../../core/services/speciality.service';
 import { Doctor } from '../../core/models/doctor.model';
 import { Sexe } from '../../core/models/sexe.enum';
+import { AuthService } from '../../core/services/auth.service';
+import { ToastService } from '../../shared/services/toast.service';
+import { Role } from '../../core/models/role.enum';
 
 type Mode = 'create' | 'edit';
 
@@ -41,8 +44,11 @@ export class DocteursFormPageComponent {
   private readonly router = inject(Router);
   private readonly doctorService = inject(DoctorService);
   private readonly specialityService = inject(SpecialityService);
+  private readonly authService = inject(AuthService);
+  private readonly toastService = inject(ToastService);
 
   private id: number | null;
+  private idUser: number | null = null;
 
   sexeOptions: Option[] = [
     { value: Sexe.H, label: 'Masculin' },
@@ -62,6 +68,7 @@ export class DocteursFormPageComponent {
     cin: string;
     email: string;
     password: string;
+    passwordConfirmation: string;
     sexe: Sexe;
     statutValue: 'true' | 'false';
     dateNaissance: string;
@@ -81,13 +88,18 @@ export class DocteursFormPageComponent {
     if (this.mode === 'edit' && this.id != null) {
       this.doctorService.getDoctor(this.id).subscribe({
         next: (existing: any) => {
+          this.idUser = existing?.idUser ?? null;
           this.form = {
             nom: existing?.nom ?? '',
             prenom: existing?.prenom ?? '',
             cin: existing?.cin ?? '',
             email: existing?.email ?? '',
             password: '',
-            sexe: existing?.sexe === ('M' as any) ? Sexe.H : (existing?.sexe ?? Sexe.H),
+            passwordConfirmation: '',
+            sexe:
+              existing?.sexe === 'F' || existing?.sexe === 'f' || existing?.sexe === Sexe.F
+                ? Sexe.F
+                : Sexe.H,
             statutValue: existing?.statut ? 'true' : 'false',
             dateNaissance: existing?.dateNaissance ?? '',
             telephone: existing?.telephone ?? '',
@@ -118,6 +130,10 @@ export class DocteursFormPageComponent {
   }
 
   get isValid(): boolean {
+    const passwordValid = this.mode === 'edit' && !this.form.password?.trim()
+      ? true 
+      : (!!this.form.password?.trim() && this.form.password === this.form.passwordConfirmation);
+
     return (
       !!this.form.nom?.trim() &&
       !!this.form.prenom?.trim() &&
@@ -127,7 +143,7 @@ export class DocteursFormPageComponent {
       !!this.form.dateNaissance?.trim() &&
       !!this.form.numeroOrdre?.trim() &&
       !!this.form.idSpecialite &&
-      (this.mode === 'edit' || (!!this.form.password && this.form.password.trim().length > 0))
+      passwordValid
     );
   }
 
@@ -140,8 +156,70 @@ export class DocteursFormPageComponent {
     if (!this.isValid) return;
 
     const statut = this.form.statutValue === 'true';
-    const payload: Omit<Doctor, 'idDocteur'> = {
-      idUser: 1, // Placeholder, should be handled by auth
+    
+    // Auth-service user data
+    const authPayload = {
+      nom: this.form.nom.trim(),
+      prenom: this.form.prenom.trim(),
+      cin: this.form.cin.trim(),
+      email: this.form.email.trim(),
+      password: this.form.password.trim(),
+      role: Role.DOCTEUR,
+      sexe: this.form.sexe === Sexe.H ? 'M' : 'F',
+      statut,
+      telephone: this.form.telephone.trim(),
+      adresse: this.form.adresse.trim(),
+      dateNaissance: this.form.dateNaissance,
+      passwordConfirmation: this.form.passwordConfirmation.trim(),
+    };
+
+    if (this.mode === 'create') {
+      this.authService.register(authPayload).subscribe({
+        next: (authRes: any) => {
+          if (authRes?.error) {
+             this.toastService.error('Erreur', authRes.message || 'Erreur lors de la création de l\'utilisateur.');
+             return;
+          }
+          
+          const newUserId = authRes?.user?.idUser;
+          if (!newUserId) {
+             this.toastService.error('Erreur', 'Impossible de récupérer l\'ID utilisateur créé.');
+             return;
+          }
+
+          const docPayload: Omit<Doctor, 'idDocteur'> = {
+            idUser: newUserId,
+            nom: this.form.nom.trim(),
+            prenom: this.form.prenom.trim(),
+            cin: this.form.cin.trim(),
+            email: this.form.email.trim(),
+            statut,
+            dateNaissance: this.form.dateNaissance,
+            telephone: this.form.telephone.trim(),
+            adresse: this.form.adresse.trim(),
+            numeroOrdre: this.form.numeroOrdre.trim(),
+            idSpecialite: Number(this.form.idSpecialite),
+            specialiteLabel: '',
+            sexe: (this.form.sexe === Sexe.H ? 'M' : this.form.sexe) as any,
+          };
+
+          this.doctorService.createDoctor(docPayload).subscribe({
+            next: () => {
+               this.toastService.success('Succès', 'Docteur ajouté avec succès.');
+               this.router.navigate(['/docteurs']);
+            },
+            error: (err: any) => this.toastService.error('Erreur', err?.error?.message || 'Erreur lors de la création du profil docteur.'),
+          });
+        },
+        error: (err: any) => this.toastService.error('Erreur API', err?.error?.message || 'Connexion auth-service échouée.')
+      });
+      return;
+    }
+
+    if (this.id == null) return;
+
+    const docPayload: Omit<Doctor, 'idDocteur'> = {
+      idUser: this.idUser || 0,
       nom: this.form.nom.trim(),
       prenom: this.form.prenom.trim(),
       cin: this.form.cin.trim(),
@@ -156,20 +234,33 @@ export class DocteursFormPageComponent {
       sexe: (this.form.sexe === Sexe.H ? 'M' : this.form.sexe) as any,
     };
 
-    if (this.mode === 'create') {
-      this.doctorService.createDoctor({ ...payload, password: this.form.password.trim() }).subscribe({
-        next: () => this.router.navigate(['/docteurs']),
-        error: (err: any) => console.error('Error creating doctor', err),
+    const updateDoctorProfile = () => {
+      this.doctorService.updateDoctor(this.id!, docPayload).subscribe({
+        next: () => {
+          this.toastService.success('Succès', 'Docteur mis à jour avec succès');
+          this.router.navigate(['/docteurs']);
+        },
+        error: (err: any) => this.toastService.error('Erreur', 'Erreur lors de la mise à jour du docteur.')
       });
-      return;
+    };
+
+    if (this.idUser) {
+      if (!authPayload.password) {
+         delete (authPayload as any).password;
+      }
+      this.authService.updateUser(this.idUser, authPayload).subscribe({
+        next: (res: any) => {
+          if (res?.error) {
+             this.toastService.error('Erreur', res.message || 'Erreur lors de la mise à jour (Auth).');
+             return;
+          }
+          updateDoctorProfile();
+        },
+        error: (err: any) => this.toastService.error('Erreur', 'Impossible de joindre auth-service pour la mise à jour.')
+      });
+    } else {
+      updateDoctorProfile();
     }
-
-    if (this.id == null) return;
-
-    this.doctorService.updateDoctor(this.id, payload).subscribe({
-      next: () => this.router.navigate(['/docteurs']),
-      error: (err: any) => console.error('Error updating doctor', err),
-    });
   }
 
   private emptyForm() {
@@ -179,6 +270,7 @@ export class DocteursFormPageComponent {
       cin: '',
       email: '',
       password: '',
+      passwordConfirmation: '',
       sexe: Sexe.H,
       statutValue: 'true' as 'true' | 'false',
       dateNaissance: '',

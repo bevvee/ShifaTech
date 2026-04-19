@@ -8,11 +8,18 @@
           <app-label>Patient</app-label>
           <div class="flex items-center gap-3">
             <div
-              class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-sm font-semibold text-white"
+              class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5"
             >
-              {{ patientInitials }}
+              <img
+                *ngIf="patientIcon"
+                [src]="patientIcon"
+                [alt]="patientLabel"
+                class="h-full w-full object-cover"
+                (error)="$any($event.target).src = 'assets/images/user/user-01.png'"
+              />
+              <span *ngIf="!patientIcon" class="text-xs font-semibold text-gray-400">{{ patientInitials }}</span>
             </div>
-            <div class="text-sm text-gray-800 dark:text-white/90">
+            <div class="text-sm font-medium text-gray-800 dark:text-white/90">
               {{ patientLabel }}
             </div>
           </div>
@@ -22,11 +29,18 @@
           <app-label>Docteur</app-label>
           <div class="flex items-center gap-3">
             <div
-              class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-sm font-semibold text-white"
+              class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5"
             >
-              {{ doctorInitials }}
+              <img
+                *ngIf="doctorIcon"
+                [src]="doctorIcon"
+                [alt]="doctorLabel"
+                class="h-full w-full object-cover"
+                (error)="$any($event.target).src = 'assets/img/user-grey.png'"
+              />
+              <span *ngIf="!doctorIcon" class="text-xs font-semibold text-gray-400">{{ doctorInitials }}</span>
             </div>
-            <div class="text-sm text-gray-800 dark:text-white/90">
+            <div class="text-sm font-medium text-gray-800 dark:text-white/90">
               {{ doctorLabel }}
             </div>
           </div>

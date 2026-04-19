@@ -8,6 +8,13 @@ import { DossierMedicalStore } from './dossier-medical.store';
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
 import { DossierMedicalDto, DossierStatus } from '../../core/models/dossier-medical.model';
 import { AlertService } from '../../core/services/alert.service';
+import { Store as NgrxStore } from '@ngrx/store';
+import { selectUserRole } from '../../core/store/auth/auth.selectors';
+import { DoctorService } from '../../core/services/doctor.service';
+import { forkJoin } from 'rxjs';
+import { take, switchMap, map } from 'rxjs/operators';
+import { Role } from '../../core/models/role.enum';
+import { Store } from '@ngrx/store';
 
 @Component({
   selector: 'app-dossier-medical',
@@ -29,9 +36,17 @@ export class DossierMedicalComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly store = inject(DossierMedicalStore);
   private readonly alerts = inject(AlertService);
+  private readonly doctorService = inject(DoctorService);
+  private readonly authStore = inject(NgrxStore);
+  private readonly ngrxStore = inject(Store);
+
+  role: Role | null = null;
 
   ngOnInit(): void {
     this.loadDossiers();
+    this.ngrxStore.select(selectUserRole).pipe(take(1)).subscribe(r => {
+      this.role = r;
+    });
   }
 
   /*
@@ -41,7 +56,16 @@ export class DossierMedicalComponent implements OnInit {
   */
 
   loadDossiers() {
-    this.store.getAll().subscribe({
+    this.authStore.select(selectUserRole).pipe(
+      take(1),
+      switchMap((role) => {
+        if (role === Role.DOCTEUR) {
+          return this.store.getAllForDoctor();
+        } else {
+          return this.store.getAll();
+        }
+      })
+    ).subscribe({
       next: (data) => this.dossiers = data,
       error: (err) => console.error('Erreur chargement dossiers', err)
     });
@@ -71,14 +95,25 @@ export class DossierMedicalComponent implements OnInit {
     this.loadDossiers();
   }
   */
-
+  get isInfirmier(): boolean {
+    return String(this.role ?? '').toUpperCase() === 'INFIRMIER';
+  }
+  
   deleteDossier(id: number) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')) {
-      this.store.delete(id).subscribe({
-        next: () => this.loadDossiers(),
-        error: (err) => console.error('Erreur suppression dossier', err)
-      });
-    }
+    void this.confirmAndDeleteDossier(id);
+  }
+
+  private async confirmAndDeleteDossier(id: number) {
+    const ok = await this.alerts.confirmDelete('ce dossier');
+    if (!ok) return;
+
+    this.store.delete(id).subscribe({
+      next: () => this.loadDossiers(),
+      error: (err) => {
+        console.error('Erreur suppression dossier', err);
+        void this.alerts.error('Impossible de supprimer ce dossier.');
+      }
+    });
   }
 
   getStatusBadgeColor(status: DossierStatus): 'success' | 'warning' | 'error' {

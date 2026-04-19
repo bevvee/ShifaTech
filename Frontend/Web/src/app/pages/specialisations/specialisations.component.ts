@@ -11,6 +11,7 @@ import { AlertService } from '../../core/services/alert.service';
 import { ServiceRow } from '../../core/models/service.model';
 import { ServicesCatalogService } from '../../core/services/services-catalog.service';
 import { ActivatedRoute } from '@angular/router';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   selector: 'app-specialisations',
@@ -44,6 +45,7 @@ export class SpecialisationsComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly servicesCatalog = inject(ServicesCatalogService);
+  private readonly toastService = inject(ToastService);
 
   ngOnInit() {
     const fromQuery = this.route.snapshot.queryParamMap.get('type');
@@ -114,8 +116,14 @@ export class SpecialisationsComponent {
     if (!ok) return;
 
     this.specialityService.deleteSpeciality(id, this.owner).subscribe({
-      next: () => this.loadSpecialities(),
-      error: (err: any) => console.error('Error deleting speciality', err)
+      next: () => {
+        this.toastService.success('Succès', 'Spécialité supprimée avec succès.');
+        this.loadSpecialities();
+      },
+      error: (err: any) => {
+        this.toastService.error('Erreur', 'Erreur lors de la suppression de la spécialité.');
+        console.error('Error deleting speciality', err);
+      }
     });
   }
 

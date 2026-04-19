@@ -1,5 +1,7 @@
 package com.shifatech.patient_service.dto;
 
+import com.shifatech.patient_service.entity.TypeBlessure;
+import com.shifatech.patient_service.entity.TypeVisite;
 import com.shifatech.patient_service.entity.Visite.StatusVisite;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +19,9 @@ public class VisiteDTO {
     private Long idDoctor;
     private Long idDossier;
     private StatusVisite status;
+    private TypeVisite typeVisite;
+    private TypeBlessure typeBlessure;
+    private Long idBodyPart;
     private LocalDateTime dateCreation;
     private String planTraitement;
     private String observations;

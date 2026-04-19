@@ -6,14 +6,32 @@ spring:
     name: admin-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/admindb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://admin-db:3306/admindb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
     username: adminuser
     password: adminpass
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQL8Dialect 
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+
+  mail:
+    host: mailhog        # nom du container Docker
+    port: 1025
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+app:
+  auth-service-url: http://auth-service:8080
+  rdv-service-url: http://rdv-service:9000

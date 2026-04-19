@@ -6,6 +6,7 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+
 class DossierMedicalProcessor implements ProcessorInterface
 {
     public function __construct(
@@ -32,45 +33,19 @@ class DossierMedicalProcessor implements ProcessorInterface
                 ['headers' => $headers, 'json' => (array) $data]
             )->toArray();
 
-            $result = $response['data'];
-
-            $dossier = new \App\ApiResource\DossierMedical();
-            $dossier->idPatient = $result['idPatient'];
-            $dossier->idDossier = $result['idDossier'] ?? null;
-            $dossier->status = $result['status'] ?? null;
-            $dossier->poids = $result['poids'] ?? null;
-            $dossier->taille = $result['taille'] ?? null;
-            $dossier->groupeSanguin = $result['groupeSanguin'] ?? null;
-            $dossier->antecedentsMedicaux = $result['antecedentsMedicaux'] ?? null;
-            $dossier->allergies = $result['allergies'] ?? null;
-            $dossier->pathologiesChroniques = $result['pathologiesChroniques'] ?? null;
-            $dossier->notes = $result['notes'] ?? null;
-            $dossier->diagnostic = $result['diagnostic'] ?? null;
-            return $dossier;
+            return $this->buildDossier($response['data']);
         }
 
         if ($method === 'PUT' && $idPatient) {
             $body = array_filter((array) $data, fn($value) => $value !== null);
-            return $this->httpClient->request(
+
+            $response = $this->httpClient->request(
                 'PUT',
                 'http://patient-service:8080/' . $idPatient . '/dossier-medical',
                 ['headers' => $headers, 'json' => $body]
             )->toArray();
-            $result = $response['data'];
 
-            $dossier = new \App\ApiResource\DossierMedical();
-            $dossier->idPatient = $result['idPatient'];
-            $dossier->idDossier = $result['idDossier'] ?? null;
-            $dossier->status = $result['status'] ?? null;
-            $dossier->poids = $result['poids'] ?? null;
-            $dossier->taille = $result['taille'] ?? null;
-            $dossier->groupeSanguin = $result['groupeSanguin'] ?? null;
-            $dossier->antecedentsMedicaux = $result['antecedentsMedicaux'] ?? null;
-            $dossier->allergies = $result['allergies'] ?? null;
-            $dossier->pathologiesChroniques = $result['pathologiesChroniques'] ?? null;
-            $dossier->notes = $result['notes'] ?? null;
-            $dossier->diagnostic = $result['diagnostic'] ?? null;
-            return $dossier;
+            return $this->buildDossier($response['data']);
         }
 
         if ($method === 'DELETE' && $idPatient) {
@@ -78,10 +53,27 @@ class DossierMedicalProcessor implements ProcessorInterface
                 'DELETE',
                 'http://patient-service:8080/' . $idPatient . '/dossier-medical',
                 ['headers' => $headers]
-            )->getStatusCode();
+            );
             return null;
         }
 
         return null;
+    }
+
+    private function buildDossier(array $result): \App\ApiResource\DossierMedical
+    {
+        $dossier = new \App\ApiResource\DossierMedical();
+        $dossier->idPatient           = $result['idPatient'];
+        $dossier->idDossier           = $result['idDossier'] ?? null;
+        $dossier->status              = $result['status'] ?? null;
+        $dossier->poids               = $result['poids'] ?? null;
+        $dossier->taille              = $result['taille'] ?? null;
+        $dossier->groupeSanguin       = $result['groupeSanguin'] ?? null;
+        $dossier->antecedentsMedicaux = $result['antecedentsMedicaux'] ?? null;
+        $dossier->allergies           = $result['allergies'] ?? null;
+        $dossier->pathologiesChroniques = $result['pathologiesChroniques'] ?? null;
+        $dossier->notes               = $result['notes'] ?? null;
+        $dossier->diagnostic          = $result['diagnostic'] ?? null;
+        return $dossier;
     }
 }

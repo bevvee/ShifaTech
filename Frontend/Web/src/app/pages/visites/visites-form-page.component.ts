@@ -12,6 +12,8 @@ import { VisiteStore } from './visites.store';
 import { DossierMedicalStore } from '../dossier-medical/dossier-medical.store';
 import { VisiteStatus } from '../../core/models/visite.model';
 import { ToastService } from '../../shared/services/toast.service';
+import { BodyMapComponent } from '../../shared/components/body-map/body-map.component';
+import { environment } from '../../../environments/environment';
 
 type Mode = 'create' | 'edit' | 'view';
 
@@ -27,10 +29,13 @@ type Mode = 'create' | 'edit' | 'view';
     TextAreaComponent,
     LabelComponent,
     SelectComponent,
+    BodyMapComponent,
   ],
   templateUrl: './visites-form-page.component.html'
 })
 export class VisitesFormPageComponent implements OnInit {
+  readonly env = environment;
+
   mode: Mode;
   submitted = false;
 
@@ -56,10 +61,28 @@ export class VisitesFormPageComponent implements OnInit {
     { value: 'CANCELLED', label: 'Annulée' },
   ];
 
+  typeVisiteOptions: Option[] = [
+    { value: 'CONSULTATION', label: 'Consultation Normale' },
+    { value: 'BLESSURE', label: 'Blessure / Accident' },
+  ];
+
+  typeBlessureOptions: Option[] = [
+    { value: 'BRULURE', label: 'Brûlure' },
+    { value: 'COUPURE', label: 'Coupure' },
+    { value: 'FRACTURE', label: 'Fracture' },
+    { value: 'PLAIE', label: 'Plaie' },
+    { value: 'HEMATOME', label: 'Hématome' },
+    { value: 'ENTORSE', label: 'Entorse' },
+    { value: 'AUTRE', label: 'Autre' },
+  ];
+
   form = {
     idDossier: '',
     idDoctor: 1, // Mock doctor
     status: 'OPEN' as VisiteStatus,
+    typeVisite: 'CONSULTATION' as 'CONSULTATION' | 'BLESSURE',
+    typeBlessure: '' as string,
+    bodyParts: [] as string[],
     planTraitement: '',
     observations: '',
   };
@@ -68,28 +91,6 @@ export class VisitesFormPageComponent implements OnInit {
     this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
     const idParam = this.route.snapshot.paramMap.get('id');
     this.id = idParam ? Number(idParam) : null;
-
-    /*
-    if (this.mode !== 'create' && this.id != null) {
-      const existing = this.store.getById(this.id);
-      if (!existing) {
-        this.router.navigate(['/visites']);
-        return;
-      }
-      this.form = {
-        idDossier: String(existing.idDossier),
-        idDoctor: existing.idDoctor,
-        status: existing.status,
-        planTraitement: existing.planTraitement,
-        observations: existing.observations,
-      };
-    } else if (this.mode === 'create') {
-      const qDossierId = this.route.snapshot.queryParamMap.get('dossierId');
-      if (qDossierId) {
-        this.form.idDossier = qDossierId;
-      }
-    }
-    */
   }
 
   ngOnInit() {
@@ -105,6 +106,14 @@ export class VisitesFormPageComponent implements OnInit {
           idDossier: String(existing.idDossier),
           idDoctor: existing.idDoctor,
           status: existing.status,
+          typeVisite: existing.typeVisite || 'CONSULTATION',
+          typeBlessure: existing.typeBlessure || '',
+          bodyParts: existing.bodyParts
+            ? existing.bodyParts
+                .split(',')
+                .map((s: string) => s.trim())
+                .filter((s: string) => !!s)
+            : [],
           planTraitement: existing.planTraitement,
           observations: existing.observations,
         };
@@ -125,20 +134,6 @@ export class VisitesFormPageComponent implements OnInit {
       }));
     });
   }
-
-  /*
-  generateOrdonnance() {
-    const existing = this.store.getById(this.id!);
-    if (existing) {
-      this.router.navigate(['/ordonnances/new'], { 
-        queryParams: { 
-          patientId: this.dossiersStore.getById(existing.idDossier)?.idPatient,
-          visiteId: this.id
-        } 
-      });
-    }
-  }
-  */
 
   generateOrdonnance() {
     this.store.getById(this.id!).subscribe(existing => {
@@ -167,7 +162,11 @@ export class VisitesFormPageComponent implements OnInit {
 
   get isValid(): boolean {
     if (this.isReadOnly) return true;
-    return this.form.idDossier !== '' && this.form.planTraitement.trim().length > 0;
+    
+    const basicValid = this.form.idDossier !== '';
+    const injuryValid = this.form.typeVisite === 'BLESSURE' ? !!this.form.typeBlessure : true;
+    
+    return basicValid && injuryValid;
   }
 
   cancel() {
@@ -178,20 +177,16 @@ export class VisitesFormPageComponent implements OnInit {
     this.submitted = true;
     if (!this.isValid) return;
 
-    const payload = {
-      ...this.form,
-      idDossier: Number(this.form.idDossier)
+    const payload: import('../../core/models/visite.model').VisiteCreateDto = {
+      idDossier: Number(this.form.idDossier),
+      idDoctor: this.form.idDoctor,
+      status: this.form.status,
+      typeVisite: this.form.typeVisite,
+      typeBlessure: this.form.typeBlessure || null,
+      bodyParts: this.form.bodyParts.length > 0 ? this.form.bodyParts.join(',') : null,
+      planTraitement: this.form.planTraitement,
+      observations: this.form.observations,
     };
-
-    /*
-    if (this.mode === 'create') {
-      this.store.create(payload);
-    } else if (this.id != null) {
-      this.store.update(this.id, payload);
-    }
-
-    this.router.navigate(['/visites']);
-    */
 
     if (this.mode === 'create') {
       this.store.create(payload).subscribe({

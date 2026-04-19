@@ -7,8 +7,8 @@ import { Observable, map } from 'rxjs';
 export class OrdonnanceStore {
   private readonly ordonnanceApi = inject(OrdonnanceApiService);
 
-  getAll(): Observable<OrdonnanceDto[]> {
-    return this.ordonnanceApi.getAll();
+  getAll(idDoctor?: number | number[]): Observable<OrdonnanceDto[]> {
+    return this.ordonnanceApi.getAll(idDoctor);
   }
 
   getById(id: number): Observable<OrdonnanceDto | undefined> {

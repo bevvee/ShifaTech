@@ -59,7 +59,7 @@ class InfirmierProcessor implements ProcessorInterface
             }
             $infirmier = new Infirmier();
             $infirmier->setIdUtilisateur($data->id_utilisateur);
-            $infirmier->setIdService($data->id_service);
+            $infirmier->setIdService($data->id_service ?? 0);
 
             if ($data->id_specialite) {
                $idSpecialite = (int) basename($data->id_specialite);
@@ -69,6 +69,7 @@ class InfirmierProcessor implements ProcessorInterface
                 );
                 $infirmier->setIdSpecialite($specialite);
             }
+            $infirmier->setCreatedAt(new \DateTimeImmutable());
 
             $this->entityManager->persist($infirmier);
             $this->entityManager->flush();
@@ -81,40 +82,48 @@ class InfirmierProcessor implements ProcessorInterface
             $infirmier = $this->entityManager->find(Infirmier::class, $uriVariables['id']);
             if (!$infirmier) throw new BadRequestHttpException('Infirmier introuvable');
 
-            if ($data->id_utilisateur) {
-                    try {
-                        $response = $this->httpClient->request(
-                            'GET',
-                            'http://auth-service:8080/user/' . $data->id_utilisateur,
-                            ['headers' => $headers]
-                        )->toArray();
+            // Lire le body brut — $data->nom etc. sont null en PUT !
+            $request = $this->requestStack->getCurrentRequest();
+            $rawData = json_decode($request->getContent(), true) ?? [];
+            error_log('RAW DATA PUT: ' . json_encode($rawData));
 
-                        if ($response['error'] ?? true) {
-                            throw new BadRequestHttpException('Utilisateur introuvable');
-                        }
+            try {
+                $updateData = array_filter([
+                    'nom'           => $rawData['nom'] ?? null,
+                    'prenom'        => $rawData['prenom'] ?? null,
+                    'cin'           => $rawData['cin'] ?? null,
+                    'email'         => $rawData['email'] ?? null,
+                    'sexe'          => $rawData['sexe'] ?? null,
+                    'statut'        => $rawData['statut'] ?? null,
+                    'dateNaissance' => $rawData['dateNaissance'] ?? null,
+                    'telephone'     => $rawData['telephone'] ?? null,
+                    'adresse'       => $rawData['adresse'] ?? null,
+                    'motDePasse'    => $rawData['motDePasse'] ?? null,
+                ], fn($v) => $v !== null);
 
-                        $role = $response['user']['role'] ?? null;
-                        if ($role !== 'INFIRMIER') {
-                            throw new BadRequestHttpException('Cet utilisateur n\'a pas le rôle INFIRMIER, rôle actuel : ' . $role);
-                        }
-                    } catch (BadRequestHttpException $e) {
-                        throw $e;
-                    } catch (\Exception $e) {
-                        throw new BadRequestHttpException('Utilisateur introuvable : ' . $data->id_utilisateur);
-                    }
+                error_log('UPDATE DATA vers auth-service: ' . json_encode($updateData));
 
-                    $infirmier->setIdUtilisateur($data->id_utilisateur);
+                if (!empty($updateData)) {
+                    $statusCode = $this->httpClient->request(
+                        'PUT',
+                        'http://auth-service:8080/update/' . $infirmier->getIdUtilisateur(),
+                        [
+                            'headers' => array_merge($headers, ['Content-Type' => 'application/json']),
+                            'json' => $updateData
+                        ]
+                    )->getStatusCode();
+                    error_log('AUTH SERVICE STATUS: ' . $statusCode);
                 }
-            if ($data->id_service) $infirmier->setIdService($data->id_service);
+            } catch (\Exception $e) {
+                error_log('Auth-service error: ' . $e->getMessage());
+            }
 
-            if ($data->id_specialite) {
-                $id_specialite = (int) basename($data->id_specialite);
-                $specialite = $this->entityManager->getReference(
-                    InfirmierSpecialite::class,
-                    $id_specialite
-                );
+            if (!empty($rawData['id_specialite'])) {
+                $id_specialite = (int) basename($rawData['id_specialite']);
+                $specialite = $this->entityManager->getReference(InfirmierSpecialite::class, $id_specialite);
                 $infirmier->setIdSpecialite($specialite);
             }
+            $infirmier->setUpdatedAt(new \DateTimeImmutable());
 
             $this->entityManager->flush();
             $data->id = $infirmier->getId();
@@ -135,7 +144,7 @@ class InfirmierProcessor implements ProcessorInterface
                     // Continue même si auth-service échoue
                 }
 
-                $this->entityManager->remove($infirmier);
+                $infirmier->setDeletedAt(new \DateTimeImmutable());
                 $this->entityManager->flush();
             }
             return null;

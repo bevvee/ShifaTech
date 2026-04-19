@@ -64,12 +64,12 @@
 									<td class="px-5 py-4">
 										<div class="flex items-center gap-3">
 											<img
-												src="https://i.pravatar.cc/40?u={{ o.idPatient }}"
+												[src]="$any(o).patientImage || 'assets/img/patient-male.png'"
 												class="h-10 w-10 rounded-full object-cover"
+												[alt]="o.nomPatient"
 											/>
 											<div>
 												<p class="font-medium text-gray-800 dark:text-white">{{ o.nomPatient }}</p>
-												<p class="text-sm text-gray-500">Patient ID {{ o.idPatient }}</p>
 											</div>
 										</div>
 									</td>

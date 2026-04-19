@@ -11,4 +11,7 @@ public interface AuthClient {
 
     @GetMapping("/user/{userId}")
     Map<String, Object> getUserById(@PathVariable("userId") Long userId);
+
+    @org.springframework.web.bind.annotation.PutMapping("/update/{userId}")
+    Map<String, Object> updateUser(@PathVariable("userId") Long userId, @org.springframework.web.bind.annotation.RequestBody Map<String, Object> request);
 }

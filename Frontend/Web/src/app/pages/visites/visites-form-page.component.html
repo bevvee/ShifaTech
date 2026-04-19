@@ -25,6 +25,33 @@
 			</div>
 
 			<div>
+				<app-label>Type de Visite <span class="font-semibold text-error-500">*</span></app-label>
+				<app-select [options]="typeVisiteOptions" [(value)]="form.typeVisite" [hasSearch]="false" [disabled]="isReadOnly" />
+			</div>
+
+			@if (form.typeVisite === 'BLESSURE') {
+				<div>
+					<app-label>Genre de Blessure <span class="font-semibold text-error-500">*</span></app-label>
+					<app-select [options]="typeBlessureOptions" [(value)]="form.typeBlessure" [hasSearch]="false" [disabled]="isReadOnly" />
+				</div>
+
+				<div class="col-span-1 sm:col-span-2">
+					<app-label>Zones Corporelles Affectées</app-label>
+					<app-body-map
+						[selectedCodes]="form.bodyParts"
+						[readOnly]="isReadOnly"
+						[debug]="env.debugBodyMap"
+						(selectionChange)="form.bodyParts = $event"
+					/>
+					@if (form.bodyParts.length > 0) {
+						<p class="mt-2 text-xs text-gray-500">
+							{{ form.bodyParts.length }} zone(s) sélectionnée(s)
+						</p>
+					}
+				</div>
+			}
+
+			<div>
 				<app-label for="traitement">Plan de Traitement <span class="font-semibold text-error-500">*</span></app-label>
 				<app-text-area id="traitement" name="traitement" placeholder="Prescription, soins à prodiguer..." [(value)]="form.planTraitement" [rows]="5" [error]="submitted && !form.planTraitement.trim()" [disabled]="isReadOnly" />
 			</div>

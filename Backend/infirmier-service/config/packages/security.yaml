@@ -5,12 +5,13 @@ security:
 
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
+        jwt_user_provider:
+            lexik_jwt:
+                class: App\Dto\SecurityUser
         #app_user_provider:
          #   entity:
          #       class: App\Entity\Infirmier
          #       property: id
-        jwt_user_provider:
-            id: App\Provider\JwtUserProvider
 
 
     firewalls:
@@ -24,14 +25,31 @@ security:
             stateless: true
             provider:  jwt_user_provider
             jwt: ~
+
+        login:
+            pattern: ^/api/login
+            stateless: true
+            lazy: true
+            json_login:
+                check_path: /api/login
+                username_path: email
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
 
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
     # Note: Only the *first* matching rule is applied
+
+    role_hierarchy:
+        ROLE_SECRETAIRE: ROLE_INFERMIER
+
     access_control:
-        - { path: ^/api/infirmier, roles: ROLE_ADMIN, methods: [GET,POST, PUT, DELETE] }
+        - { path: ^/api/infirmier, roles: ROLE_ADMIN, methods: [POST, PUT, DELETE] }
+        - { path: ^/api/infirmier, roles: IS_AUTHENTICATED_FULLY, methods: [GET] }
+        # - { path: ^/api/rendez_vouses, roles: ROLE_SECRETAIRE, methods: [ GET, POST, PATCH, DELETE ] }
         - { path: ^/api/infirmier_specialites, roles: IS_AUTHENTICATED_FULLY, methods: [GET] }
         - { path: ^/api/infirmier_specialites, roles: ROLE_ADMIN, methods: [POST, PUT, DELETE] }
         - { path: ^/api/docs, roles: PUBLIC_ACCESS }

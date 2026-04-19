@@ -13,7 +13,7 @@ export type SpecialityOwner = 'doctor' | 'infirmier';
 export class SpecialityService extends ApiService {
 
     private doctorBase = environment.api.doctor + '/speciality';
-    private infirmierBase = environment.api.infirmier + '/infirmier_specialites';
+    private infirmierBase = environment.api.infirmierSpecialite;
 
     constructor() {
         super(inject(HttpClient));
@@ -44,12 +44,14 @@ export class SpecialityService extends ApiService {
             return this.post<Speciality>(`${this.doctorBase}`, data);
         }
 
-        const body: any = {
+        const body = {
             label: data.label,
-            idService: data.idService ?? null,
+            id_service: data.idService ?? null,
         };
 
-        return this.post<unknown>(`${this.infirmierBase}`, body).pipe(
+        return this.http.post<unknown>(`${this.infirmierBase}`, body, {
+            headers: { 'Content-Type': 'application/ld+json' }
+        }).pipe(
             map((raw) => this.mapInfirmierSpeciality(raw))
         );
     }
@@ -59,12 +61,14 @@ export class SpecialityService extends ApiService {
             return this.put<Speciality>(`${this.doctorBase}/${id}`, data);
         }
 
-        const body: any = {
+        const body = {
             label: data.label,
-            idService: data.idService ?? null,
+            id_service: data.idService ?? null,
         };
 
-        return this.put<unknown>(`${this.infirmierBase}/${id}`, body).pipe(
+        return this.http.put<unknown>(`${this.infirmierBase}/${id}`, body, {
+            headers: { 'Content-Type': 'application/ld+json' }
+        }).pipe(
             map((raw) => this.mapInfirmierSpeciality(raw))
         );
     }
@@ -80,9 +84,10 @@ export class SpecialityService extends ApiService {
     private unwrapCollection(resp: unknown): any[] {
         if (Array.isArray(resp)) return resp;
         if (resp && typeof resp === 'object') {
-            const anyResp: any = resp;
-            const hydra = anyResp['hydra:member'];
-            if (Array.isArray(hydra)) return hydra;
+            const r = resp as any;
+            if (Array.isArray(r['hydra:member'])) return r['hydra:member'];
+            if (Array.isArray(r['member']))        return r['member'];  // ✅ ajout
+            if (Array.isArray(r['data']))          return r['data'];
         }
         return [];
     }

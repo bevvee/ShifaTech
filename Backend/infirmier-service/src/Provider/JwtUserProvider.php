@@ -2,44 +2,26 @@
 
 namespace App\Provider;
 
-use App\Entity\Infirmier;
-use App\Provider\AdminUser;
-use App\Repository\InfirmierRepository;
+use App\Security\SecurityUser;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\User\PayloadAwareUserProviderInterface;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 class JwtUserProvider implements PayloadAwareUserProviderInterface
 {
-    public function __construct(private InfirmierRepository $infirmierRepository) {}
+    // Plus besoin d'InfirmierRepository ici !
 
     public function loadUserByIdentifierAndPayload(string $identifier, array $payload): UserInterface
     {
-        error_log('=== JWT PAYLOAD ===');
-        error_log(json_encode($payload));
-        error_log('identifier: ' . $identifier);
-
         $userId = $payload['userId'] ?? null;
-        $role = $payload['role'] ?? null;
-        error_log('userId extrait: ' . $userId);
+        $role   = $payload['role']   ?? null;
 
-        if (!$userId) {
-            error_log('ERREUR: userId absent du payload');
-            throw new UserNotFoundException('userId absent du token JWT');
+        if (!$userId || !$role) {
+            throw new UserNotFoundException('userId ou role absent du token JWT');
         }
 
-        if ($role === 'ADMIN') {
-            return new AdminUser($userId);
-        }
-
-        $infirmier = $this->infirmierRepository->findOneBy(['id_utilisateur' => $userId]);
-        error_log('infirmier trouvé: ' . ($infirmier ? 'OUI id='.$infirmier->getId() : 'NON'));
-
-        if (!$infirmier) {
-            throw new UserNotFoundException("Aucun infirmier trouvé pour userId: $userId");
-        }
-
-        return $infirmier;
+        // Aucune requête BDD — on construit l'utilisateur depuis le token
+        return new SecurityUser((int) $userId, 'ROLE_' . strtoupper($role));
     }
 
     public function refreshUser(UserInterface $user): UserInterface
@@ -49,11 +31,11 @@ class JwtUserProvider implements PayloadAwareUserProviderInterface
 
     public function supportsClass(string $class): bool
     {
-        return $class === Infirmier::class;
+        return $class === SecurityUser::class;
     }
 
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
-        throw new \Exception('Méthode non utilisée dans un contexte JWT');
+        throw new \Exception('Non utilisé dans un contexte JWT stateless');
     }
 }

@@ -30,6 +30,17 @@ public class Visite {
     @Column(name = "status", length = 20, nullable = false)
     private StatusVisite status = StatusVisite.OPEN;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_visite", length = 20)
+    private TypeVisite typeVisite;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_blessure", length = 20)
+    private TypeBlessure typeBlessure;
+
+    @Column(name = "id_body_part")
+    private Long idBodyPart;
+
     @CreationTimestamp
     @Column(name = "date_creation", updatable = false)
     private LocalDateTime dateCreation;

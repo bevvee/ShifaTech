@@ -23,6 +23,12 @@ export class VisiteApiService {
     );
   }
 
+  getAllForDoctor(): Observable<VisiteDto[]> {
+    return this.http.get<ApiResponse<any[]>>(`${environment.api.doctor}/my-visits`).pipe(
+      map(res => res.data.map(v => this.mapToDto(v)))
+    );
+  }
+
   getByDossierId(idDossier: number): Observable<VisiteDto[]> {
     return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/dossier/${idDossier}/visites`).pipe(
       map(res => res.data.map(v => this.mapToDto(v)))

@@ -8,6 +8,7 @@ import { ButtonComponent } from '../../shared/components/ui/button/button.compon
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
 import { DoctorService } from '../../core/services/doctor.service';
 import { Doctor } from '../../core/models/doctor.model';
+import { Sexe } from '../../core/models/sexe.enum';
 import { AlertService } from '../../core/services/alert.service';
 import { Subscription } from 'rxjs';
 
@@ -88,6 +89,15 @@ export class DocteursComponent implements OnInit, OnDestroy {
 
   deleteDoctor(id: number) {
     void this.confirmAndDeleteDoctor(id);
+  }
+
+  /** Silhouette selon le sexe (fichiers dans `public/assets/img/`). */
+  avatarUrl(d: Doctor): string {
+    const s = String(d.sexe ?? '').toUpperCase();
+    // API / enum : F = féminin ; M, H ou autre = masculin (avatar gris)
+    const female = s === 'F' || s === Sexe.F;
+    const base = '/assets/img';
+    return female ? `${base}/user-pink.png` : `${base}/user-grey.png`;
   }
 
   private async confirmAndDeleteDoctor(id: number) {
