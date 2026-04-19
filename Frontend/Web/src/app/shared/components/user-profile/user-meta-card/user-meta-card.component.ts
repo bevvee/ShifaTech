@@ -55,7 +55,6 @@ export class UserMetaCardComponent {
       telephone: this.editedUser.telephone,
       adresse: this.editedUser.adresse,
       sexe: this.editedUser.sexe,
-      role: this.editedUser.role,
       dateNaissance: this.editedUser.dateNaissance
     };
 
@@ -70,11 +69,27 @@ export class UserMetaCardComponent {
           this.modal.closeModal();
         } else {
           console.error('Update failed:', res.message);
+          this.toast.error('Erreur', this.formatErrorMessage(res.message));
         }
       },
       error: (err: any) => {
         console.error('Error updating profile:', err);
+        const errorMessage = err?.error?.message || err?.message || 'Erreur lors de la mise à jour du profil';
+        this.toast.error('Erreur', this.formatErrorMessage(errorMessage));
       }
     });
   }
+
+  private formatErrorMessage(errMessage: string): string {
+    if (!errMessage) return 'Une erreur est survenue lors de la mise à jour.';
+    if (errMessage.includes(';')) {
+      return errMessage.split(';')
+        .map(msg => msg.trim())
+        .filter(msg => msg.length > 0)
+        .map(msg => `• ${msg}`)
+        .join('\n');
+    }
+    return errMessage;
+  }
 }
+
