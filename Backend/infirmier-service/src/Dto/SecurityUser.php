@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Security;
+namespace App\Dto;
 
 use Lexik\Bundle\JWTAuthenticationBundle\Security\User\JWTUserInterface;
 

@@ -1,6 +1,25 @@
 package com.shifatech.authservice.controller;
 
-import com.shifatech.authservice.dto.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.shifatech.authservice.dto.ApiResponse;
+import com.shifatech.authservice.dto.LoginRequest;
+import com.shifatech.authservice.dto.LoginResponse;
+import com.shifatech.authservice.dto.RegisterRequest;
+import com.shifatech.authservice.dto.UpdateUserRequest;
 import com.shifatech.authservice.entity.PasswordResetToken;
 import com.shifatech.authservice.entity.User;
 import com.shifatech.authservice.repository.PasswordResetTokenRepository;
@@ -8,16 +27,10 @@ import com.shifatech.authservice.repository.UserRepository;
 import com.shifatech.authservice.service.AuthService;
 import com.shifatech.authservice.service.EmailService;
 import com.shifatech.authservice.util.JwtUtil;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -48,8 +61,7 @@ public class AuthController {
 
     // Update user
     @PutMapping("/update/{userId}")
-    public ResponseEntity<ApiResponse> updateUser(@PathVariable Long userId, @RequestBody UpdateUserRequest request) {
-
+    public ResponseEntity<ApiResponse> updateUser( @PathVariable Long userId, @Valid @RequestBody UpdateUserRequest request) {
         ApiResponse response = authService.updateUser(userId, request);
         HttpStatus status = response.isError() ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
         return new ResponseEntity<>(response, status);
