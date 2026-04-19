@@ -11,10 +11,12 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
 
     List<Notification> findByIdUserOrderByDateEnvoiDesc(Integer idUser);
 
-    List<Notification> findByIdUserAndTypeNotif(Integer idUser, TypeNotif typeNotif);
+    List<Notification> findByIdUserAndEstLuFalseOrderByDateEnvoiDesc(Integer idUser);
 
     boolean existsByIdUserAndMessageContaining(Integer idUser, String messageFragment);
 
     boolean existsByIdUserAndMessage(Integer idUser, String message);
+
+    boolean existsByMessageContaining(String message);
 
 }

@@ -70,15 +70,17 @@
             [className]="'flex flex-col gap-1 w-full text-left px-3 py-3
                           rounded-lg border-b border-gray-100
                           hover:bg-gray-50 dark:border-gray-800
-                          dark:hover:bg-white/5 transition-colors'"
+                          dark:hover:bg-white/5 transition-colors' + (!notif.estLu ? ' bg-blue-50/40 dark:bg-blue-900/10' : '')"
           >
-            <span class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="flex items-center gap-1.5 text-xs font-semibold"
+                  [class]="getTypeBadgeClass(notif.typeNotif)">
+              <span>{{ notif.titre ?? notif.typeNotif }}</span>
+            </span>
+            <span class="text-sm text-gray-700 dark:text-gray-300 leading-snug">
               {{ notif.message }}
             </span>
-            <span class="flex gap-2 text-xs text-gray-400">
-              <span class="text-orange-400 font-medium">{{ notif.typeNotif }}</span>
-              <span>·</span>
-              <span>{{ formatDate(notif.dateEnvoi) }}</span>
+            <span class="text-xs text-gray-400">
+              {{ formatDate(getDate(notif)) }}
             </span>
           </app-dropdown-item>
         </li>

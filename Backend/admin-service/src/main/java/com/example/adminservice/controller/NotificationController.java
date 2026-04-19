@@ -46,14 +46,13 @@ public class NotificationController {
         return ResponseEntity.ok("Scheduler exécuté");
     }
 
-    // ← trigger manuel pour tester les annulations
-    @PostMapping("/trigger-annulations")
-    public ResponseEntity<String> triggerAnnulations() {
-        rdvScheduler.detecterAnnulations();
-        return ResponseEntity.ok("Détection annulations exécutée");
+    /** Déclenche manuellement la détection de tous les changements de statut. */
+    @PostMapping("/trigger-changements")
+    public ResponseEntity<String> triggerChangements() {
+        rdvScheduler.detecterChangementsStatuts();
+        return ResponseEntity.ok("Détection changements de statut exécutée");
     }
 
-    // ← simplifié, délègue à EventService
     @PostMapping("/event")
     public ResponseEntity<String> handleEvent(@RequestBody EventRequestDTO event) {
         eventService.handleAnnulation(
@@ -63,5 +62,34 @@ public class NotificationController {
             event.getDateRdv()
         );
         return ResponseEntity.ok("Event traité !");
+    }
+
+    @GetMapping("/test-user-email/{userId}")
+    public ResponseEntity<String> testUserEmail(@PathVariable Integer userId) {
+        String token = apiClient.fetchJwtToken();
+        if (token == null) return ResponseEntity.ok("Token NULL !");
+        String email = apiClient.getUserEmail(userId, token);
+        return ResponseEntity.ok("Email : " + (email != null ? email : "NULL"));
+    }
+
+    @GetMapping("/test-send-email")
+    public ResponseEntity<String> testSendEmail(
+            @RequestParam(defaultValue = "bentiressfarah12@gmail.com") String to) {
+        try {
+            String body = """
+                    Bonjour,
+
+                    Ceci est un e-mail de bienvenue envoyé par ShifaTech.
+                    Si vous recevez ce message, la configuration SMTP fonctionne correctement.
+
+                    Cordialement,
+                    L'équipe ShifaTech
+                    """;
+            emailService.sendEmailSync(to, "Connexion SMTP vérifiée", body);
+            return ResponseEntity.ok("✅ E-mail envoyé avec succès à : " + to);
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body("❌ Échec SMTP : " + e.getMessage());
+        }
     }
 }

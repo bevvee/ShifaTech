@@ -266,6 +266,13 @@ services:
       SPRING_DATASOURCE_PASSWORD: adminpass
       SERVICES_DOCTOR_URL: http://doctor-service:8080
       SERVICES_INFIRMIER_URL: http://infirmier-service:8080
+      APP_PATIENT-SERVICE-URL: http://patient-service:8080
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+      SPRING_MAIL_USERNAME: noreply@shifatech.local
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED: "false"
     expose:
       - "8080"
     networks:

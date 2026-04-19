@@ -21,16 +21,16 @@ spring:
         format_sql: true
 
   mail:
-    host: mailhog        # nom du container Docker
+    host: mailhog
     port: 1025
-    username: ""
-    password: ""
+    username: noreply@shifatech.local
     properties:
       mail:
         smtp:
           auth: false
           starttls:
             enable: false
+            required: false
 
 app:
   auth-service-url: http://auth-service:8080

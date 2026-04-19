@@ -35,5 +35,6 @@ public class Notification {
     private String emailDestinataire;
 
     @Builder.Default
-    private boolean lu = false;
+    @Column(name = "est_lu")
+    private boolean estLu = false;
 }
