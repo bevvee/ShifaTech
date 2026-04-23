@@ -23,6 +23,8 @@ RUN pip install --upgrade pip \
 # Copy project
 COPY . .
 
+ENV TORCH_HOME=/app/torch_cache
+
 # Expose API port
 EXPOSE 8000
 

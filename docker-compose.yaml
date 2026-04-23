@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   ##################################
   # DATABASES
@@ -314,10 +312,25 @@ services:
     build: ./Backend/wound-image-service
     container_name: wound-image-service
     restart: always
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: admin123
+      WOUND_MODEL_FILE: wound_segmentation_unet.pth
+      WOUND_INPUT_NORMALIZATION: imagenet
     depends_on:
       - minio
     expose:
       - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    volumes:
+      - ./Backend/wound-image-service/app:/app/app
+      - ./torch_cache:/app/torch_cache
     networks:
       - shifatech-net
   ##################################
