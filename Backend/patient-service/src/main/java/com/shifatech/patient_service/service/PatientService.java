@@ -7,9 +7,11 @@ import com.shifatech.patient_service.dto.RegisterRequest;
 import com.shifatech.patient_service.dto.UpdatePatientRequest;
 import com.shifatech.patient_service.dto.UpdateUserRequest;
 import com.shifatech.patient_service.dto.UserDTO;
+import com.shifatech.patient_service.entity.DossierMedical;
 import com.shifatech.patient_service.entity.Patient;
 import com.shifatech.patient_service.exception.ResourceAlreadyExistsException;
 import com.shifatech.patient_service.exception.ResourceNotFoundException;
+import com.shifatech.patient_service.repository.DossierMedicalRepository;
 import com.shifatech.patient_service.repository.PatientRepository;
 import com.shifatech.patient_service.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 public class PatientService {
 
     private final PatientRepository patientRepository;
+    private final DossierMedicalRepository dossierMedicalRepository;
     private final AuthServiceClient authServiceClient;
     private final JwtUtil jwtUtil;
 
@@ -219,6 +222,15 @@ public class PatientService {
         patient.setStatut(false);
 
         patientRepository.save(patient);
+
+        // Supprimer aussi le dossier médical s'il existe
+        dossierMedicalRepository.findByIdPatient(id).ifPresent(dossier -> {
+            dossier.setDeletedAt(LocalDateTime.now());
+            dossier.setStatus(DossierMedical.StatusDossier.ARCHIVED);
+            dossierMedicalRepository.save(dossier);
+            log.info("Dossier médical associé (ID: {}) supprimé (soft delete).", dossier.getIdDossier());
+        });
+
         log.info("Patient supprimé avec succès. ID: {}", id);
     }
 

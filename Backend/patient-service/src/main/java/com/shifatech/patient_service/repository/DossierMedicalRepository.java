@@ -18,8 +18,11 @@ public interface DossierMedicalRepository extends JpaRepository<DossierMedical, 
 
     List<DossierMedical> findByStatus(StatusDossier status);
 
-    @Query("SELECT d FROM DossierMedical d WHERE d.idPatient = :idPatient AND d.deletedAt IS NULL")
+    @Query("SELECT d FROM DossierMedical d WHERE d.idPatient = :idPatient AND d.deletedAt IS NULL AND d.idPatient IN (SELECT p.idPatient FROM Patient p WHERE p.deletedAt IS NULL)")
     List<DossierMedical> findActiveByIdPatient(Long idPatient);
+
+    @Query("SELECT d FROM DossierMedical d WHERE d.deletedAt IS NULL AND d.idPatient IN (SELECT p.idPatient FROM Patient p WHERE p.deletedAt IS NULL)")
+    List<DossierMedical> findByDeletedAtIsNull();
 
     boolean existsByIdPatient(Long idPatient);
 }

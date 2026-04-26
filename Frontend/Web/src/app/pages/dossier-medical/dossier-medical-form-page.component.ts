@@ -21,6 +21,7 @@ import { VisiteDto } from '../../core/models/visite.model';
 import { OrdonnanceDto } from '../../core/models/ordonnance.model';
 import { AlertService } from '../../core/services/alert.service';
 import { take } from 'rxjs/operators';
+import { combineLatest } from 'rxjs';
 
 type Mode = 'create' | 'edit' | 'view';
 
@@ -161,11 +162,29 @@ export class DossierMedicalFormPageComponent implements OnInit {
   }
 
   loadPatients() {
-    this.patientsStore.getAll().subscribe(list => {
-      this.patientOptions = list.map(p => ({
-        value: String(p.id),
-        label: `${p.nom} ${p.prenom} (${p.numDossier})`
-      }));
+    combineLatest([
+      this.patientsStore.getAll(),
+      this.store.getAll()
+    ]).subscribe({
+      next: ([patients, dossiers]) => {
+        const patientIdsWithDossier = new Set(dossiers.map(d => Number(d.idPatient)));
+        const selectedId = this.form.idPatient ? Number(this.form.idPatient) : null;
+
+        this.patientOptions = patients
+          .filter(p => {
+            const hasDossier = patientIdsWithDossier.has(Number(p.id));
+            const isSelected = selectedId !== null && Number(p.id) === selectedId;
+            // On affiche le patient s'il n'a pas de dossier OU si c'est celui déjà sélectionné (pour le mode édition/view ou redirection)
+            return this.mode !== 'create' || !hasDossier || isSelected;
+          })
+          .map(p => ({
+            value: String(p.id),
+            label: `${p.nom} ${p.prenom}`
+          }));
+        
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Erreur chargement données sélecteur', err)
     });
   }
 
@@ -300,10 +319,10 @@ export class DossierMedicalFormPageComponent implements OnInit {
   }
 
   viewVisite(id: number) {
-    this.router.navigate(['/visites', id]);
+    this.router.navigate(['/visites', id], { queryParams: { fromDossier: this.id } });
   }
 
   viewOrdonnance(id: number) {
-    this.router.navigate(['/ordonnances', id]);
+    this.router.navigate(['/ordonnances', id], { queryParams: { fromDossier: this.id } });
   }
 }

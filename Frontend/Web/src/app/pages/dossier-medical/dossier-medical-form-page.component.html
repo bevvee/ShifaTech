@@ -2,12 +2,6 @@
 	<app-page-breadcrumb pageTitle="Dossier Médical" />
 
 	<app-component-card [title]="title">
-		<div
-	    	*ngIf="isInfirmier && mode === 'edit'"
-	    	class="rounded-lg border border-error-200 bg-error-50 p-4 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400"
-	  	>
-	    	Vous n'avez pas les droits pour modifier un dossier médical.
-	  	</div>
 		@if (mode === 'view') {
 			<div class="space-y-8">
 				<!-- Patient / Dossier header strip -->
@@ -38,7 +32,7 @@
 						</div>
 					</div>
 
-					@if (((userRole$ | async) === Role.INFIRMIER) || ((userRole$ | async) === Role.ADMIN)) {
+					@if (((userRole$ | async) === Role.INFIRMIER) && form.status === 'ACTIVE') {
 						<div class="mt-4 flex items-center justify-end">
 							<app-button size="sm" variant="outline" (btnClick)="createVisite()">
 								<svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
