@@ -93,6 +93,16 @@ export class PatientsComponent implements OnInit {
     });
   }
 
+  onViewDetails(patientId: number) {
+    this.userRole$.pipe(take(1)).subscribe((role) => {
+      if (role === Role.SECRETAIRE) {
+        this.viewPatient(patientId);
+      } else {
+        this.viewDossierByPatient(patientId);
+      }
+    });
+  }
+
   viewPatient(id: number) {
     this.router.navigate(['/patients', id]);
   }

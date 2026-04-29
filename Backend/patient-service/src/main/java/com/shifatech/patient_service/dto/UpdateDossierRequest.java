@@ -25,4 +25,5 @@ public class UpdateDossierRequest {
     private String pathologiesChroniques;
     private String notes;
     private String diagnostic;
+    private com.shifatech.patient_service.entity.DossierMedical.StatusDossier status;
 }

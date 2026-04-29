@@ -120,7 +120,7 @@ public class DossierMedicalService {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Seul le personnel médical peut lister les dossiers.");
         }
-        return dossierMedicalRepository.findAll().stream()
+        return dossierMedicalRepository.findByDeletedAtIsNull().stream()
                 .map(d -> mapToDTO(d, authHeader))
                 .collect(java.util.stream.Collectors.toList());
     }
@@ -162,6 +162,8 @@ public class DossierMedicalService {
             dossier.setNotes(request.getNotes());
         if (request.getDiagnostic() != null)
             dossier.setDiagnostic(request.getDiagnostic());
+        if (request.getStatus() != null)
+            dossier.setStatus(request.getStatus());
 
         dossier.setUpdatedBy(updatedBy);
 
