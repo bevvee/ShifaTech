@@ -10,7 +10,7 @@ import { Option } from '../../shared/components/form/select/select.component';
 import { InfirmierService } from '../../core/services/infirmier.service';
 import { InfirmierDto } from '../../core/models/infirmier.model';
 import { FormsModule } from '@angular/forms';
-import { AlertService } from 'src/app/core/services/alert.service';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-infirmiers',
