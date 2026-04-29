@@ -191,7 +191,7 @@ class RendezVous
 
     public function setStatut(StatutEnum $statut): static
     {
-        $this->statut = $statut;
+        $this->statut = $statut === StatutEnum::TERMINER ? StatutEnum::TERMINE : $statut;
 
         return $this;
     }

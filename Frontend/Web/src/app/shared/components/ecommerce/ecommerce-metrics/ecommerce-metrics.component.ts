@@ -2,17 +2,16 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Subscription, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, take } from 'rxjs/operators';
 import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 import { Role } from '../../../../core/models/role.enum';
-import { selectUserRole } from '../../../../core/store/auth/auth.selectors';
+import { selectAuthUser, selectUserProfile, selectUserRole } from '../../../../core/store/auth/auth.selectors';
 import { DoctorService } from '../../../../core/services/doctor.service';
 import { RdvService } from '../../../../core/services/rdv.service';
 import { SpecialityService } from '../../../../core/services/speciality.service';
 import { PatientApiService } from '../../../../core/services/api/patient-api.service';
 import { VisiteStore } from '../../../../pages/visites/visites.store';
 import { InfirmierService } from '../../../../core/services/infirmier.service';
-import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-ecommerce-metrics',
@@ -32,6 +31,7 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
 
 
   private readonly subscription = new Subscription();
+  private doctorRdvMetricsUserId: number | null = null;
 
   role: Role | null = null;
   today = new Date();
@@ -182,43 +182,81 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
       },
       {
         key: 'patients',
-        label: 'Total Patients',
+        label: 'Patients (RDV terminé)',
         value: 0,
         icon: this.icons.groupIcon,
-      },
-      {
-        key: 'visites',
-        label: 'Total Visites',
-        value: 0,
-        icon: this.icons.boxIconLine,
       },
     ];
 
     this.subscription.add(
-      this.visiteStore
-        .getAll()
-        .pipe(
-          map((rows) => (Array.isArray(rows) ? rows.length : 0)),
-          catchError(() => of(0)),
-        )
-        .subscribe((count) => this.setMetricValue('visites', count)),
+      this.store
+        .select(selectUserProfile)
+        .pipe(take(1), catchError(() => of(null)))
+        .subscribe((profile) => {
+          this.loadDoctorRdvMetrics(profile);
+        }),
     );
 
-    this.rdvService
-      .getAll()
-      .pipe(
-        map((res) => this.countFromResponse(res)),
-        catchError(() => of(0)),
-      )
-      .subscribe((count) => this.setMetricValue('rdv', count));
+    this.subscription.add(
+      this.store
+        .select(selectAuthUser)
+        .pipe(take(1), catchError(() => of(null)))
+        .subscribe((user) => {
+          this.loadDoctorRdvMetrics(user);
+        }),
+    );
+  }
 
-    this.doctorService
-      .getMyPatients()
+  private loadDoctorRdvMetrics(source: any): void {
+    const rawUserId =
+      source?.idUser ??
+      source?.id_user ??
+      source?.userId ??
+      source?.id ??
+      null;
+
+    const doctorUserId = rawUserId != null ? Number(rawUserId) : null;
+    if (!doctorUserId || Number.isNaN(doctorUserId)) return;
+    if (this.doctorRdvMetricsUserId === doctorUserId) return;
+    this.doctorRdvMetricsUserId = doctorUserId;
+
+    this.rdvService
+      .getRendezVousViewList({ id_docteur: doctorUserId, pagination: false, itemsPerPage: 1000 })
       .pipe(
-        map((rows) => (Array.isArray(rows) ? rows.length : 0)),
-        catchError(() => of(0)),
+        map((res) => ({
+          totalItems: typeof res?.totalItems === 'number' ? (res.totalItems as number) : null,
+          items: this.extractArrayFromResponse(res),
+        })),
+        catchError(() => of({ totalItems: null, items: [] as any[] })),
       )
-      .subscribe((count) => this.setMetricValue('patients', count));
+      .subscribe((payload: any) => {
+        const items: any[] = Array.isArray(payload?.items) ? payload.items : [];
+        const totalItems: number | null = typeof payload?.totalItems === 'number' ? payload.totalItems : null;
+
+        this.setMetricValue('rdv', totalItems ?? items.length);
+
+        const finishedPatientIds = new Set<number>();
+        for (const it of items) {
+          const status = String(it?.statut ?? it?.status ?? '').trim().toUpperCase();
+          const isFinished = status === 'TERMINE' || status === 'TERMINÉ' || status === 'FINISHED';
+          if (!isFinished) continue;
+
+          const pidRaw = it?.idPatient ?? it?.id_patient ?? it?.patientId;
+          const pid = pidRaw != null ? Number(pidRaw) : NaN;
+          if (!Number.isNaN(pid)) finishedPatientIds.add(pid);
+        }
+
+        this.setMetricValue('patients', finishedPatientIds.size);
+      });
+  }
+
+  private extractArrayFromResponse(res: any): any[] {
+    if (Array.isArray(res)) return res;
+    if (res && Array.isArray(res['hydra:member'])) return res['hydra:member'];
+    if (res && Array.isArray(res.member)) return res.member;
+    if (res && Array.isArray(res.data)) return res.data;
+    if (res && Array.isArray(res.items)) return res.items;
+    return [];
   }
 
   private loadSecretaireMetrics(): void {
@@ -362,6 +400,8 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
 
   private countFromResponse(res: any): number {
     if (res && typeof res['totalItems'] === 'number') return res['totalItems'];
+    // API Platform (Hydra)
+    if (res && typeof res['hydra:totalItems'] === 'number') return res['hydra:totalItems'];
     if (res && Array.isArray(res['hydra:member'])) return res['hydra:member'].length;
     if (res && Array.isArray(res.member)) return res.member.length;
     if (Array.isArray(res)) return res.length;

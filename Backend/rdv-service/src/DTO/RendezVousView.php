@@ -2,19 +2,18 @@
 
 namespace App\DTO;
 
-class RendezVousView
+final class RendezVousView
 {
-    public int $id;
-    public string $date;
-    public string $heureDebut;
-    public string $heureFin;
-    public string $statut;
-
-    public int $patientId;
-    public string $patientNom;
-    public string $patientPrenom;
-
-    public int $doctorId;
-    public string $doctorNom;
-    public string $doctorPrenom;
+    public function __construct(
+        public int $id,
+        public int $idPatient,
+        public int $idDocteur,
+        public string $dateRdv,
+        public string $heureDebut,
+        public string $heureFin,
+        public string $statut,
+        public ?PatientSummary $patient,
+        public ?DoctorSummary $docteur,
+    ) {
+    }
 }

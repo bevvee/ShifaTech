@@ -6,7 +6,6 @@ import { PageBreadcrumbComponent } from '../../shared/components/common/page-bre
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 import { InputFieldComponent } from '../../shared/components/form/input/input-field.component';
-import { TextAreaComponent } from '../../shared/components/form/input/text-area.component';
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
 import { InfirmierService } from '../../core/services/infirmier.service';
@@ -26,7 +25,6 @@ type Mode = 'create' | 'edit';
     ComponentCardComponent,
     ButtonComponent,
     InputFieldComponent,
-    TextAreaComponent,
     LabelComponent,
     SelectComponent,
   ],

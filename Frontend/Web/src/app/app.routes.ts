@@ -171,7 +171,7 @@ export const routes: Routes = [
         component: PatientsComponent,
         title: "Liste des Patients | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.INFIRMIER, Role.DOCTEUR, Role.SECRETAIRE] },
+        data: { roles: [Role.INFIRMIER, Role.DOCTEUR, Role.SECRETAIRE] },
       },
       {
         path: "patients/new",

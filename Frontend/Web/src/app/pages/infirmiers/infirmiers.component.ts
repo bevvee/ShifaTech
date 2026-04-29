@@ -7,7 +7,6 @@ import { ComponentCardComponent } from '../../shared/components/common/component
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
 import { Option } from '../../shared/components/form/select/select.component';
-import { TableDropdownComponent } from '../../shared/components/common/table-dropdown/table-dropdown.component';
 import { InfirmierService } from '../../core/services/infirmier.service';
 import { InfirmierDto } from '../../core/models/infirmier.model';
 import { FormsModule } from '@angular/forms';
@@ -22,7 +21,6 @@ import { AlertService } from 'src/app/core/services/alert.service';
     ComponentCardComponent,
     ButtonComponent,
     BadgeComponent,
-    TableDropdownComponent,
   ],
   templateUrl: './infirmiers.component.html',
   styles: ``
@@ -31,6 +29,7 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
 
   infirmiers: InfirmierDto[] = [];
   specialiteOptions: Option[] = [];
+  loading = true;
   private readonly subscription = new Subscription();
 
   currentPage = 1;
@@ -59,6 +58,7 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
   }
 
   loadInfirmiers() {
+    this.loading = true;
     this.infirmierService.getAll().subscribe({
       next: (res: any) => {
         let items: any[] = [];
@@ -77,12 +77,17 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
           ...inf,
           id: inf.id ?? (inf['@id'] ? parseInt(inf['@id'].split('/').pop(), 10) : inf.id_utilisateur)
         }));
+        this.loading = false;
       },
-      error: (err) => console.error('Erreur:', err)
+      error: (err) => {
+        console.error('Erreur:', err);
+        this.loading = false;
+      }
     });
   }
 
   loadSpecialites() {
+    this.loading = true;
     this.infirmierService.getSpecialites().subscribe({
       next: (res: any) => {
         let items: any[] = [];
@@ -103,8 +108,12 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
             label: s.label ?? s.nom ?? s.libelle
           };
         });
+        this.loading = false;
       },
-      error: (err) => console.error('Erreur spécialités:', err)
+      error: (err) => {
+        console.error('Erreur spécialités:', err);
+        this.loading = false;
+      }
     });
   }
 

@@ -34,6 +34,7 @@ export class OrdonnancesComponent implements OnInit {
 
   searchTerm = '';
   ordonnances: OrdonnanceDto[] = [];
+  loading = true;
 
   private readonly router = inject(Router);
   private readonly store = inject(OrdonnanceStore);
@@ -53,6 +54,7 @@ export class OrdonnancesComponent implements OnInit {
   */
 
   loadOrdonnances() {
+    this.loading = true;
     this.authStore.select(selectUserRole).pipe(
       take(1),
       switchMap((role) => {
@@ -110,7 +112,8 @@ export class OrdonnancesComponent implements OnInit {
       })
     ).subscribe({
       next: (data) => this.ordonnances = data,
-      error: (err) => console.error('Erreur chargement ordonnances', err)
+      error: (err) => console.error('Erreur chargement ordonnances', err),
+      complete: () => this.loading = false,
     });
   }
 

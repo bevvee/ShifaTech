@@ -63,28 +63,36 @@ class RendezVousRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-//    /**
-//     * @return RendezVous[] Returns an array of RendezVous objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('r')
-//            ->andWhere('r.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('r.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function findCurrentByDoctor(int $idDocteur, \DateTimeImmutable $now): ?RendezVous
+{
+    return $this->createQueryBuilder('r')
+        ->andWhere('r.id_docteur = :doctor')
+        ->andWhere('r.date_rdv = :today')
+        ->andWhere('r.heure_debut <= :nowTime')
+        ->andWhere('r.heure_fin >= :nowTime')
+        ->setParameter('doctor', $idDocteur)
+        ->setParameter('today', $now->format('Y-m-d'))
+        ->setParameter('nowTime', $now->format('H:i:s'))
+        ->orderBy('r.heure_debut', 'ASC')
+        ->setMaxResults(1)
+        ->getQuery()
+        ->getOneOrNullResult();
+}
 
-//    public function findOneBySomeField($value): ?RendezVous
-//    {
-//        return $this->createQueryBuilder('r')
-//            ->andWhere('r.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+public function findCurrentByPatient(int $idPatient, \DateTimeImmutable $now): ?RendezVous
+{
+    return $this->createQueryBuilder('r')
+        ->andWhere('r.id_patient = :idPatient')
+        ->andWhere('r.date_rdv = :today')
+        ->andWhere('r.heure_debut <= :currentTime')
+        ->andWhere('r.heure_fin >= :currentTime')
+        ->andWhere('r.statut = :statut')
+        ->setParameter('idPatient', $idPatient)
+        ->setParameter('today', $now->format('Y-m-d'))
+        ->setParameter('currentTime', $now->format('H:i:s'))
+        ->setParameter('statut', 'CONFIRME')
+        ->setMaxResults(1)
+        ->getQuery()
+        ->getOneOrNullResult();
+}
 }

@@ -31,6 +31,7 @@ export class DocteursComponent implements OnInit, OnDestroy {
   private readonly subscription = new Subscription();
 
   docteurs: Doctor[] = [];
+  loading = true;
 
   constructor(
     private readonly router: Router,
@@ -47,6 +48,7 @@ export class DocteursComponent implements OnInit, OnDestroy {
   }
 
   loadDoctors() {
+    this.loading = true;
     this.subscription.add(
       this.doctorService.getDoctors().subscribe({
         next: (data) => {
@@ -54,6 +56,7 @@ export class DocteursComponent implements OnInit, OnDestroy {
           this.filteredDocteurs = data;
         },
         error: (err: any) => console.error('Error loading doctors', err),
+        complete: () => this.loading = false,
       }),
     );
   }
