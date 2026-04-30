@@ -5,10 +5,15 @@ from minio.error import S3Error
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "admin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "admin123")
-MINIO_PUBLIC_ENDPOINT = os.getenv("MINIO_PUBLIC_ENDPOINT", "localhost:9000")
+
+# Use nginx gateway for public access (accessible from frontend)
+# Format: http://localhost/minio/ (configured in nginx)
+MINIO_PUBLIC_URL = os.getenv("MINIO_PUBLIC_URL", "http://localhost/minio")
+
 MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
 
 print(f"Connecting to MinIO at: {MINIO_ENDPOINT}")
+print(f"Public URL for downloads: {MINIO_PUBLIC_URL}")
 
 client = Minio(
     MINIO_ENDPOINT,
@@ -53,5 +58,7 @@ def upload_file(object_name, file_path):
 
 
 def build_object_url(object_name):
-    scheme = "https" if MINIO_SECURE else "http"
-    return f"{scheme}://{MINIO_PUBLIC_ENDPOINT}/{BUCKET}/{object_name}"
+    """Build a publicly accessible URL for the uploaded object via nginx gateway"""
+    # Using nginx gateway which proxies to MinIO
+    # Accessible from frontend as: http://localhost/minio/bucket/object
+    return f"{MINIO_PUBLIC_URL}/{BUCKET}/{object_name}"

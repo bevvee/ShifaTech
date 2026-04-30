@@ -35,18 +35,77 @@
 					<app-select [options]="typeBlessureOptions" [(value)]="form.typeBlessure" [hasSearch]="false" [disabled]="isReadOnly" />
 				</div>
 
-				<div class="col-span-1 sm:col-span-2">
-					<app-label>Zones Corporelles Affectées</app-label>
-					<app-body-map
-						[selectedCodes]="form.bodyParts"
-						[readOnly]="isReadOnly"
-						[debug]="env.debugBodyMap"
-						(selectionChange)="form.bodyParts = $event"
-					/>
-					@if (form.bodyParts.length > 0) {
-						<p class="mt-2 text-xs text-gray-500">
-							{{ form.bodyParts.length }} zone(s) sélectionnée(s)
-						</p>
+				<div class="col-span-1 sm:col-span-2 wound-layout">
+					<div class="wound-layout__main">
+						<div>
+							<app-label>Zones Corporelles Affectées</app-label>
+							<app-body-map
+								[selectedCodes]="form.bodyParts"
+								[readOnly]="isReadOnly"
+								[debug]="env.debugBodyMap"
+								(selectionChange)="form.bodyParts = $event"
+							/>
+							@if (form.bodyParts.length > 0) {
+								<p class="mt-2 text-xs text-gray-500">
+									{{ form.bodyParts.length }} zone(s) sélectionnée(s)
+								</p>
+							}
+						</div>
+					</div>
+
+					<div class="wound-layout__side">
+						<app-label>Image de plaie</app-label>
+						<div class="wound-upload-section" [class.is-empty]="!woundImagePreviewUrl" (click)="onWoundImageBoxClick()">
+							@if (woundImagePreviewUrl) {
+								<div class="wound-preview">
+									<img [src]="woundImagePreviewUrl" alt="Aperçu de l'image de plaie" />
+								</div>
+							} @else {
+								<div class="wound-preview wound-preview--empty">
+									<span>Aucune image sélectionnée</span>
+								</div>
+							}
+
+							<div class="wound-upload-meta">
+								<p class="wound-upload-name">
+									@if (woundImageName) {
+										{{ woundImageName }}
+									} @else {
+										Cliquez pour charger une image
+									}
+								</p>
+
+								<input
+									id="woundImageInput"
+									type="file"
+									accept="image/*"
+									style="display: none"
+									(change)="onWoundImageSelected($event)"
+								/>
+
+								<app-button
+									size="sm"
+									variant="outline"
+									(btnClick)="triggerWoundImageUpload()"
+									[disabled]="isReadOnly"
+								>
+									<svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+									</svg>
+									Charger une image de plaie
+								</app-button>
+							</div>
+						</div>
+					</div>
+
+					@if (showWoundAnalysis && woundImageName && id) {
+						<div class="col-span-1 sm:col-span-2">
+							<app-wound-analysis
+								[visitId]="id"
+								[imageName]="woundImageName"
+								[autoAnalyze]="true"
+							/>
+						</div>
 					}
 				</div>
 			}

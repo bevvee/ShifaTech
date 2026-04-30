@@ -4,7 +4,7 @@ import os
 import torch.nn as nn
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_FILE = os.getenv("WOUND_MODEL_FILE", "wound_model-V1.pth")
+MODEL_FILE = os.getenv("WOUND_MODEL_FILE", "wound_model.pth")
 
 
 class _DoubleConv(nn.Module):

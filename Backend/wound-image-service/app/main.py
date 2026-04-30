@@ -3,8 +3,9 @@ import json
 import tempfile
 from datetime import datetime, timezone
 from fastapi import FastAPI, HTTPException
-from .schemas import WoundRequest, WoundResponse
+from .schemas import WoundRequest, WoundResponse, WoundReport
 from .minio_client import download_image, upload_file, build_object_url
+from .medical_diagnostic import generate_medical_diagnostic
 
 app = FastAPI()
 
@@ -134,19 +135,41 @@ def analyze(request: WoundRequest):
                 overlay_local_path=overlay_local_path,
             )
 
+        # Generate medical diagnostic in French
+        medical_diagnostic = generate_medical_diagnostic(
+            wound_pixels=result["wound_pixels"],
+            wound_percentage=result["wound_percentage"],
+            max_probability=max_probability,
+            low_confidence=explicit_low_conf,
+        )
+
+        report_data = result.get("report") or {}
+        wound_report = WoundReport(
+            date_analyse=medical_diagnostic.date_analyse,
+            plaie_pourcentage=result["wound_percentage"],
+            plaie_pixels=result["wound_pixels"],
+            seuil_utilise=float(confidence.get("threshold_used", 0.0)),
+            niveau_confiance_detection=medical_diagnostic.niveau_confiance,
+            severite_estimee=medical_diagnostic.severite,
+            resumé=report_data.get("summary", "Rapport d'analyse de plaie généré automatiquement."),
+            resultats_cles=report_data.get("key_findings", []),
+            diagnostic_preliminaire=medical_diagnostic,
+        )
+
         return {
             "visit_id": request.visit_id,
             "result": {
                 "wound_pixels": result["wound_pixels"],
                 "wound_percentage": result["wound_percentage"],
                 "confidence": confidence,
+                "diagnostic": medical_diagnostic,
                 "uncertainty_status": uncertainty_status,
                 "mask_suppressed": mask_suppressed,
                 "retraining_case_queued": retraining_case_queued,
                 "mask_url": mask_url,
                 "overlay_url": overlay_url,
                 "report_url": report_url,
-                "report": result.get("report"),
+                "report": wound_report,
             }
         }
         

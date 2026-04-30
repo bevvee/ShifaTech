@@ -13,6 +13,7 @@ import { DossierMedicalStore } from '../dossier-medical/dossier-medical.store';
 import { VisiteStatus } from '../../core/models/visite.model';
 import { ToastService } from '../../shared/services/toast.service';
 import { BodyMapComponent } from '../../shared/components/body-map/body-map.component';
+import { WoundAnalysisComponent } from '../../shared/components/wound-analysis/wound-analysis.component';
 import { environment } from '../../../environments/environment';
 
 type Mode = 'create' | 'edit' | 'view';
@@ -30,8 +31,10 @@ type Mode = 'create' | 'edit' | 'view';
     LabelComponent,
     SelectComponent,
     BodyMapComponent,
+    WoundAnalysisComponent,
   ],
-  templateUrl: './visites-form-page.component.html'
+  templateUrl: './visites-form-page.component.html',
+  styleUrl: './visites-form-page.component.scss',
 })
 export class VisitesFormPageComponent implements OnInit {
   readonly env = environment;
@@ -45,7 +48,7 @@ export class VisitesFormPageComponent implements OnInit {
   private readonly dossiersStore = inject(DossierMedicalStore);
   private readonly toastService = inject(ToastService);
 
-  private id: number | null;
+  id: number | null;
 
   /*
   dossierOptions: Option[] = this.dossiersStore.getAll().map(d => ({
@@ -86,6 +89,12 @@ export class VisitesFormPageComponent implements OnInit {
     planTraitement: '',
     observations: '',
   };
+
+  // Wound analysis properties
+  woundImageName: string = '';
+  woundImageFile: File | null = null;
+  woundImagePreviewUrl: string = '';
+  showWoundAnalysis = false;
 
   constructor() {
     this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
@@ -190,9 +199,10 @@ export class VisitesFormPageComponent implements OnInit {
 
     if (this.mode === 'create') {
       this.store.create(payload).subscribe({
-        next: () => {
+        next: (created) => {
+          this.id = created.id;
+          this.mode = 'edit';
           this.toastService.success('Succès', 'Visite enregistrée avec succès');
-          this.router.navigate(['/visites']);
         },
         error: () => this.toastService.error('Erreur', 'Erreur lors de l\'enregistrement')
       });
@@ -206,4 +216,53 @@ export class VisitesFormPageComponent implements OnInit {
       });
     }
   }
+
+  // Wound analysis methods
+  onWoundImageSelected(event: any) {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      if (this.woundImagePreviewUrl) {
+        URL.revokeObjectURL(this.woundImagePreviewUrl);
+      }
+
+      this.woundImageFile = files[0];
+      if (this.woundImageFile) {
+        this.woundImageName = this.woundImageFile.name;
+        this.woundImagePreviewUrl = URL.createObjectURL(this.woundImageFile);
+        this.uploadWoundImage();
+      }
+    }
+  }
+
+  uploadWoundImage() {
+    if (!this.woundImageFile) return;
+
+    // In a real scenario, you would upload the image to MinIO or your backend
+    // For now, we'll just set the image name which will trigger analysis
+    this.showWoundAnalysis = true;
+    
+    // If visit has an ID, we can analyze directly
+    // Otherwise, we'll analyze after the visit is created
+    if (this.id) {
+      // Analysis will happen automatically with app-wound-analysis component
+    }
+  }
+
+  triggerWoundImageUpload() {
+    const input = document.getElementById('woundImageInput') as HTMLInputElement;
+    input?.click();
+  }
+
+  onWoundImageBoxClick() {
+    if (this.isReadOnly) {
+      return;
+    }
+
+    this.triggerWoundImageUpload();
+  }
+
+  getVisitIdForAnalysis(): number {
+    return this.id || 0;
+  }
 }
+

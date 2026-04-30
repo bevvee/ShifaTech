@@ -11,6 +11,7 @@ export const environment = {
     visites:'/patient/api/visites',
     body: '/body',
     admin: '/admin/api',
+    wound: '/wound',
   }
 };
 

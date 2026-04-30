@@ -316,8 +316,11 @@ services:
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: admin123
-      WOUND_MODEL_FILE: wound_segmentation_unet.pth
+      MINIO_PUBLIC_URL: http://localhost/minio
       WOUND_INPUT_NORMALIZATION: imagenet
+      WOUND_CONFIDENCE_MIN_ACCEPTED: "0.35"
+      WOUND_SUPPRESS_MASK_ON_LOW_CONFIDENCE: "false"
+      WOUND_QUEUE_LOW_CONFIDENCE_FOR_RETRAINING: "true"
     depends_on:
       - minio
     expose:
@@ -330,6 +333,7 @@ services:
       start_period: 20s
     volumes:
       - ./Backend/wound-image-service/app:/app/app
+      - ./Backend/wound-image-service/models:/app/models
       - ./torch_cache:/app/torch_cache
     networks:
       - shifatech-net

@@ -39,6 +39,7 @@ export class BodyMapComponent implements OnInit, OnChanges {
   hoveredLabel: string | null = null;
   tooltipX = 0;
   tooltipY = 0;
+  tooltipWidth = 120;
 
   ngOnInit(): void {
     this.loadMap();
@@ -121,6 +122,7 @@ export class BodyMapComponent implements OnInit, OnChanges {
   onMouseEnter(part: BodyPart, event: MouseEvent): void {
     if (!part.is_clickable) return;
     this.hoveredLabel = part.label;
+    this.tooltipWidth = Math.max(120, Math.min(260, part.label.length * 8 + 18));
     this.updateTooltipPosition(event);
   }
 
@@ -136,8 +138,10 @@ export class BodyMapComponent implements OnInit, OnChanges {
     const svgEl = (event.currentTarget as SVGElement).closest('svg');
     if (svgEl) {
       const rect = svgEl.getBoundingClientRect();
-      this.tooltipX = event.clientX - rect.left + 10;
-      this.tooltipY = event.clientY - rect.top - 30;
+      const desiredX = event.clientX - rect.left + 10;
+      const desiredY = event.clientY - rect.top - 30;
+      this.tooltipX = Math.max(6, Math.min(desiredX, rect.width - this.tooltipWidth - 6));
+      this.tooltipY = Math.max(18, desiredY);
     }
   }
 
