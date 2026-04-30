@@ -1,3 +1,5 @@
+import { RdvStatut } from './rdv-statut.enum';
+
 export interface RdvCreateDto {
 
   id?: number;
@@ -12,7 +14,7 @@ export interface RdvCreateDto {
 
   id_docteur: number;
 
-  statut?: string;
+  statut?: RdvStatut;
 
 }
 

@@ -29,6 +29,7 @@ export class PatientsComponent implements OnInit {
 
   searchTerm = '';
   patients: PatientDto[] = [];
+  loading = true;
 
   private readonly router = inject(Router);
   private readonly store = inject(PatientsStore);
@@ -45,16 +46,19 @@ export class PatientsComponent implements OnInit {
   }
 
   loadPatients() {
+    this.loading = true;
     this.userRole$.pipe(take(1)).subscribe((role) => {
       if (role === Role.DOCTEUR) {
         this.doctorService.getMyPatients().subscribe({
           next: (data) => this.patients = data,
-          error: (err) => console.error('Erreur chargement mes patients', err)
+          error: (err) => console.error('Erreur chargement mes patients', err),
+          complete: () => this.loading = false,
         });
       } else {
         this.store.getAll().subscribe({
           next: (data) => this.patients = data,
-          error: (err) => console.error('Erreur chargement patients', err)
+          error: (err) => console.error('Erreur chargement patients', err),
+          complete: () => this.loading = false,
         });
       }
     });
@@ -85,6 +89,16 @@ export class PatientsComponent implements OnInit {
         console.error('Erreur récupération dossier', err);
         // En cas d'erreur (ex: 404), on propose d'en créer un
         this.router.navigate(['/dossier-medical/new'], { queryParams: { patientId } });
+      }
+    });
+  }
+
+  onViewDetails(patientId: number) {
+    this.userRole$.pipe(take(1)).subscribe((role) => {
+      if (role === Role.SECRETAIRE) {
+        this.viewPatient(patientId);
+      } else {
+        this.viewDossierByPatient(patientId);
       }
     });
   }

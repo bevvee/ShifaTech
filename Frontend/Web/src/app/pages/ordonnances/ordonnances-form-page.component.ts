@@ -95,6 +95,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
           return;
         }
 
+        this.ordonnance = existing;
         this.form = {
           idPatient: String(existing.idPatient),
           idDoctor: existing.idDoctor,
@@ -107,11 +108,17 @@ export class OrdonnancesFormPageComponent implements OnInit {
           dateValidite: existing.dateValidite,
           statut: existing.statut,
         };
+
+        // Fetch patient and dossier details
+        this.fetchPatientAndDossier(existing.idPatient);
       });
     } else {
       const qPatientId = this.route.snapshot.queryParamMap.get('patientId');
       const qVisiteId = this.route.snapshot.queryParamMap.get('visiteId');
-      if (qPatientId) this.form.idPatient = qPatientId;
+      if (qPatientId) {
+        this.form.idPatient = qPatientId;
+        this.fetchPatientAndDossier(Number(qPatientId));
+      }
       if (qVisiteId) this.form.idVisite = qVisiteId;
     }
   }
@@ -131,6 +138,18 @@ export class OrdonnancesFormPageComponent implements OnInit {
         value: String(p.id),
         label: `${p.nom} ${p.prenom} (${p.numDossier})`
       }));
+    });
+  }
+
+  private fetchPatientAndDossier(patientId: number) {
+    if (!patientId) return;
+
+    this.patientsStore.getById(patientId).subscribe(p => {
+      this.patient = p;
+    });
+
+    this.dossierStore.getByPatientId(patientId).subscribe(d => {
+      this.dossier = d;
     });
   }
 
@@ -249,7 +268,12 @@ export class OrdonnancesFormPageComponent implements OnInit {
   }
 
   cancel = () => {
-    this.router.navigate(['/ordonnances']);
+    const fromDossier = this.route.snapshot.queryParamMap.get('fromDossier');
+    if (fromDossier) {
+      this.router.navigate(['/dossier-medical', fromDossier]);
+    } else {
+      this.router.navigate(['/ordonnances']);
+    }
   };
 
   save = () => {

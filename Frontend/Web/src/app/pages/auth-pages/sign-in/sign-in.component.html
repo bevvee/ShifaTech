@@ -1,25 +1,30 @@
-<div class="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-slate-50">
+<div class="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-slate-50 dark:bg-shifa-dark-bg">
   <!-- ===== MEDICAL ANIMATED BACKGROUND ===== -->
-  <div class="absolute inset-0 medical-bg"></div>
+  <div class="absolute inset-0 medical-bg opacity-100 dark:opacity-40"></div>
+
+  <!-- Theme toggle (top-right) -->
+  <div class="absolute top-4 right-4 z-20">
+    <app-theme-toggle-button></app-theme-toggle-button>
+  </div>
 
   <!-- ===== CONTENT WRAPPER ===== -->
   <div class="relative z-10 w-full flex flex-col items-center">
     <!-- Brand -->
     <div class="flex items-center gap-2 mb-2 select-none">
       <img src="images/logo/logo-icon.png" class="h-16 w-auto" alt="ShifaTech" />
-      <span class="text-2xl font-semibold text-gray-800">
+      <span class="text-2xl font-semibold text-gray-800 dark:text-gray-100">
         <span class="text-blue-light-850">Shifa</span>
         <span class="text-green-400">Tech</span>
       </span>
     </div>
 
     <!-- Card -->
-    <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-gray-200 px-6 py-7 sm:px-8 sm:py-8 transition-all duration-300">
-      <h2 class="text-base sm:text-2xl font-medium text-center text-gray-900">Bon retour</h2>
-      <p class="text-sm text-gray-500 mt-1 text-center">Entrez vos identifiants pour accéder à votre compte</p>
+    <div class="w-full max-w-lg bg-white dark:bg-shifa-dark-surface rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 px-6 py-7 sm:px-8 sm:py-8 transition-all duration-300">
+      <h2 class="text-base sm:text-2xl font-medium text-center text-gray-900 dark:text-white">Bon retour</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 text-center">Entrez vos identifiants pour accéder à votre compte</p>
 
       @if (errorMessage) {
-        <div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm text-center">
+        <div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-600 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300 rounded-lg text-sm text-center">
           {{ errorMessage }}
         </div>
       }
@@ -105,15 +110,15 @@
 
         <!-- Divider -->
         <div class="flex items-center gap-3 py-1">
-          <div class="flex-1 h-px bg-gray-200"></div>
-          <span class="text-xs text-gray-500">OU</span>
-          <div class="flex-1 h-px bg-gray-200"></div>
+          <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+          <span class="text-xs text-gray-500 dark:text-gray-400">OU</span>
+          <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
         </div>
 
         <button
           type="button"
           (click)="onGoogleLogin()"
-          class="w-full hover:bg-gray-50 hover:shadow-lg h-11 flex justify-center font-medium items-center rounded-lg border border-black bg-white"
+          class="w-full hover:bg-gray-50 hover:shadow-lg dark:hover:bg-white/5 h-11 flex justify-center font-medium items-center rounded-lg border border-black dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="me-2">
             <path d="M18.7511 10.1944C18.7511 9.47495 18.6915 8.94995 18.5626 8.40552H10.1797V11.6527H15.1003C15.0011 12.4597 14.4654 13.675 13.2749 14.4916L13.2582 14.6003L15.9087 16.6126L16.0924 16.6305C17.7788 15.1041 18.7511 12.8583 18.7511 10.1944Z" fill="#4285F4" />
@@ -124,13 +129,13 @@
           Connecter avec Google
         </button>
 
-        <div class="text-sm text-gray-600 text-center">
+        <div class="text-sm text-gray-600 dark:text-gray-300 text-center">
           Vous n'avez pas de compte ?
           <span class="text-green-400 hover:underline cursor-pointer">Contacter l'administration</span>
         </div>
       </form>
     </div>
 
-    <p class="text-sm text-gray-700 mt-6 text-center">Copyright © 2026 - ShifaTech</p>
+    <p class="text-sm text-gray-700 dark:text-gray-400 mt-6 text-center">Copyright © 2026 - ShifaTech</p>
   </div>
 </div>

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { VisiteDto, VisiteCreateDto } from '@models/visite.model';
+import { VisiteDto, VisiteCreateDto } from '../models/visite.model';
 const BASE = '/infirmier/api';
 
 @Injectable({ providedIn: 'root' })

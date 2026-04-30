@@ -8,4 +8,5 @@ enum StatutEnum: string
     case CONFIRME = 'CONFIRME';
     case ANNULE = 'ANNULE';
     case TERMINE = 'TERMINE';
+    case TERMINER = 'TERMINER';
 }

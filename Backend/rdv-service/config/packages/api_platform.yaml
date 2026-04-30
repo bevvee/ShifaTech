@@ -3,6 +3,11 @@ api_platform:
     version: '1.0.0'
     description: 'Rendez-vous Management Service'
 
+    mapping:
+        paths:
+            - '%kernel.project_dir%/src/Entity'
+            - '%kernel.project_dir%/src/ApiResource'
+
     defaults:
         pagination_enabled: true
         pagination_items_per_page: 10

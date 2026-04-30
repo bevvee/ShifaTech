@@ -69,6 +69,7 @@ class RendezVousProcessor implements ProcessorInterface
         |-------------------------------------------------
         */
 
+        // doctor-service lookup is now done via doctor userId
         $this->doctorClient->verifyDoctorExists($data->getIdDocteur());
 
         /*
@@ -97,9 +98,7 @@ class RendezVousProcessor implements ProcessorInterface
         $this->em->persist($data);
         $this->em->flush();
 
-        $doctorName = $this->doctorClient->getDoctorFullName(
-            $data->getIdDocteur()
-        );
+        $doctorName = $this->doctorClient->getDoctorFullName($data->getIdDocteur());
         /*
         |-------------------------------------------------
         | 6️⃣ Send Email Confirmation

@@ -13,6 +13,8 @@ export type ConfirmOptions = {
 export class AlertService {
   private baseOptions() {
     return {
+      width: 'min(36rem, calc(100vw - 1rem))',
+      padding: '1.25rem',
       customClass: {
         container: 'swal-shifa-container',
         popup: 'swal-shifa-popup',
@@ -26,9 +28,33 @@ export class AlertService {
     } as const;
   }
 
+  private toastOptions() {
+    return {
+      toast: true,
+      position: 'top-end' as const,
+      width: 'min(24rem, calc(100vw - 1rem))',
+      padding: '0.95rem 1rem',
+      showConfirmButton: false,
+      timer: 3200,
+      timerProgressBar: true,
+      customClass: {
+        container: 'swal-shifa-container',
+        popup: 'swal-shifa-toast',
+        title: 'swal-shifa-toast-title',
+        htmlContainer: 'swal-shifa-toast-text',
+      },
+    } as const;
+  }
+
   async confirm(options: ConfirmOptions): Promise<boolean> {
+    const base = this.baseOptions();
+
     const result = await Swal.fire({
-      ...this.baseOptions(),
+      ...base,
+      customClass: {
+        ...base.customClass,
+        container: 'swal-shifa-container swal-shifa-confirm-container',
+      },
       title: options.title,
       text: options.text,
       icon: options.icon ?? 'question',
@@ -80,5 +106,21 @@ export class AlertService {
       icon: 'info',
       confirmButtonText: 'OK',
     });
+  }
+
+  async toast(icon: SweetAlertIcon, title: string, text: string): Promise<void> {
+    const result = await Swal.fire({
+      ...this.toastOptions(),
+      icon,
+      title,
+      text,
+      background: undefined,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+      },
+    });
+
+    void result;
   }
 }

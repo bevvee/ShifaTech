@@ -30,6 +30,7 @@ export class VisitesComponent implements OnInit {
 
   searchTerm = '';
   visites: VisiteDto[] = [];
+  loading = true;
 
   private readonly router = inject(Router);
   private readonly store = inject(VisiteStore);
@@ -49,6 +50,7 @@ export class VisitesComponent implements OnInit {
   */
 
   loadVisites() {
+    this.loading = true;
     this.authStore.select(selectUserRole).pipe(
       take(1),
       switchMap((role) => {
@@ -60,7 +62,8 @@ export class VisitesComponent implements OnInit {
       })
     ).subscribe({
       next: (data) => this.visites = data,
-      error: (err) => console.error('Erreur chargement visites', err)
+      error: (err) => console.error('Erreur chargement visites', err),
+      complete: () => this.loading = false,
     });
   }
 

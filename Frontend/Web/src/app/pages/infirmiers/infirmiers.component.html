@@ -2,6 +2,22 @@
 	<app-page-breadcrumb pageTitle="Infirmiers" />
 
 	<app-component-card title="Liste Infirmiers">
+		@if (loading) {
+			<div class="flex flex-col items-center justify-center py-20 space-y-6">
+				<div class="relative flex items-center justify-center">
+					<span class="absolute h-20 w-20 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></span>
+					<div class="h-12 w-12 rounded-full bg-white shadow-sm dark:bg-white/5"></div>
+				</div>
+				<div class="flex items-center space-x-1 text-gray-500 dark:text-gray-400 text-sm">
+					<span>Chargement des infirmiers</span>
+					<span class="animate-bounce">.</span>
+					<span class="animate-bounce [animation-delay:200ms]">.</span>
+					<span class="animate-bounce [animation-delay:400ms]">.</span>
+				</div>
+			</div>
+		}
+		@if (!loading) {
+			<ng-container>
 			<div card-actions class="flex items-center gap-3">
 				<app-button size="sm" variant="outline" (btnClick)="toggleFilters()">
 				  Filters
@@ -199,5 +215,7 @@
 					</div>
 				}
 			</div>
+			</ng-container>
+			}
 	</app-component-card>
 </div>

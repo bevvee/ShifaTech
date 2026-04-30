@@ -30,7 +30,12 @@ class RendezVousFixture extends Fixture
                 ->setDateRdv($date)
                 ->setHeureDebut($heureDebut)
                 ->setHeureFin($heureFin)
-                ->setStatut($faker->randomElement(StatutEnum::cases()))
+                ->setStatut($faker->randomElement([
+                    StatutEnum::EN_ATTENTE,
+                    StatutEnum::CONFIRME,
+                    StatutEnum::ANNULE,
+                    StatutEnum::TERMINE,
+                ]))
                 ->setCreatedAt(new \DateTimeImmutable())
                 ->setCreatedBy(1);
 

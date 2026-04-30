@@ -2,6 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Store } from '@ngrx/store';
+import { selectUserRole } from '../../core/store/auth/auth.selectors';
+import { Role } from '../../core/models/role.enum';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
@@ -44,6 +47,10 @@ export class VisitesFormPageComponent implements OnInit {
   private readonly store = inject(VisiteStore);
   private readonly dossiersStore = inject(DossierMedicalStore);
   private readonly toastService = inject(ToastService);
+  private readonly ngrxStore = inject(Store);
+
+  userRole$ = this.ngrxStore.select(selectUserRole);
+  protected readonly Role = Role;
 
   private id: number | null;
 
@@ -128,10 +135,14 @@ export class VisitesFormPageComponent implements OnInit {
 
   loadDossiers() {
     this.dossiersStore.getAll().subscribe(list => {
-      this.dossierOptions = list.map(d => ({
-        value: String(d.id),
-        label: `${d.nomPatient} (${d.numDossier})`
-      }));
+      const qDossierId = this.route.snapshot.queryParamMap.get('dossierId');
+      
+      this.dossierOptions = list
+        .filter(d => !qDossierId || String(d.id) === qDossierId || this.mode !== 'create')
+        .map(d => ({
+          value: String(d.id),
+          label: `${d.nomPatient} (${d.numDossier})`
+        }));
     });
   }
 
@@ -170,7 +181,12 @@ export class VisitesFormPageComponent implements OnInit {
   }
 
   cancel() {
-    this.router.navigate(['/visites']);
+    const fromDossier = this.route.snapshot.queryParamMap.get('fromDossier');
+    if (fromDossier) {
+      this.router.navigate(['/dossier-medical', fromDossier]);
+    } else {
+      this.router.navigate(['/visites']);
+    }
   }
 
   save() {

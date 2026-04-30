@@ -9,16 +9,19 @@ import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { selectUserRole, selectAuthUser } from '../../../core/store/auth/auth.selectors';
 import { take } from 'rxjs';
+import { ThemeToggleButtonComponent } from '../../../shared/components/common/theme-toggle/theme-toggle-button.component';
 
 @Component({
   selector: 'app-sign-in',
+  standalone: true,
   imports: [
     FormsModule,
     LabelComponent,
     CheckboxComponent,
     InputFieldComponent,
     RouterModule,
-    CommonModule
+    CommonModule,
+    ThemeToggleButtonComponent
   ],
   templateUrl: './sign-in.component.html',
   styles: ``

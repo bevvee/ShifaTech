@@ -11,6 +11,8 @@ import { Observable } from 'rxjs';
 export class RdvService extends ApiService {
 
   private base = environment.api.rdv;
+  private baseViewList = '/rdv/api/rendez-vous-view';
+  private baseViewCurrent = '/rdv/api/rendez-vous-view/current';
 
   getAll(): Observable<any>;
   getAll(params: Record<string, string | number | boolean | null | undefined>): Observable<any>;
@@ -42,5 +44,37 @@ export class RdvService extends ApiService {
 
   deleteById(id: number) {
     return super.delete(`${this.base}/${id}`);
+  }
+
+  getRendezVousViewList(): Observable<any>;
+  getRendezVousViewList(params: Record<string, string | number | boolean | null | undefined>): Observable<any>;
+  getRendezVousViewList(params?: Record<string, string | number | boolean | null | undefined>) {
+    if (!params) {
+      return this.get<any>(`${this.baseViewList}`);
+    }
+
+    let httpParams = new HttpParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value === null || value === undefined) continue;
+      httpParams = httpParams.set(key, String(value));
+    }
+
+    return this.http.get<any>(`${this.baseViewList}`, { params: httpParams });
+  }
+
+  getRendezVousViewCurrent(): Observable<any>;
+  getRendezVousViewCurrent(params: Record<string, string | number | boolean | null | undefined>): Observable<any>;
+  getRendezVousViewCurrent(params?: Record<string, string | number | boolean | null | undefined>) {
+    if (!params) {
+      return this.get<any>(`${this.baseViewCurrent}`);
+    }
+
+    let httpParams = new HttpParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value === null || value === undefined) continue;
+      httpParams = httpParams.set(key, String(value));
+    }
+
+    return this.http.get<any>(`${this.baseViewCurrent}`, { params: httpParams });
   }
 }

@@ -5,10 +5,11 @@ namespace App\State;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\DTO\RendezVousView;
+use App\Entity\RendezVous;
 use App\Repository\RendezVousRepository;
-use App\Service\AuthServiceClient;
 use App\Service\DoctorServiceClient;
 use App\Service\PatientServiceClient;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class RendezVousViewProvider implements ProviderInterface
 {
@@ -16,37 +17,65 @@ class RendezVousViewProvider implements ProviderInterface
         private RendezVousRepository $repository,
         private PatientServiceClient $patientClient,
         private DoctorServiceClient $doctorClient,
-        private AuthServiceClient $authClient
+        private RequestStack $requestStack,
     ) {}
 
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
     {
-        $rdvs = $this->repository->findAll();
-        $result = [];
+        $request = $this->requestStack->getCurrentRequest();
 
-        foreach ($rdvs as $rdv) {
-            $patient = $this->patientClient->getPatient($rdv->getIdPatient());
-            $doctor = $this->doctorClient->getDoctor($rdv->getIdDocteur());
+        $idDocteurRaw = $request?->query->get('id_docteur');
+        $idPatientRaw = $request?->query->get('id_patient');
 
-            $view = new RendezVousView();
+        $isCurrentRoute = str_contains($request?->getPathInfo() ?? '', '/current');
 
-            $view->id = $rdv->getId();
-            $view->date = $rdv->getDateRdv()?->format('Y-m-d') ?? '';
-            $view->heureDebut = $rdv->getHeureDebut()?->format('H:i') ?? '';
-            $view->heureFin = $rdv->getHeureFin()?->format('H:i') ?? '';
-            $view->statut = $rdv->getStatut()?->value ?? '';
+        if ($isCurrentRoute) {
+            $now = new \DateTimeImmutable();
 
-            $view->patientId = $rdv->getIdPatient();
-            $view->patientNom = $patient['nom'] ?? '';
-            $view->patientPrenom = $patient['prenom'] ?? '';
+            if ($idDocteurRaw !== null && $idDocteurRaw !== '') {
+                $rdv = $this->repository->findCurrentByDoctor((int) $idDocteurRaw, $now);
+            } elseif ($idPatientRaw !== null && $idPatientRaw !== '') {
+                $rdv = $this->repository->findCurrentByPatient((int) $idPatientRaw, $now);
+            } else {
+                return null;
+            }
 
-            $view->doctorId = $rdv->getIdDocteur();
-            $view->doctorNom = $doctor['nom'] ?? '';
-            $view->doctorPrenom = $doctor['prenom'] ?? '';
-
-            $result[] = $view;
+            return $rdv ? [$this->toView($rdv)] : [];
         }
 
-        return $result;
+        if ($idDocteurRaw !== null && $idDocteurRaw !== '') {
+            $rdvs = $this->repository->findBy(['id_docteur' => (int) $idDocteurRaw]);
+        } elseif ($idPatientRaw !== null && $idPatientRaw !== '') {
+            $rdvs = $this->repository->findBy(['id_patient' => (int) $idPatientRaw]);
+        } else {
+            $rdvs = $this->repository->findAll();
+        }
+
+        return array_map(
+            fn (RendezVous $rdv) => $this->toView($rdv),
+            $rdvs
+        );
+    }
+
+    private function toView(RendezVous $rdv): RendezVousView
+    {
+        $id = (int) ($rdv->getId() ?? 0);
+        $idPatient = (int) ($rdv->getIdPatient() ?? 0);
+        $idDocteur = (int) ($rdv->getIdDocteur() ?? 0);
+
+        $patient = $idPatient ? $this->patientClient->getPatientSummary($idPatient) : null;
+        $docteur = $idDocteur ? $this->doctorClient->getDoctorSummary($idDocteur) : null;
+
+        return new RendezVousView(
+            id: $id,
+            idPatient: $idPatient,
+            idDocteur: $idDocteur,
+            dateRdv: $rdv->getDateRdv()?->format('Y-m-d') ?? '',
+            heureDebut: $rdv->getHeureDebut()?->format('H:i') ?? '',
+            heureFin: $rdv->getHeureFin()?->format('H:i') ?? '',
+            statut: $rdv->getStatut()?->value ?? '',
+            patient: $patient,
+            docteur: $docteur,
+        );
     }
 }

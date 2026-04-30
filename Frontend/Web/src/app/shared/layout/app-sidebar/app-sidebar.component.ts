@@ -96,12 +96,12 @@ export class AppSidebarComponent {
   <path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`,
       name: "Patients",
-      roles: [Role.SECRETAIRE, Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER],
+      roles: [Role.SECRETAIRE, Role.DOCTEUR, Role.INFIRMIER],
       subItems: [
         {
           name: "Liste des Patients",
           path: "/patients",
-          roles: [Role.SECRETAIRE, Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER],
+          roles: [Role.SECRETAIRE, Role.DOCTEUR, Role.INFIRMIER],
         },
         {
           name: "Ajouter Patient",
@@ -115,9 +115,9 @@ export class AppSidebarComponent {
   <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`,
       name: "Dossier Médical",
-      roles: [Role.INFIRMIER, Role.SECRETAIRE,Role.DOCTEUR],
+      roles: [Role.INFIRMIER,Role.DOCTEUR],
       subItems: [
-        { name: "Liste des Dossiers", path: "/dossier-medical" },
+        { name: "Liste des Dossiers", path: "/dossier-medical", },
         { name: "Nouveau Dossier", path: "/dossier-medical/new",roles: [Role.INFIRMIER], },
       ],
     },
@@ -139,7 +139,7 @@ export class AppSidebarComponent {
   <path d="M12 7v6m-3-3h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
 </svg>`,
       name: "Ordonnances",
-      roles: [Role.DOCTEUR, Role.INFIRMIER],
+      roles: [Role.DOCTEUR],
       subItems: [
         { name: "Liste Ordonnances", path: "/ordonnances" },
         { name: "Nouvelle Ordonnance", path: "/ordonnances/new",roles: [Role.DOCTEUR] },
