@@ -32,6 +32,7 @@ public class DossierMedicalDTO {
     // Infos du patient pour l'affichage
     private String nomPatient;
     private String numDossier;
+    private String sexePatient;
 
     // Infos du docteur (récupérées du service Auth)
     private String nomDocteur;

@@ -28,4 +28,5 @@ public class OrdonnanceDTO {
     // Infos pour l'affichage
     private String nomPatient;
     private String numDossier;
+    private String sexePatient;
 }

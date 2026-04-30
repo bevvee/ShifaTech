@@ -39,6 +39,11 @@ export class DoctorService extends ApiService {
     return this.get<any[]>(`${this.base}/my-patients`);
   }
 
+  getDoctorByUserId(idUser: number) {
+    return this.get<any>(`${this.base}/user/${idUser}`);
+  }
+
+
   // getSpecialities() {
   //   return this.get<Speciality[]>(`/speciality/all`);
   // }

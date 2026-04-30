@@ -238,6 +238,7 @@ public class OrdonnanceService {
                         var user = authServiceClient.getUserById(patient.getIdUser(), authHeader);
                         if (user != null) {
                             dto.setNomPatient(user.getNom() + " " + user.getPrenom());
+                            dto.setSexePatient(user.getSexe());
                         }
                     } catch (Exception e) {
                         log.warn("Erreur AuthServiceClient pour ordonnance {}: {}", ordonnance.getIdOrdonnance(), e.getMessage());

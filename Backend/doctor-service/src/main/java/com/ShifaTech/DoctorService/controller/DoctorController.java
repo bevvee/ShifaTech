@@ -23,7 +23,7 @@ public class DoctorController {
     // --- CRUD Operations ---
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT', 'INFIRMIER', 'SECRETAIRE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT', 'DOCTEUR', 'INFIRMIER', 'SECRETAIRE')")
     public ResponseEntity<List<DoctorDTO>> getAllDoctors() {
         return ResponseEntity.ok(doctorService.getAllDoctors());
     }

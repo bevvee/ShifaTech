@@ -20,6 +20,16 @@ export interface PatientDto {
   dateNaissance: string;
   telephone: string;
   adresse: string;
+  userInfo?: {
+    idUser: number;
+    nom: string;
+    prenom: string;
+    email: string;
+    telephone: string;
+    adresse: string;
+    sexe: Sexe;
+    dateNaissance: string;
+  };
 }
 
 // DTO de création patient (formulaire complet)

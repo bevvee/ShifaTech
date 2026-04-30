@@ -152,17 +152,12 @@ export class OrdonnancesComponent implements OnInit {
   }
   */
 
-  async deleteOrdonnance(id: number) {
-    const ok = await this.alerts.confirmDelete('cette ordonnance');
-    if (!ok) return;
-
-    this.store.delete(id).subscribe({
-      next: () => this.loadOrdonnances(),
-      error: (err) => {
-        console.error('Erreur suppression ordonnance', err);
-        void this.alerts.error('Erreur lors de la suppression de l\'ordonnance.');
-      }
-    });
+  deleteOrdonnance(id: number) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette ordonnance ?')) {
+      this.store.delete(id).subscribe(() => {
+        this.loadOrdonnances();
+      });
+    }
   }
 
   getStatusBadgeColor(status: OrdonnanceStatut): 'success' | 'warning' | 'error' {
@@ -170,6 +165,16 @@ export class OrdonnancesComponent implements OnInit {
     if (status === 'EXPIRED') return 'warning';
     return 'error';
   }
+
+  getInitials(row: OrdonnanceDto): string {
+    const name = row.nomPatient?.trim() ?? '';
+    if (!name) return '?';
+    const parts = name.split(' ');
+    const first = parts[0] ? parts[0][0] : '';
+    const second = parts[1] ? parts[1][0] : '';
+    return `${first}${second}`.toUpperCase() || '?';
+  }
+
 
   get filteredOrdonnances(): OrdonnanceDto[] {
     const q = this.searchTerm.trim().toLowerCase();

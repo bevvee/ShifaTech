@@ -17,6 +17,11 @@ import { PatientDto } from '../../core/models/patient.model';
 import { DossierMedicalStore } from '../dossier-medical/dossier-medical.store';
 import { DossierMedicalDto } from '../../core/models/dossier-medical.model';
 import { AlertService } from '../../core/services/alert.service';
+import { DoctorService } from '../../core/services/doctor.service';
+import { Store } from '@ngrx/store';
+import { selectUserRole, selectUserId } from '../../core/store/auth/auth.selectors';
+import { take } from 'rxjs';
+
 
 type Mode = 'create' | 'edit' | 'view';
 
@@ -49,6 +54,9 @@ export class OrdonnancesFormPageComponent implements OnInit {
   private readonly visitesStore = inject(VisiteStore);
   private readonly dossierStore = inject(DossierMedicalStore);
   private readonly alerts = inject(AlertService);
+  private readonly authStore = inject(Store);
+  private readonly doctorService = inject(DoctorService);
+
 
   private id: number | null;
 
@@ -67,7 +75,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
 
   form = {
     idPatient: '',
-    idDoctor: 1,
+    idDoctor: 0,
     idVisite: '',
     description: '',
     medicaments: '',
@@ -78,6 +86,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
     statut: 'ACTIVE' as OrdonnanceStatut,
   };
 
+
   constructor() {
     this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -87,6 +96,8 @@ export class OrdonnancesFormPageComponent implements OnInit {
   ngOnInit() {
     this.loadPatients();
     this.loadVisites();
+    this.resolveCurrentDoctor();
+
 
     if (this.mode !== 'create' && this.id != null) {
       this.store.getById(this.id).subscribe(existing => {
@@ -122,6 +133,19 @@ export class OrdonnancesFormPageComponent implements OnInit {
       if (qVisiteId) this.form.idVisite = qVisiteId;
     }
   }
+
+  private resolveCurrentDoctor() {
+    this.authStore.select(selectUserId).pipe(take(1)).subscribe(userId => {
+      if (userId) {
+        this.doctorService.getDoctorByUserId(Number(userId)).subscribe((doctor: any) => {
+          if (doctor && doctor.idDocteur) {
+            this.form.idDoctor = doctor.idDocteur;
+          }
+        });
+      }
+    });
+  }
+
 
   loadVisites() {
     this.visitesStore.getAll().subscribe(list => {

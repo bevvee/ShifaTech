@@ -8,6 +8,7 @@ export interface OrdonnanceDto {
 
     // Pour affichage (résolu via stores)
     nomPatient?: string;
+    sexePatient?: string;
     numDossier?: string;
 
     description: string;

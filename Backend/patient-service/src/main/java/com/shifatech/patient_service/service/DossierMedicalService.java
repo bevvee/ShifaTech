@@ -221,6 +221,7 @@ public class DossierMedicalService {
                         var user = authServiceClient.getUserById(patient.getIdUser(), authHeader);
                         if (user != null) {
                             dto.setNomPatient(user.getNom() + " " + user.getPrenom());
+                            dto.setSexePatient(user.getSexe());
                             log.info("[DEBUG] Dossier {}: Nom récupéré -> {}", dossier.getIdDossier(),
                                     dto.getNomPatient());
                         } else {

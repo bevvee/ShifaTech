@@ -54,20 +54,23 @@
 									<td class="px-5 py-4">
 										<div class="flex items-center gap-3">
 											<div
-												class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-800 dark:bg-white/10 dark:text-white"
+												class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+												[ngClass]="(p.userInfo?.sexe || p.sexe) === 'F' ? 'bg-pink-400' : 'bg-gray-400'"
 												aria-hidden="true"
 											>
 												{{ getInitials(p) }}
 											</div>
 											<div>
-												<p class="font-medium text-gray-800 dark:text-white">{{ p.nom }} {{ p.prenom }}</p>
-												<p class="text-sm text-gray-500">{{ p.email }}</p>
+												<p class="font-medium text-gray-800 dark:text-white">
+													{{ p.userInfo?.nom || p.nom }} {{ p.userInfo?.prenom || p.prenom }}
+												</p>
+												<p class="text-sm text-gray-500">{{ p.userInfo?.email || p.email }}</p>
 											</div>
 										</div>
 									</td>
 									<td class="px-5 py-4 text-gray-700 dark:text-gray-300">{{ p.assurance }}</td>
 									<td class="px-5 py-4 text-gray-700 dark:text-gray-300">{{ p.numeroAssurance }}</td>
-									<td class="px-5 py-4 text-gray-700 dark:text-gray-300">{{ p.sexe }}</td>
+									<td class="px-5 py-4 text-gray-700 dark:text-gray-300">{{ p.userInfo?.sexe || p.sexe }}</td>
 									<td class="px-5 py-4">
 										<div class="flex items-center text-gray-700 dark:text-gray-300">
 											<div class="mr-2 h-2.5 w-2.5 rounded-full" [ngClass]="p.statut ? 'bg-success-500' : 'bg-error-500'"></div>

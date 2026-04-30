@@ -257,11 +257,23 @@ public class DoctorService {
 									u.setNom((String) uMap.get("nom"));
 									u.setPrenom((String) uMap.get("prenom"));
 									u.setSexe((String) uMap.get("sexe"));
+									u.setEmail((String) uMap.get("email"));
+									u.setTelephone((String) uMap.get("telephone"));
+									u.setAdresse((String) uMap.get("adresse"));
+									u.setCin((String) uMap.get("cin"));
+									u.setStatut(uMap.get("statut") instanceof Boolean ? (Boolean) uMap.get("statut") : (uMap.get("statut") != null && uMap.get("statut").toString().equalsIgnoreCase("true")));
+									u.setDateNaissance((String) uMap.get("dateNaissance"));
 								} else {
 									// Fallback to flat structure
 									u.setNom((String) mapData.get("nom"));
 									u.setPrenom((String) mapData.get("prenom"));
 									u.setSexe((String) mapData.get("sexe"));
+									u.setEmail((String) mapData.get("email"));
+									u.setTelephone((String) mapData.get("telephone"));
+									u.setAdresse((String) mapData.get("adresse"));
+									u.setCin((String) mapData.get("cin"));
+									u.setStatut(mapData.get("statut") instanceof Boolean ? (Boolean) mapData.get("statut") : (mapData.get("statut") != null && mapData.get("statut").toString().equalsIgnoreCase("true")));
+									u.setDateNaissance((String) mapData.get("dateNaissance"));
 								}
 								p.setUserInfo(u);
 								return p;

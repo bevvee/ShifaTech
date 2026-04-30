@@ -129,8 +129,8 @@ export class PatientsComponent implements OnInit {
   }
 
   getInitials(row: PatientDto): string {
-    const nom = row.nom?.trim() ?? '';
-    const prenom = row.prenom?.trim() ?? '';
+    const nom = (row.userInfo?.nom || row.nom || '').trim();
+    const prenom = (row.userInfo?.prenom || row.prenom || '').trim();
     const first = nom.length > 0 ? nom[0] : '';
     const second = prenom.length > 0 ? prenom[0] : '';
     const initials = `${first}${second}`.toUpperCase();
@@ -144,10 +144,10 @@ export class PatientsComponent implements OnInit {
 
     return this.patients.filter((p) => {
       const haystack = [
-        p.nom,
-        p.prenom,
+        p.userInfo?.nom || p.nom,
+        p.userInfo?.prenom || p.prenom,
         p.cin,
-        p.email,
+        p.userInfo?.email || p.email,
         p.telephone,
         p.adresse,
       ]
