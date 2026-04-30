@@ -38,6 +38,7 @@ export class SpecialisationsComponent {
 
   specialisations: Speciality[] = [];
   searchTerm = '';
+  loading = true;
 
   services: ServiceRow[] = [];
   private readonly specialityService = inject(SpecialityService);
@@ -55,9 +56,11 @@ export class SpecialisationsComponent {
   }
 
   loadSpecialities() {
+    this.loading = true;
     this.specialityService.getSpecialities(this.owner).subscribe({
       next: (data) => this.specialisations = data,
-      error: (err: any) => console.error('Error loading specialities', err)
+      error: (err: any) => console.error('Error loading specialities', err),
+      complete: () => this.loading = false,
     });
   }
 

@@ -6,7 +6,7 @@
 			<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
 				Les champs marqués <span class="font-semibold text-error-500">*</span> sont requis.
 			</p>
-			@if (isReadOnly) {
+			@if (isReadOnly && (userRole$ | async) === Role.DOCTEUR) {
 				<app-button size="sm" variant="outline" (btnClick)="generateOrdonnance()">
 					<svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
 					Générer Ordonnance
@@ -16,7 +16,7 @@
 		<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
 			<div>
 				<app-label>Dossier Médical <span class="font-semibold text-error-500">*</span></app-label>
-				<app-select [options]="dossierOptions" [(value)]="form.idDossier" [hasSearch]="true" [disabled]="isReadOnly || mode === 'edit'" />
+				<app-select [options]="dossierOptions" [(value)]="form.idDossier" [hasSearch]="dossierOptions.length > 1" [disabled]="isReadOnly || mode === 'edit' || (mode === 'create' && dossierOptions.length === 1)" />
 			</div>
 
 			<div>

@@ -12,6 +12,39 @@
     </span>
 
     <div card-actions class="relative inline-flex items-center gap-2">
+
+      <!-- Search -->
+      <div class="relative hidden sm:block">
+        <input
+          type="text"
+          placeholder="Search..."
+          class="h-10 w-56 rounded-lg border border-gray-200 bg-white pl-10 pr-10 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none dark:border-white/10 dark:bg-white/3 dark:text-gray-200"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchTermChanged($event)"
+          (keyup.enter)="applySearch()"
+        />
+
+        <div class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="2" />
+            <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </div>
+
+        <button
+          *ngIf="searchTerm"
+          type="button"
+          (click)="clearSearch()"
+          class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/6 dark:hover:text-gray-200"
+          aria-label="Clear search"
+          title="Clear"
+        >
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
       
       <!-- Filter dropdown trigger -->
       <button
@@ -75,11 +108,11 @@
               class="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/3 dark:text-gray-200"
               [(ngModel)]="selectedStatut"
             >
-              <option value="">All status</option>
-              <option value="CONFIRME">Confirmé</option>
-              <option value="EN_ATTENTE">En attente</option>
-              <option value="ANNULE">Annulé</option>
-              <option value="TERMINE">Terminé</option>
+                <option [ngValue]="''">All status</option>
+                <option [ngValue]="RdvStatut.CONFIRME">Confirmé</option>
+                <option [ngValue]="RdvStatut.EN_ATTENTE">En attente</option>
+                <option [ngValue]="RdvStatut.ANNULE">Annulé</option>
+                <option [ngValue]="RdvStatut.TERMINE">Terminé</option>
             </select>
           </div>
 

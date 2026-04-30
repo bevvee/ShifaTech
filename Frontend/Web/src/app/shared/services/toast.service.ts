@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { AlertService } from '../../core/services/alert.service';
 
 export interface Toast {
     id: number;
@@ -16,15 +17,11 @@ export class ToastService {
     private toastsSubject = new BehaviorSubject<Toast[]>([]);
     toasts$ = this.toastsSubject.asObservable();
 
-    show(type: 'success' | 'error' | 'warning' | 'info', title: string, message: string, duration = 5000) {
-        const id = Date.now();
-        const toast: Toast = { id, type, title, message };
-        this.toasts.push(toast);
-        this.toastsSubject.next([...this.toasts]);
+    constructor(private readonly alerts: AlertService) {}
 
-        if (duration > 0) {
-            setTimeout(() => this.remove(id), duration);
-        }
+    show(type: 'success' | 'error' | 'warning' | 'info', title: string, message: string, duration = 5000) {
+        void duration;
+        void this.alerts.toast(type, title, message);
     }
 
     success(title: string, message: string) {

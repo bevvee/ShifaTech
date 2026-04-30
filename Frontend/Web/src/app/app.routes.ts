@@ -171,7 +171,7 @@ export const routes: Routes = [
         component: PatientsComponent,
         title: "Liste des Patients | ShifaTech",
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.INFIRMIER, Role.DOCTEUR, Role.SECRETAIRE] },
+        data: { roles: [Role.INFIRMIER, Role.DOCTEUR, Role.SECRETAIRE] },
       },
       {
         path: "patients/new",
@@ -235,14 +235,14 @@ export const routes: Routes = [
         component: VisitesComponent,
         title: 'Visites | ShifaTech',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER, Role.SECRETAIRE] }
       },
       {
         path: 'visites/new',
         component: VisitesFormPageComponent,
         title: 'Nouvelle Visite | ShifaTech',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.INFIRMIER] }
+        data: { roles: [Role.ADMIN, Role.INFIRMIER, Role.SECRETAIRE] }
       },
       {
         path: 'visites/:id',
@@ -264,7 +264,7 @@ export const routes: Routes = [
         component: OrdonnancesComponent,
         title: 'Ordonnances | ShifaTech',
         canActivate: [roleGuard],
-        data: { roles: [Role.DOCTEUR, Role.INFIRMIER] }
+        data: { roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
       },
       {
         path: 'ordonnances/new',
@@ -278,7 +278,7 @@ export const routes: Routes = [
         component: OrdonnancesFormPageComponent,
         title: 'Détails Ordonnance | ShifaTech',
         canActivate: [roleGuard],
-        data: { mode: 'view', roles: [Role.DOCTEUR, Role.INFIRMIER] }
+        data: { mode: 'view', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
       },
       {
         path: 'ordonnances/:id/edit',

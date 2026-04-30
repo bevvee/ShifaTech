@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\DTO\PatientSummary;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -10,63 +11,63 @@ class PatientServiceClient
 {
     public function __construct(
         private HttpClientInterface $httpClient,
-        private RequestStack $requestStack
+        private RequestStack $requestStack,
+        private string $patientServiceUrl = 'http://patient-service:8080'
     ) {}
 
     public function resolvePatientUserId(int $patientId): int
     {
-        $request = $this->requestStack->getCurrentRequest();
-        $jwt = $request?->headers->get('Authorization');
+        $patient = $this->getPatientSummary($patientId);
 
-        $response = $this->httpClient->request(
-            'GET',
-            sprintf('http://patient-service:8080/patients/%d', $patientId),
-            [
-                'headers' => [
-                    'Authorization' => $jwt
-                ]
-            ]
-        );
-
-        if ($response->getStatusCode() === 404) {
+        if (!$patient) {
             throw new NotFoundHttpException('Patient introuvable.');
         }
 
-        $status = $response->getStatusCode();
-        $content = $response->getContent(false); // get body even if error
-
-        if ($status !== 200) {
-            throw new \RuntimeException(
-                'patient-service error '.$status.' : '.$content
-            );
+        if (!$patient->idUser) {
+            throw new \RuntimeException('patient-service response missing idUser.');
         }
 
-        $data = $response->toArray(false);
-
-        return (int) $data['idUser'];
+        return $patient->idUser;
     }
 
-    public function getPatient(int $patientId): array
+    public function getPatientSummary(int $patientId): ?PatientSummary
     {
-        $request = $this->requestStack->getCurrentRequest();
-        $jwt = $request?->headers->get('Authorization');
-
         $response = $this->httpClient->request(
             'GET',
-            sprintf('http://patient-service:8080/%d', $patientId),
+            sprintf('%s/patients/details/%d', $this->patientServiceUrl, $patientId),
             [
-                'headers' => [
-                    'Authorization' => $jwt
-                ]
+                'headers' => $this->buildHeaders(),
+                'timeout' => 5,
             ]
         );
 
-        if ($response->getStatusCode() !== 200) {
-            return [];
+        $status = $response->getStatusCode();
+
+        if ($status === 404) {
+            return null;
         }
 
-        $data = $response->toArray(false);
+        if ($status !== 200) {
+            throw new \RuntimeException(
+                'patient-service error '.$status.' : '.$response->getContent(false)
+            );
+        }
 
-        return $data['data'] ?? $data;
+        return PatientSummary::fromApiPayload($response->toArray(false));
+    }
+
+    public function getPatient(int $patientId): ?PatientSummary
+    {
+        return $this->getPatientSummary($patientId);
+    }
+
+    private function buildHeaders(): array
+    {
+        $jwt = $this->requestStack
+            ->getCurrentRequest()
+            ?->headers
+            ->get('Authorization');
+
+        return $jwt ? ['Authorization' => $jwt] : [];
     }
 }

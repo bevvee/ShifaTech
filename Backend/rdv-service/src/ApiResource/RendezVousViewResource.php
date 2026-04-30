@@ -4,18 +4,20 @@ namespace App\ApiResource;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
-use App\DTO\RendezVousView;
 use App\State\RendezVousViewProvider;
 
 #[ApiResource(
-    shortName: 'RendezVousView',
     operations: [
         new GetCollection(
-            uriTemplate: '/rdv-view',
+            uriTemplate: '/rendez-vous-view',
+            provider: RendezVousViewProvider::class
+        ),
+        new GetCollection(
+            uriTemplate: '/rendez-vous-view/current',
             provider: RendezVousViewProvider::class
         )
     ]
 )]
-class RendezVousViewResource extends RendezVousView
+class RendezVousViewResource
 {
 }

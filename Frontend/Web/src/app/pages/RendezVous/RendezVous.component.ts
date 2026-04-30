@@ -1,13 +1,13 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterModule } from "@angular/router";
 import { ActivatedRoute } from "@angular/router";
 import { RdvService } from "../../core/services/rdv.service";
 import { RdvCreateDto } from "../../core/models/rdv.model";
 import { Router } from "@angular/router";
-import { forkJoin, of } from "rxjs";
+import { forkJoin, of, Subject } from "rxjs";
 import { catchError, map } from "rxjs/operators";
-import { switchMap, take } from "rxjs/operators";
+import { debounceTime, distinctUntilChanged, switchMap, take, takeUntil } from "rxjs/operators";
 import { FormsModule } from "@angular/forms";
 import { PageBreadcrumbComponent } from "../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { ComponentCardComponent } from "../../shared/components/common/component-card/component-card.component";
@@ -23,6 +23,7 @@ import { Store } from "@ngrx/store";
 import { selectAuthUser, selectUserProfile, selectUserRole } from "../../core/store/auth/auth.selectors";
 import { Role } from "../../core/models/role.enum";
 import { AlertService } from "../../core/services/alert.service";
+import { RdvStatut } from "../../core/models/rdv-statut.enum";
 
 @Component({
   selector: "app-rendezvous",
@@ -46,16 +47,20 @@ export class RendezVousComponent implements OnInit {
   totalItems = 0;
 
   filterOpen = false;
+  searchTerm: string = '';
   selectedDate: string = ''; // YYYY-MM-DD
-  selectedStatut: '' | 'CONFIRME' | 'EN_ATTENTE' | 'ANNULE' | 'TERMINE' = '';
+  selectedStatut: '' | RdvStatut = '';
   selectedDoctorUserId: string = ''; // used by infirmier/secretaire
   selectedHeure: string = ''; // HH:mm (client-side filter)
 
   currentRole: Role | null = null;
   readonly Role = Role;
+  readonly RdvStatut = RdvStatut;
   doctorsForFilter: Doctor[] = [];
 
-  private heureFilteredAllRows: RendezVousRow[] = [];
+  private clientFilteredAllRows: RendezVousRow[] = [];
+  private readonly destroy$ = new Subject<void>();
+  private readonly search$ = new Subject<string>();
 
   formatDate(date: string): string {
     const d = new Date(date);
@@ -103,8 +108,32 @@ export class RendezVousComponent implements OnInit {
     }
 
     if (this.mode === "list") {
+      this.search$
+        .pipe(
+          map((v) => String(v ?? '').trim()),
+          distinctUntilChanged(),
+          debounceTime(250),
+          takeUntil(this.destroy$)
+        )
+        .subscribe((term) => {
+          // Keep it simple: reload (with pagination disabled when searching)
+          // so results can match across all RDVs.
+          if (!term) {
+            this.clientFilteredAllRows = [];
+            this.loadRdvs(1);
+            return;
+          }
+
+          this.loadRdvs(1);
+        });
+
       this.loadRdvs();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   toggleFilter() {
@@ -116,12 +145,26 @@ export class RendezVousComponent implements OnInit {
     this.filterOpen = false;
   }
 
+  applySearch() {
+    this.loadRdvs(1);
+  }
+
+  onSearchTermChanged(value: string) {
+    this.search$.next(value);
+  }
+
+  clearSearch() {
+    this.searchTerm = '';
+    this.clientFilteredAllRows = [];
+    this.loadRdvs(1);
+  }
+
   clearFilters() {
     this.selectedDate = '';
     this.selectedStatut = '';
     this.selectedDoctorUserId = '';
     this.selectedHeure = '';
-    this.heureFilteredAllRows = [];
+    this.clientFilteredAllRows = [];
     this.loadRdvs(1);
   }
 
@@ -150,10 +193,10 @@ export class RendezVousComponent implements OnInit {
         const userId = this.getAuthUserId(user, profile);
         const myDoctorId = isDoctor ? this.resolveDoctorId(userId, doctors) : null;
 
-        // Standardization on idDocteur (Doctor table PK).
-        // However, some data may still be indexed by id_user (Auth service ID).
-        const primaryDoctorIdForQuery = isDoctor ? myDoctorId : null;
-        const secondaryDoctorIdForQuery = isDoctor ? userId : null;
+        // rdv-service is secured and commonly stores id_docteur as the auth userId.
+        // Use userId as primary filter for doctors; keep doctor-table-id as fallback only.
+        const primaryDoctorIdForQuery = isDoctor ? userId : null;
+        const secondaryDoctorIdForQuery = isDoctor ? myDoctorId : null;
 
         const today = new Date().toISOString().slice(0, 10);
         const baseParams: Record<string, string | number> = {
@@ -185,9 +228,10 @@ export class RendezVousComponent implements OnInit {
 
         // Heure filtering is not listed in backend filters; we fetch a larger first page and cache
         // results locally for proper pagination.
-        const shouldFetchAllForHeure = Boolean(this.selectedHeure);
-        const fetchParams = shouldFetchAllForHeure
-          ? { ...baseParams, page: 1, itemsPerPage: 1000 }
+        const shouldFetchAllForClientFilters = Boolean(this.selectedHeure) || Boolean(this.searchTerm?.trim());
+        const fetchParams = shouldFetchAllForClientFilters
+          // API Platform commonly caps itemsPerPage; pagination=false makes search reliable.
+          ? { ...baseParams, pagination: false, page: 1, itemsPerPage: 1000 }
           : baseParams;
 
         const rdv$ = (() => {
@@ -196,12 +240,18 @@ export class RendezVousComponent implements OnInit {
             return this.rdvService.getAll({ ...fetchParams, id_docteur: selectedDoctorIdForQuery });
           }
 
-          // Doctor user: always constrained to their own doctor id
-          if (isDoctor && primaryDoctorIdForQuery != null) {
-            return this.rdvService.getAll({ ...fetchParams, id_docteur: primaryDoctorIdForQuery });
+          // Doctor user: ALWAYS constrained to their own id (never load all RDVs)
+          if (isDoctor) {
+            if (primaryDoctorIdForQuery != null) {
+              return this.rdvService.getAll({ ...fetchParams, id_docteur: primaryDoctorIdForQuery });
+            }
+            if (secondaryDoctorIdForQuery != null) {
+              return this.rdvService.getAll({ ...fetchParams, id_docteur: secondaryDoctorIdForQuery });
+            }
+            return of([] as any);
           }
 
-          // Admin/others: all RDVs
+          // Infirmier/others: all RDVs (with current filters)
           return this.rdvService.getAll(fetchParams);
         })();
 
@@ -313,15 +363,18 @@ export class RendezVousComponent implements OnInit {
           };
         });
 
-        // If heure filtering is applied client-side, cache all filtered rows and compute total from it.
-        if (this.selectedHeure) {
-          this.heureFilteredAllRows = rows;
-          const paged = this.slicePage(rows, this.page, this.itemsPerPage);
-          return { rows: paged, totalItems: rows.length };
+        const search = String(this.searchTerm ?? '').trim().toLowerCase();
+        const rowsAfterSearch = search ? rows.filter((r) => this.matchesSearch(r, search)) : rows;
+
+        // If client-side filtering is applied (heure/search), cache all filtered rows and compute total from it.
+        if (this.selectedHeure || search) {
+          this.clientFilteredAllRows = rowsAfterSearch;
+          const paged = this.slicePage(rowsAfterSearch, this.page, this.itemsPerPage);
+          return { rows: paged, totalItems: rowsAfterSearch.length };
         }
 
-        this.heureFilteredAllRows = [];
-        return { rows, totalItems };
+        this.clientFilteredAllRows = [];
+        return { rows: rowsAfterSearch, totalItems };
       })
     ).subscribe({
       next: ({ rows, totalItems }) => {
@@ -359,10 +412,10 @@ export class RendezVousComponent implements OnInit {
   }
 
   onPageChange(page: number) {
-    // When heure filter is active, paginate locally from cached list.
-    if (this.selectedHeure && this.heureFilteredAllRows.length) {
+    // When client-side filters are active, paginate locally from cached list.
+    if ((this.selectedHeure || this.searchTerm?.trim()) && this.clientFilteredAllRows.length) {
       this.page = page;
-      this.rendezVous = this.slicePage(this.heureFilteredAllRows, this.page, this.itemsPerPage);
+      this.rendezVous = this.slicePage(this.clientFilteredAllRows, this.page, this.itemsPerPage);
       return;
     }
 
@@ -372,10 +425,10 @@ export class RendezVousComponent implements OnInit {
   onItemsPerPageChange(itemsPerPage: number) {
     this.itemsPerPage = itemsPerPage;
 
-    if (this.selectedHeure && this.heureFilteredAllRows.length) {
+    if ((this.selectedHeure || this.searchTerm?.trim()) && this.clientFilteredAllRows.length) {
       this.page = 1;
-      this.rendezVous = this.slicePage(this.heureFilteredAllRows, this.page, this.itemsPerPage);
-      this.totalItems = this.heureFilteredAllRows.length;
+      this.rendezVous = this.slicePage(this.clientFilteredAllRows, this.page, this.itemsPerPage);
+      this.totalItems = this.clientFilteredAllRows.length;
       return;
     }
 
@@ -434,18 +487,23 @@ export class RendezVousComponent implements OnInit {
     return hhmm === target;
   }
 
-  mapStatus(status: string): "Confirmé" | "En attente" | "Annulé" | "Terminé" {
-    const s = (status || "").trim().toUpperCase();
+  private matchesSearch(row: RendezVousRow, termLower: string): boolean {
+    const hay = `${row.patient} ${row.medecin} ${row.date} ${row.heure} ${row.statut}`.toLowerCase();
+    return hay.includes(termLower);
+  }
 
-    if (s === "CONFIRME") {
+  mapStatus(status: RdvStatut | string): "Confirmé" | "En attente" | "Annulé" | "Terminé" {
+    const s = String(status ?? "").trim().toUpperCase();
+
+    if (s === RdvStatut.CONFIRME) {
       return "Confirmé";
     }
 
-    if (s === "ANNULE") {
+    if (s === RdvStatut.ANNULE) {
       return "Annulé";
     }
 
-    if (s === "TERMINE") {
+    if (s === RdvStatut.TERMINE) {
       return "Terminé";
     }
 

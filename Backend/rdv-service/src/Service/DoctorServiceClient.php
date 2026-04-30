@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\DTO\DoctorSummary;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -10,90 +11,62 @@ class DoctorServiceClient
 {
     public function __construct(
         private HttpClientInterface $httpClient,
-        private RequestStack $requestStack
+        private RequestStack $requestStack,
+        private string $doctorServiceUrl = 'http://doctor-service:8080'
     ) {}
 
-    public function verifyDoctorExists(int $doctorId): void
+    public function verifyDoctorExists(int $idDocteur): void
     {
-        $request = $this->requestStack->getCurrentRequest();
-        $jwt = $request?->headers->get('Authorization');
+        $doctor = $this->getDoctorSummary($idDocteur);
 
-        $response = $this->httpClient->request(
-            'GET',
-            sprintf('http://doctor-service:8080/%d', $doctorId),
-            [
-                'headers' => [
-                    'Authorization' => $jwt
-                ]
-            ]
-        );
-
-        if ($response->getStatusCode() === 404) {
+        if (!$doctor) {
             throw new NotFoundHttpException('Docteur introuvable.');
         }
+    }
 
-        if ($response->getStatusCode() !== 200) {
-            $content = $response->getContent(false);
+    public function getDoctorFullName(int $idDocteur): ?string
+    {
+        return $this->getDoctorSummary($idDocteur)?->getFullName();
+    }
+
+    public function getDoctorSummary(int $idDocteur): ?DoctorSummary
+    {
+        $response = $this->httpClient->request(
+            'GET',
+            sprintf('%s/user/%d', $this->doctorServiceUrl, $idDocteur),
+            [
+                'headers' => $this->getAuthHeaders(),
+                'timeout' => 5,
+            ]
+        );
+
+        $status = $response->getStatusCode();
+
+        if ($status === 404) {
+            return null;
+        }
+
+        if ($status !== 200) {
             throw new \RuntimeException(
-                'doctor-service error '.$response->getStatusCode().' : '.$content
+                'doctor-service error '.$status.' : '.$response->getContent(false)
             );
         }
+
+        return DoctorSummary::fromApiPayload($response->toArray(false));
     }
 
-
-    public function getDoctorFullName(int $doctorId): ?string
+    public function getDoctor(int $idDocteur): ?DoctorSummary
     {
-        $request = $this->requestStack->getCurrentRequest();
-        $jwt = $request?->headers->get('Authorization');
-
-        $response = $this->httpClient->request(
-            'GET',
-            sprintf('http://doctor-service:8080/%d', $doctorId),
-            [
-                'headers' => [
-                    'Authorization' => $jwt
-                ]
-            ]
-        );
-
-        if ($response->getStatusCode() !== 200) {
-            return null;
-        }
-        $content = $response->getContent(false);
-        dump($content);
-        die();
-        $data = $response->toArray(false);
-
-        $nom = $data['data']['nom'] ?? null;
-        $prenom = $data['data']['prenom'] ?? null;
-
-        if (!$nom || !$prenom) {
-            return null;
-        }
-
-        return $prenom.' '.$nom;
+        return $this->getDoctorSummary($idDocteur);
     }
-    public function getDoctor(int $doctorId): array
+
+    private function getAuthHeaders(): array
     {
-        $request = $this->requestStack->getCurrentRequest();
-        $jwt = $request?->headers->get('Authorization');
+        $jwt = $this->requestStack
+            ->getCurrentRequest()
+            ?->headers
+            ->get('Authorization');
 
-        $response = $this->httpClient->request(
-            'GET',
-            sprintf('http://doctor-service:8080/%d', $doctorId),
-            [
-                'headers' => [
-                    'Authorization' => $jwt
-                ]
-            ]
-        );
-
-        if ($response->getStatusCode() !== 200) {
-            return [];
-        }
-
-        $data = $response->toArray(false);
-
-        return $data['data'] ?? $data;
+        return $jwt ? ['Authorization' => $jwt] : [];
     }
 }
