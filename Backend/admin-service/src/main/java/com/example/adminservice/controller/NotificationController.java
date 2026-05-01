@@ -22,7 +22,7 @@ public class NotificationController {
     private final RdvScheduler rdvScheduler;
     private final ApiClient apiClient;
     private final EmailService emailService;
-    private final EventService eventService; // ← ajouté
+    private final EventService eventService; 
 
     @GetMapping("/user/{idUser}")
     public ResponseEntity<List<NotificationDTO>> getByUser(@PathVariable Integer idUser) {
@@ -46,7 +46,6 @@ public class NotificationController {
         return ResponseEntity.ok("Scheduler exécuté");
     }
 
-    /** Déclenche manuellement la détection de tous les changements de statut. */
     @PostMapping("/trigger-changements")
     public ResponseEntity<String> triggerChangements() {
         rdvScheduler.detecterChangementsStatuts();
@@ -86,10 +85,10 @@ public class NotificationController {
                     L'équipe ShifaTech
                     """;
             emailService.sendEmailSync(to, "Connexion SMTP vérifiée", body);
-            return ResponseEntity.ok("✅ E-mail envoyé avec succès à : " + to);
+            return ResponseEntity.ok("E-mail envoyé avec succès à : " + to);
         } catch (Exception e) {
             return ResponseEntity.status(500)
-                    .body("❌ Échec SMTP : " + e.getMessage());
+                    .body("Échec SMTP : " + e.getMessage());
         }
     }
 }

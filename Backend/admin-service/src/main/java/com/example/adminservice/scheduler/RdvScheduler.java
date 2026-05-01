@@ -27,17 +27,8 @@ public class RdvScheduler {
     private final EventService eventService;
     private final EmailService emailService;
 
-    /**
-     * Cache de l'état connu de chaque RDV : rdvId → statut.
-     * Permet de ne traiter que les changements de statut (delta),
-     * évitant N requêtes DB à chaque tick pour des RDV inchangés.
-     * Se réinitialise au redémarrage du service (le dedup DB sert de filet de sécurité).
-     */
     private final ConcurrentHashMap<Integer, String> rdvStatutCache = new ConcurrentHashMap<>();
 
-    // ─────────────────────────────────────────────
-    // SCHEDULER 1 — Rappels 24h (toutes les heures)
-    // ─────────────────────────────────────────────
 
     @Scheduled(cron = "0 0 * * * *")
     public void envoyerRappels24h() {
@@ -70,14 +61,6 @@ public class RdvScheduler {
         }
     }
 
-    // ─────────────────────────────────────────────
-    // SCHEDULER 2 — Détection des changements de statut (chaque minute)
-    // Remplace les deux anciens schedulers séparés :
-    //   - detecterAnnulations()
-    //   - detecterConfirmationsEtModifications()
-    // Un seul fetchAllAppointments() par minute au lieu de deux.
-    // ─────────────────────────────────────────────
-
     @Scheduled(cron = "0 * * * * *")
     public void detecterChangementsStatuts() {
         String token = resolveToken();
@@ -91,7 +74,6 @@ public class RdvScheduler {
             String currentStatut = rdv.getStatut();
             if (currentStatut == null) continue;
 
-            // Ne traiter que si le statut a changé depuis le dernier tick
             String previousStatut = rdvStatutCache.put(rdv.getId(), currentStatut);
             if (currentStatut.equalsIgnoreCase(previousStatut)) continue;
 
@@ -113,10 +95,6 @@ public class RdvScheduler {
             }
         }
     }
-
-    // ─────────────────────────────────────────────
-    // HELPERS
-    // ─────────────────────────────────────────────
 
     private String resolveToken() {
         try {

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .header {
+            background: linear-gradient(135deg, #0061ff 0%, #60efff 100%);
+            padding: 40px 20px;
+            text-align: center;
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+        .content {
+            padding: 40px;
+            line-height: 1.6;
+        }
+        .message-box {
+            background-color: #f8fafc;
+            border-left: 4px solid #0061ff;
+            padding: 20px;
+            margin: 25px 0;
+            font-size: 16px;
+            border-radius: 0 8px 8px 0;
+        }
+        .footer {
+            background-color: #f1f5f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #0061ff;
+            color: white !important;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+        .logo-text {
+            font-weight: bold;
+            font-size: 24px;
+            margin-bottom: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="logo-text">ShifaTech</span>
+            <h1 th:text="${title}">Notification</h1>
+        </div>
+        <div class="content">
+            <p>Bonjour,</p>
+            <p>Vous avez reçu une nouvelle mise à jour concernant votre suivi médical sur <strong>ShifaTech</strong>.</p>
+            
+            <div class="message-box" th:text="${message}">
+                Ceci est le contenu du message de notification.
+            </div>
+
+            <p>Pour consulter les détails et gérer vos rendez-vous, vous pouvez vous connecter à votre espace patient en cliquant sur le bouton ci-dessous :</p>
+            
+            <div style="text-align: center;">
+                <a href="http://localhost:4200" class="btn">Accéder à mon espace</a>
+            </div>
+            
+            <p style="margin-top: 30px;">Cordialement,<br>L'équipe médicale ShifaTech.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 ShifaTech - Plateforme de gestion de santé.<br>
+            Ceci est un message automatique, merci de ne pas y répondre.</p>
+        </div>
+    </div>
+</body>
+</html>

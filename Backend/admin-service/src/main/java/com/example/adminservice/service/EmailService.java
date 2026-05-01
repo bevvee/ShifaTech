@@ -37,7 +37,6 @@ public class EmailService {
         }
     }
 
-    /** Envoi synchrone pour le test SMTP — propage l'exception si échec. */
     public void sendEmailSync(String to, String subject, String text) {
         log.info("[EMAIL-TEST] Envoi synchrone vers [{}]", to);
         SimpleMailMessage message = new SimpleMailMessage();

@@ -27,20 +27,10 @@ import java.time.LocalDateTime;
 public class NotificationPayload {
 
     Integer idNotif;
-
-    /** Catégorie : RAPPEL | RDV | INFO | CONFIRMATION | MODIFICATION */
     TypeNotif typeNotif;
-
-    /** Titre court affiché en en-tête de la notification. */
     String titre;
-
-    /** ID de la ressource métier concernée (ex : idRdv). Null si non applicable. */
     Integer idRessource;
-
     String message;
-
-    /** Instant de création — même nom que dans NotificationDTO pour cohérence frontend. */
     LocalDateTime dateEnvoi;
-
     boolean estLu;
 }

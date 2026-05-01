@@ -43,20 +43,13 @@ public class ApiClient {
     @Value("${app.patient-service-url:http://patient-service:9000}")
     private String patientServiceUrl;
 
-    // Cache JWT — évite un appel HTTP à auth-service à chaque tick scheduler
     private volatile String cachedToken;
     private volatile Instant tokenExpiry = Instant.EPOCH;
 
-    // ─────────────────────────────────────────────
-    // AUTH
-    // ─────────────────────────────────────────────
-
     /**
-     * Retourne le token JWT en cache s'il est encore valide (TTL 50 min),
-     * sinon en récupère un nouveau auprès de l'auth-service.
      *
-     * @throws ServiceUnavailableException si l'auth-service est hors ligne
-     * @return null si les credentials sont invalides
+     * @throws ServiceUnavailableException 
+     * @return 
      */
     public synchronized String fetchJwtToken() {
         if (cachedToken != null && Instant.now().isBefore(tokenExpiry)) {
@@ -72,7 +65,6 @@ public class ApiClient {
             );
             if (res.getBody() == null) return null;
 
-            // Supporte les clés "accessToken" et "token"
             Object raw = res.getBody().getOrDefault("accessToken",
                          res.getBody().get("token"));
             if (raw == null) {
@@ -91,15 +83,11 @@ public class ApiClient {
         }
     }
 
-    /** Invalide le cache — à appeler si un appel retourne 401. */
     public synchronized void invalidateToken() {
         cachedToken = null;
         tokenExpiry = Instant.EPOCH;
     }
 
-    // ─────────────────────────────────────────────
-    // RDV
-    // ─────────────────────────────────────────────
 
     public List<AppointmentDTO> fetchAllAppointments(String token) {
         try {
@@ -118,9 +106,6 @@ public class ApiClient {
         }
     }
 
-    // ─────────────────────────────────────────────
-    // PATIENT
-    // ─────────────────────────────────────────────
 
     public Integer getUserIdForPatient(Integer idPatient, String token) {
         try {
@@ -144,11 +129,6 @@ public class ApiClient {
             return null;
         }
     }
-
-    // ─────────────────────────────────────────────
-    // DOCTOR
-    // ─────────────────────────────────────────────
-
     public Integer getUserIdForDoctor(Integer idDocteur, String token) {
         DoctorDTO doctor = fetchDoctorById(idDocteur, token);
         return doctor != null ? doctor.getIdUser() : null;
@@ -175,11 +155,6 @@ public class ApiClient {
             return null;
         }
     }
-
-    // ─────────────────────────────────────────────
-    // AUTH - EMAIL
-    // ─────────────────────────────────────────────
-
     public String getUserEmail(Integer userId, String token) {
         try {
             ResponseEntity<UserResponseDTO> res = restTemplate.exchange(
@@ -196,11 +171,6 @@ public class ApiClient {
             return null;
         }
     }
-
-    // ─────────────────────────────────────────────
-    // INFIRMIERS
-    // ─────────────────────────────────────────────
-
     public List<Integer> getAllInfirmiersUserIds(String token) {
         return fetchAllInfirmiers(token).stream()
                 .map(InfirmierDTO::getIdUtilisateur)
@@ -264,10 +234,6 @@ public class ApiClient {
             return Set.of();
         }
     }
-
-    // ─────────────────────────────────────────────
-    // HELPER
-    // ─────────────────────────────────────────────
 
     private HttpEntity<Void> bearerEntity(String token) {
         HttpHeaders headers = new HttpHeaders();

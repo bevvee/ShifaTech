@@ -20,10 +20,6 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationWebSocketService webSocketService;
 
-    // ─────────────────────────────────────────────
-    // LECTURE
-    // ─────────────────────────────────────────────
-
     public List<NotificationDTO> getNotificationsByUser(Integer idUser) {
         return notificationRepository
                 .findByIdUserOrderByDateEnvoiDesc(idUser)
@@ -32,19 +28,9 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
-    // ─────────────────────────────────────────────
-    // CRÉATION
-    // ─────────────────────────────────────────────
-
     public void createNotification(Integer idUser, TypeNotif type, String message) {
         createNotification(idUser, type, message, null);
     }
-
-    /**
-     * Crée et persiste une notification, puis la pousse via WebSocket.
-     * @Transactional garantit que le check d'existence et le save sont atomiques,
-     * éliminant la race condition entre deux threads concurrents.
-     */
     @Transactional
     public void createNotification(Integer idUser, TypeNotif type, String message, Integer idRessource) {
         if (notificationRepository.existsByIdUserAndMessage(idUser, message)) {
@@ -61,21 +47,9 @@ public class NotificationService {
         Notification saved = notificationRepository.save(notif);
         webSocketService.sendToUser(idUser, buildPayload(saved, idRessource));
     }
-
-    // ─────────────────────────────────────────────
-    // ÉTAT / DEDUP
-    // ─────────────────────────────────────────────
-
     public boolean alreadyNotified(Integer idUser, String messageFragment) {
         return notificationRepository.existsByIdUserAndMessageContaining(idUser, messageFragment);
     }
-
-    /**
-     * Vérifie si une notification contenant ce marqueur existe déjà (tous utilisateurs).
-     * Le marqueur doit être de la forme "[RDV#X][STATUT]" pour être suffisamment unique.
-     * Utilisé comme filet de sécurité après redémarrage du service
-     * (le state cache du scheduler est la protection principale en fonctionnement normal).
-     */
     public boolean markerExists(String marker) {
         return notificationRepository.existsByMessageContaining(marker);
     }
@@ -86,10 +60,6 @@ public class NotificationService {
         notifications.forEach(notif -> notif.setEstLu(true));
         notificationRepository.saveAll(notifications);
     }
-
-    // ─────────────────────────────────────────────
-    // MAPPING
-    // ─────────────────────────────────────────────
 
     private NotificationDTO mapToDTO(Notification notif) {
         return NotificationDTO.builder()

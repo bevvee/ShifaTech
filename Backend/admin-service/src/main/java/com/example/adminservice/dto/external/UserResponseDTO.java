@@ -3,11 +3,6 @@ package com.example.adminservice.dto.external;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
-/**
- * Supporte deux formats de réponse de l'auth-service :
- *   { "email": "x@y.com" }
- *   { "user": { "email": "x@y.com" } }
- */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserResponseDTO {

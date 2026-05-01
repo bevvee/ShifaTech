@@ -26,7 +26,6 @@ public class EventService {
         String displayMsg = "Votre rendez-vous du " + dateRdv + " a été annulé.";
         String notifMsg   = "[RDV#" + idRdv + "][ANNULE] " + displayMsg;
 
-        // Patient
         if (idPatient != null) {
             Integer idUserPatient = apiClient.getUserIdForPatient(idPatient, token);
             if (idUserPatient != null) {
@@ -38,7 +37,6 @@ public class EventService {
             }
         }
 
-        // Infirmiers
         List<Integer> infirmierIds = resolveInfirmierIds(idDocteur, token);
         String displayMsgInf = "Le rendez-vous du " + dateRdv + " a été annulé.";
         String notifMsgInf   = "[RDV#" + idRdv + "][ANNULE] " + displayMsgInf;
@@ -60,7 +58,6 @@ public class EventService {
         String displayMsg = "Votre rendez-vous du " + dateRdv + " est confirmé.";
         String notifMsg   = "[RDV#" + idRdv + "][CONFIRME] " + displayMsg;
 
-        // Patient
         if (idPatient != null) {
             Integer idUserPatient = apiClient.getUserIdForPatient(idPatient, token);
             if (idUserPatient != null) {
@@ -72,7 +69,6 @@ public class EventService {
             }
         }
 
-        // Infirmiers
         List<Integer> infirmierIds = resolveInfirmierIds(idDocteur, token);
         String displayMsgInf = "Le rendez-vous du " + dateRdv + " est confirmé.";
         String notifMsgInf   = "[RDV#" + idRdv + "][CONFIRME] " + displayMsgInf;
@@ -96,7 +92,6 @@ public class EventService {
         String displayMsg = "Votre rendez-vous a été modifié. Nouvelle date : " + dateRdv + ".";
         String notifMsg   = "[RDV#" + idRdv + "][MODIFIE] " + displayMsg;
 
-        // Patient
         if (idPatient != null) {
             Integer idUserPatient = apiClient.getUserIdForPatient(idPatient, token);
             if (idUserPatient != null) {
@@ -108,7 +103,6 @@ public class EventService {
             }
         }
 
-        // Docteur
         if (idDocteur != null) {
             Integer idUserDocteur = apiClient.getUserIdForDoctor(idDocteur, token);
             if (idUserDocteur != null) {
@@ -120,7 +114,6 @@ public class EventService {
             }
         }
 
-        // Infirmiers
         List<Integer> infirmierIds = resolveInfirmierIds(idDocteur, token);
         String displayMsgInf = "Le planning a été mis à jour. Nouvelle date : " + dateRdv + ".";
         String notifMsgInf   = "[RDV#" + idRdv + "][MODIFIE] " + displayMsgInf;

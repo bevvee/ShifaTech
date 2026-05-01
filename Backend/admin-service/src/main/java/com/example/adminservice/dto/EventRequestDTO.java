@@ -7,5 +7,4 @@ public class EventRequestDTO {
     private Integer idPatient;
     private Integer idDocteur;
     private String dateRdv;
-    private String statut; // "PLANIFIE" ou "ANNULE"
-}
+    private String statut;
