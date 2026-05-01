@@ -39,9 +39,15 @@ public class OrdonnanceController {
     @GetMapping("/ordonnances")
     public ResponseEntity<ApiResponse<List<OrdonnanceDTO>>> getAllOrdonnances(
             @RequestParam(name = "id_doctor", required = false) List<Long> ids_doctor,
+            @RequestParam(name = "id_docteur", required = false) List<Long> ids_docteur,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        log.info("Requête de récupération des ordonnances (Filter ids_doctor: {})", ids_doctor);
-        List<OrdonnanceDTO> ordonnances = ordonnanceService.getAllOrdonnances(ids_doctor, authHeader);
+        log.info("Requête de récupération des ordonnances (Filter ids_doctor: {}, ids_docteur: {})", ids_doctor, ids_docteur);
+        
+        java.util.List<Long> mergedIds = new java.util.ArrayList<>();
+        if (ids_doctor != null) mergedIds.addAll(ids_doctor);
+        if (ids_docteur != null) mergedIds.addAll(ids_docteur);
+        
+        List<OrdonnanceDTO> ordonnances = ordonnanceService.getAllOrdonnances(mergedIds.isEmpty() ? null : mergedIds, authHeader);
         return ResponseEntity.ok(ApiResponse.success(ordonnances, "Ordonnances récupérées"));
     }
 

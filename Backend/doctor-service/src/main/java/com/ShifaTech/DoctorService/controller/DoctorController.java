@@ -99,6 +99,21 @@ public class DoctorController {
         return ResponseEntity.ok(doctorService.getAppointmentsByDoctor(id));
     }
 
+    @GetMapping("/my-appointments")
+    @PreAuthorize("hasRole('DOCTEUR')")
+    public ResponseEntity<ApiResponse<List<Object>>> getMyAppointments() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = auth.getName();
+        DoctorDTO doctor = doctorService.getDoctorProfileByUserId(Long.valueOf(currentUserId));
+        
+        List<Object> appointments = doctorService.getAppointmentsByDoctor(doctor.getIdDocteur());
+        return ResponseEntity.ok(ApiResponse.<List<Object>>builder()
+                .success(true)
+                .message("Appointments fetched successfully")
+                .data(appointments)
+                .build());
+    }
+
     @GetMapping("/user/{idUser:[0-9]+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT','INFIRMIER')")
     public ResponseEntity<DoctorDTO> getDoctorByUserId(@PathVariable Long idUser) {
@@ -143,6 +158,22 @@ public class DoctorController {
                 .success(true)
                 .message("Medical records fetched successfully")
                 .data(dossiers)
+                .build());
+    }
+
+    @GetMapping("/my-ordonnances")
+    @PreAuthorize("hasRole('DOCTEUR')")
+    public ResponseEntity<ApiResponse<List<Object>>> getMyOrdonnances(
+            @RequestHeader("Authorization") String authHeader) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = auth.getName();
+        DoctorDTO doctor = doctorService.getDoctorProfileByUserId(Long.valueOf(currentUserId));
+        
+        List<Object> ords = doctorService.getMyOrdonnances(doctor.getIdDocteur(), authHeader);
+        return ResponseEntity.ok(ApiResponse.<List<Object>>builder()
+                .success(true)
+                .message("Ordonnances fetched successfully")
+                .data(ords)
                 .build());
     }
 

@@ -39,13 +39,27 @@ export class DoctorService extends ApiService {
     return this.get<any[]>(`${this.base}/my-patients`);
   }
 
+  getAppointmentsByDoctor(id: number) {
+    return this.get<any[]>(`${this.base}/${id}/rdv`);
+  }
+
+  getMyAppointments() {
+    return this.get<any>(`${this.base}/my-appointments`);
+  }
+
+  getMyVisits() {
+    return this.get<any>(`${this.base}/my-visits`);
+  }
+
+  getMyMedicalRecords() {
+    return this.get<any>(`${this.base}/my-medical-records`);
+  }
+
+  getMyOrdonnances() {
+    return this.get<any>(`${this.base}/my-ordonnances`);
+  }
+
   getDoctorByUserId(idUser: number) {
     return this.get<any>(`${this.base}/user/${idUser}`);
   }
-
-
-  // getSpecialities() {
-  //   return this.get<Speciality[]>(`/speciality/all`);
-  // }
-
 }

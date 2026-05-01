@@ -55,66 +55,86 @@ export class OrdonnancesComponent implements OnInit {
 
   loadOrdonnances() {
     this.loading = true;
-    this.authStore.select(selectUserRole).pipe(
-      take(1),
-      switchMap((role) => {
-        if (role === Role.DOCTEUR) {
-          return forkJoin({
-            user: this.authStore.select(selectAuthUser).pipe(take(1)),
-            profile: this.authStore.select(selectUserProfile).pipe(take(1)),
-            doctors: this.doctorService.getDoctors().pipe(catchError(() => of([] as Doctor[])))
-          }).pipe(
-            switchMap(({ user, profile, doctors }) => {
-              const userId = (profile as any)?.idUser ?? (user as any)?.idUser ?? (user as any)?.id ?? (profile as any)?.id;
-              const match = doctors.find(d => Number(d.idUser) === Number(userId));
-              const myDoctorId = match?.idDocteur;
-              
-              if (myDoctorId) {
-                return this.store.getAll(Number(myDoctorId)).pipe(
-                  switchMap(data => {
-                    if (data && data.length > 0) return of(data);
-                    // Fallback to userId if PK returns nothing
-                    if (userId && Number(userId) !== Number(myDoctorId)) {
-                      return this.store.getAll(Number(userId));
-                    }
-                    return of(data);
-                  })
-                );
-              } else if (userId) {
-                return this.store.getAll(Number(userId));
-              }
-              return this.store.getAll();
-            })
-          );
-        } else {
-          return this.store.getAll();
-        }
-      })
-    ).pipe(
-      switchMap((data: OrdonnanceDto[]) => {
-        return this.patientApi.getAll().pipe(
-          map((patients: PatientDto[]) => {
-            const patientSexeById = new Map<number, string>();
-            for (const p of patients) {
-              if (p.id != null) patientSexeById.set(Number(p.id), p.sexe);
-              if (p.idUser != null) patientSexeById.set(Number(p.idUser), p.sexe);
-            }
+    
+    forkJoin({
+      role: this.authStore.select(selectUserRole).pipe(take(1), catchError(() => of(null))),
+      user: this.authStore.select(selectAuthUser).pipe(take(1), catchError(() => of(null))),
+      profile: this.authStore.select(selectUserProfile).pipe(take(1), catchError(() => of(null))),
+      doctors: this.doctorService.getDoctors().pipe(catchError(() => of([] as Doctor[]))),
+      patients: this.patientApi.getAll().pipe(catchError(() => of([] as PatientDto[])))
+    }).pipe(
+      switchMap(({ role, user, profile, doctors, patients }) => {
+        const isDoctor = role === Role.DOCTEUR;
+        const userId = this.getAuthUserId(user, profile);
+        const myDoctorId = isDoctor ? this.resolveDoctorId(userId, doctors) : null;
 
-            return data.map(o => ({
-              ...o,
-              patientImage: patientSexeById.get(Number(o.idPatient)) === 'F' 
-                ? 'assets/img/patient-female.png' 
-                : 'assets/img/patient-male.png'
-            } as any));
+        // Prioritize myDoctorId (real doctor PK) over userId
+        const primaryId = isDoctor ? (myDoctorId ?? userId) : null;
+
+        const fetch$ = isDoctor 
+          ? this.doctorService.getMyOrdonnances().pipe(
+              map(res => res.data || res),
+              switchMap(data => {
+                // FALLBACK: If proxy returns nothing but we have a primaryId, try direct call
+                if ((!data || (Array.isArray(data) && data.length === 0)) && primaryId) {
+                  return this.store.getAll(Number(primaryId)).pipe(catchError(() => of([])));
+                }
+                return of(data);
+              })
+            )
+          : this.store.getAll(primaryId ? Number(primaryId) : undefined);
+
+        return fetch$.pipe(
+          switchMap(data => {
+            return of({ data: Array.isArray(data) ? data : [], patients });
           }),
-          catchError(() => of(data as any[]))
+          catchError(() => of({ data: [] as OrdonnanceDto[], patients }))
         );
+      }),
+      map(({ data, patients }) => {
+        const patientLookup = new Map<number, PatientDto>();
+        for (const p of patients) {
+          const pid = p.id ?? (p as any).idPatient;
+          if (pid != null) patientLookup.set(Number(pid), p);
+        }
+
+        return data.map((o: OrdonnanceDto) => {
+          const pid = Number(o.idPatient);
+          const p = patientLookup.get(pid);
+          
+          return {
+            ...o,
+            id: o.id ?? (o as any).idOrdonnance,
+            nomPatient: o.nomPatient || (p ? `${p.prenom ?? ''} ${p.nom ?? ''}`.trim() : `Patient #${pid}`),
+            numDossier: o.numDossier || p?.numDossier || '',
+            patientImage: (o.sexePatient || p?.sexe) === 'F' 
+              ? 'assets/img/patient-female.png' 
+              : 'assets/img/patient-male.png'
+          } as any;
+        });
       })
     ).subscribe({
-      next: (data) => this.ordonnances = data,
-      error: (err) => console.error('Erreur chargement ordonnances', err),
-      complete: () => this.loading = false,
+      next: (data) => {
+        this.ordonnances = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Erreur chargement ordonnances', err);
+        this.loading = false;
+      }
     });
+  }
+
+  private getAuthUserId(user: any, profile: any): number | null {
+    const raw = profile?.idUser ?? profile?.id_user ?? profile?.userId ?? profile?.id ??
+                user?.idUser ?? user?.id_user ?? user?.userId ?? user?.id ?? null;
+    return raw != null ? Number(raw) : null;
+  }
+
+  private resolveDoctorId(userId: number | null, doctors: Doctor[]): number | null {
+    if (userId == null) return null;
+    const match = doctors.find(d => Number(d.idUser) === Number(userId));
+    return match?.idDocteur != null ? Number(match.idDocteur) : null;
   }
 
   createOrdonnance() {
