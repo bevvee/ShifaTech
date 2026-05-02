@@ -20,10 +20,9 @@ class InfirmierService
         $dto = new InfirmierDetailDto();
         $dto->idInfirmier   = $infirmier->getId();
         $dto->idUtilisateur = $infirmier->getIdUtilisateur();
-        $dto->idService     = $infirmier->getIdService();
+        $dto->idService     = $infirmier->getIdSpecialite()?->getIdService();
         $dto->specialite    = $infirmier->getIdSpecialite()?->getLabel();
 
-        // Récupérer les infos user depuis auth-service
         $user = $this->authServiceClient->getUserById($infirmier->getIdUtilisateur(), $authHeader);
         if ($user) {
             $dto->nom           = $user['nom'] ?? null;

@@ -28,6 +28,14 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
+    public List<NotificationDTO> getUnreadByUser(Integer idUser) {
+        return notificationRepository
+                .findByIdUserAndEstLuFalseOrderByDateEnvoiDesc(idUser)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     public void createNotification(Integer idUser, TypeNotif type, String message) {
         createNotification(idUser, type, message, null);
     }
@@ -42,6 +50,7 @@ public class NotificationService {
                 .typeNotif(type)
                 .message(message)
                 .dateEnvoi(LocalDateTime.now())
+                .idRessource(idRessource)
                 .build();
 
         Notification saved = notificationRepository.save(notif);
@@ -70,6 +79,7 @@ public class NotificationService {
                 .dateEnvoi(notif.getDateEnvoi())
                 .idUser(notif.getIdUser())
                 .estLu(notif.isEstLu())
+                .idRessource(notif.getIdRessource())
                 .build();
     }
 

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { environment } from '../../../environments/environment';
-import { switchMap } from 'rxjs';
+import { switchMap, tap, catchError, throwError, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -40,7 +40,12 @@ export class InfirmierService extends ApiService {
       adresse: dto.adresse,
     };
 
+    let createdUserId: number | null = null;
+
     return this.post<any>(`${this.authBase}/register`, registerPayload).pipe(
+      tap((authResponse: any) => {
+        createdUserId = authResponse?.user?.idUser ?? null;
+      }),
       switchMap((authResponse: any) => {
         const userId = authResponse?.user?.idUser;
         return this.post<any>(`${this.base}`, {
@@ -49,6 +54,17 @@ export class InfirmierService extends ApiService {
           id_service: dto.id_service ?? 1,
           statut: dto.statut ?? true,
         });
+      }),
+      catchError((err) => {
+        if (createdUserId !== null) {
+          const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+          const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+          return this.http.delete(`${this.authBase}/delete/${createdUserId}`, { headers }).pipe(
+            catchError(() => of(null)),
+            switchMap(() => throwError(() => err))
+          );
+        }
+        return throwError(() => err);
       })
     );
   }

@@ -105,7 +105,8 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
 
   formatDate(dateStr: string): string {
     if (!dateStr) return '';
-    const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+    const utcStr = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
+    const diff = Math.floor((Date.now() - new Date(utcStr).getTime()) / 60000);
     if (diff < 1) return "à l'instant";
     if (diff < 60) return `il y a ${diff} min`;
     if (diff < 1440) return `il y a ${Math.floor(diff / 60)}h`;

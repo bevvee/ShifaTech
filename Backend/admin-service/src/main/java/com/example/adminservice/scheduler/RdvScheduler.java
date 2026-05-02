@@ -5,7 +5,6 @@ import com.example.adminservice.client.ApiClient;
 import com.example.adminservice.dto.external.AppointmentDTO;
 import com.example.adminservice.exception.ServiceUnavailableException;
 import com.example.adminservice.service.EmailService;
-import com.example.adminservice.service.EventService;
 import com.example.adminservice.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -24,11 +22,7 @@ public class RdvScheduler {
 
     private final ApiClient apiClient;
     private final NotificationService notificationService;
-    private final EventService eventService;
     private final EmailService emailService;
-
-    private final ConcurrentHashMap<Integer, String> rdvStatutCache = new ConcurrentHashMap<>();
-
 
     @Scheduled(cron = "0 0 * * * *")
     public void envoyerRappels24h() {
@@ -53,45 +47,10 @@ public class RdvScheduler {
 
             notificationService.createNotification(rdv.getIdPatient(), TypeNotif.RAPPEL, message);
 
-            Integer idUserPatient = apiClient.getUserIdForPatient(rdv.getIdPatient(), token);
+            Integer idUserPatient = apiClient.getPatientUserId(rdv.getIdPatient(), token);
             if (idUserPatient != null) {
                 String email = apiClient.getUserEmail(idUserPatient, token);
                 if (email != null) emailService.sendEmail(email, "Rappel de rendez-vous", message);
-            }
-        }
-    }
-
-    @Scheduled(cron = "0 * * * * *")
-    public void detecterChangementsStatuts() {
-        String token = resolveToken();
-        if (token == null) return;
-
-        List<AppointmentDTO> rdvList = fetchAppointments(token);
-
-        for (AppointmentDTO rdv : rdvList) {
-            if (rdv.getId() == null) continue;
-
-            String currentStatut = rdv.getStatut();
-            if (currentStatut == null) continue;
-
-            String previousStatut = rdvStatutCache.put(rdv.getId(), currentStatut);
-            if (currentStatut.equalsIgnoreCase(previousStatut)) continue;
-
-            String dateStr = rdv.getDateRdv() != null
-                    ? rdv.getDateRdv().toLocalDate().toString() : "N/A";
-
-            log.info("[SCHEDULER] RDV#{} : {} → {}", rdv.getId(), previousStatut, currentStatut);
-
-            switch (currentStatut.toUpperCase()) {
-                case "ANNULE"     -> eventService.handleAnnulation(
-                        rdv.getId(), rdv.getIdPatient(), rdv.getIdDocteur(), dateStr);
-                case "CONFIRME"   -> eventService.handleConfirmation(
-                        rdv.getId(), rdv.getIdPatient(), rdv.getIdDocteur(), dateStr);
-                case "MODIFIE"    -> eventService.handleModification(
-                        rdv.getId(), rdv.getIdPatient(), rdv.getIdDocteur(), dateStr);
-                case "EN_ATTENTE" -> eventService.handleNouveauRdv(
-                        rdv.getId(), rdv.getIdPatient(), rdv.getIdDocteur(), dateStr);
-                default           -> log.debug("[SCHEDULER] Statut ignoré : {}", currentStatut);
             }
         }
     }

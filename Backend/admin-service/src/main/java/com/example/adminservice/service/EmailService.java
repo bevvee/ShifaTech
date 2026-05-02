@@ -37,14 +37,4 @@ public class EmailService {
         }
     }
 
-    public void sendEmailSync(String to, String subject, String text) {
-        log.info("[EMAIL-TEST] Envoi synchrone vers [{}]", to);
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(to);
-        message.setSubject("[ShifaTech] " + subject);
-        message.setText(text);
-        mailSender.send(message);
-        log.info("[EMAIL-TEST] Succès → [{}]", to);
-    }
 }

@@ -1,16 +1,45 @@
 package com.example.adminservice.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.Arrays;
 import java.util.concurrent.Executor;
 
+/**
+ * Configuration des pools de threads asynchrones.
+ *
+ * Implémente AsyncConfigurer pour brancher un AsyncUncaughtExceptionHandler :
+ * sans lui, toute exception levée dans un @Async void est silencieusement
+ * avalée par Spring — aucun log, aucune trace, comportement fantôme.
+ */
 @Configuration
 @EnableAsync
-public class AsyncConfig {
+public class AsyncConfig implements AsyncConfigurer {
 
+    private static final Logger log = LoggerFactory.getLogger(AsyncConfig.class);
+
+    // ── Pool dédié aux notifications (EventService handlers) ────────────────
+    @Bean(name = "notificationTaskExecutor")
+    public Executor notificationTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(500);
+        executor.setThreadNamePrefix("notif-async-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(60);
+        executor.initialize();
+        return executor;
+    }
+
+    // ── Pool dédié à l'envoi d'e-mails (EmailService) ───────────────────────
     @Bean(name = "emailTaskExecutor")
     public Executor emailTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -22,5 +51,22 @@ public class AsyncConfig {
         executor.setAwaitTerminationSeconds(30);
         executor.initialize();
         return executor;
+    }
+
+    /**
+     * Intercepte toutes les exceptions non traitées dans les méthodes @Async void.
+     *
+     * Sans ce handler, Spring les avale silencieusement après les avoir loguées
+     * uniquement en DEBUG (invisible en production).
+     */
+    @Override
+    public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+        return (ex, method, params) ->
+            log.error("[ASYNC✗] Exception non interceptée dans {}.{}() | params={} | cause : {}",
+                      method.getDeclaringClass().getSimpleName(),
+                      method.getName(),
+                      Arrays.toString(params),
+                      ex.getMessage(),
+                      ex);
     }
 }

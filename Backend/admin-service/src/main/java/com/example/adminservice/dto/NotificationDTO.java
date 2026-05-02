@@ -15,4 +15,5 @@ public class NotificationDTO {
     private LocalDateTime dateEnvoi;
     private Integer idUser;
     private boolean estLu;
+    private Integer idRessource;
 }
