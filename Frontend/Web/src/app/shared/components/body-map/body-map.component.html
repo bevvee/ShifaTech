@@ -1,9 +1,9 @@
 <div class="body-map-container" *ngIf="!loading; else spinner">
 
   <!-- Onglets des sections -->
-  <div class="sections-tabs" *ngIf="sections.length > 1">
+  <div class="sections-tabs" *ngIf="visibleSections.length > 1">
     <div
-      *ngFor="let section of sections"
+      *ngFor="let section of visibleSections"
       class="section-tab"
       [class.active]="activeSection?.code === section.code"
       (click)="selectSection(section)"
@@ -24,7 +24,7 @@
       [attr.width]="activeSection.width"
       [attr.height]="activeSection.height"
       class="map-svg"
-      style="position: relative; display: block;"
+      style="position: relative; display: block; overflow: visible;"
     >
       <image
         *ngIf="activeSection.background_image"
@@ -76,7 +76,8 @@
           [attr.x]="tooltipX"
           [attr.y]="tooltipY"
           rx="4" ry="4"
-          width="120" height="28"
+          [attr.width]="tooltipWidth"
+          height="28"
           fill="white"
           stroke="#d1d5db"
           stroke-width="1"
@@ -85,7 +86,7 @@
         <text
           [attr.x]="tooltipX + 8"
           [attr.y]="tooltipY + 19"
-          font-size="12"
+          font-size="11"
           fill="#111827"
         >{{ hoveredLabel }}</text>
       </g>

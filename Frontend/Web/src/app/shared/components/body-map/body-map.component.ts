@@ -28,8 +28,11 @@ export class BodyMapComponent implements OnInit, OnChanges {
   @Input() readOnly = false;
   /** Active des logs console (voir aussi `environment.debugBodyMap`). */
   @Input() debug = environment.debugBodyMap;
+  /** When true, only show sections containing selected parts (read-only view mode). */
+  @Input() showOnlySelected = false;
 
   @Output() selectionChange = new EventEmitter<string[]>();
+  @Output() selectionLabelsChange = new EventEmitter<string[]>();
   @Output() firstPartIdChange = new EventEmitter<number | null>();
 
   sections: BodySection[] = [];
@@ -39,6 +42,7 @@ export class BodyMapComponent implements OnInit, OnChanges {
   hoveredLabel: string | null = null;
   tooltipX = 0;
   tooltipY = 0;
+  tooltipWidth = 120;
 
   ngOnInit(): void {
     this.loadMap();
@@ -47,6 +51,10 @@ export class BodyMapComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedCodes'] && !changes['selectedCodes'].firstChange && this.sections.length > 0) {
       this.normalizeLegacySelectionKeys(true);
+      // When showing only selected sections, auto-select the first visible section
+      if (this.showOnlySelected && this.visibleSections.length > 0 && !this.activeSection?.code) {
+        this.selectSection(this.visibleSections[0]);
+      }
     }
   }
 
@@ -56,7 +64,13 @@ export class BodyMapComponent implements OnInit, OnChanges {
       next: (data) => {
         this.sections = data.sort((a, b) => a.order - b.order);
         if (this.sections.length > 0) {
-          this.activeSection = this.sections[0];
+          // If showOnlySelected and we have selected codes, set activeSection to first visible section
+          if (this.showOnlySelected && this.selectedCodes.length > 0) {
+            const visible = this.visibleSections;
+            this.activeSection = visible.length > 0 ? visible[0] : this.sections[0];
+          } else {
+            this.activeSection = this.sections[0];
+          }
         }
         if (this.debug) {
           console.debug(
@@ -76,6 +90,17 @@ export class BodyMapComponent implements OnInit, OnChanges {
         this.loading = false;
       },
     });
+  }
+
+  /** Get sections to display: all sections or only those with selected parts depending on showOnlySelected. */
+  get visibleSections(): BodySection[] {
+    if (!this.showOnlySelected || this.selectedCodes.length === 0) {
+      return this.sections;
+    }
+    // Filter to show only sections that contain at least one selected part
+    return this.sections.filter(section =>
+      section.parts.some(part => this.isSelected(part.code, section.code))
+    );
   }
 
   selectSection(section: BodySection): void {
@@ -121,6 +146,7 @@ export class BodyMapComponent implements OnInit, OnChanges {
   onMouseEnter(part: BodyPart, event: MouseEvent): void {
     if (!part.is_clickable) return;
     this.hoveredLabel = part.label;
+    this.tooltipWidth = Math.max(120, Math.min(260, part.label.length * 8 + 18));
     this.updateTooltipPosition(event);
   }
 
@@ -136,8 +162,10 @@ export class BodyMapComponent implements OnInit, OnChanges {
     const svgEl = (event.currentTarget as SVGElement).closest('svg');
     if (svgEl) {
       const rect = svgEl.getBoundingClientRect();
-      this.tooltipX = event.clientX - rect.left + 10;
-      this.tooltipY = event.clientY - rect.top - 30;
+      const desiredX = event.clientX - rect.left + 10;
+      const desiredY = event.clientY - rect.top - 30;
+      this.tooltipX = Math.max(6, Math.min(desiredX, rect.width - this.tooltipWidth - 6));
+      this.tooltipY = Math.max(18, desiredY);
     }
   }
 
@@ -203,5 +231,6 @@ export class BodyMapComponent implements OnInit, OnChanges {
 
   private emitSelection(): void {
     this.selectionChange.emit([...this.selectedCodes]);
+    this.selectionLabelsChange.emit([...this.selectedLabels]);
   }
 }

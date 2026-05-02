@@ -84,6 +84,10 @@ public class VisiteService {
 
         visite.setPlanTraitement(request.getPlanTraitement());
         visite.setObservations(request.getObservations());
+        // analysis image URLs
+        visite.setOverlayUrl(request.getOverlayUrl());
+        visite.setMaskUrl(request.getMaskUrl());
+        visite.setOriginalImageUrl(request.getOriginalImageUrl());
         visite.setCreatedBy(createdBy);
         visite.setStatus(Visite.StatusVisite.OPEN);
 
@@ -153,6 +157,9 @@ public class VisiteService {
 
         visite.setPlanTraitement(request.getPlanTraitement());
         visite.setObservations(request.getObservations());
+        visite.setOverlayUrl(request.getOverlayUrl());
+        visite.setMaskUrl(request.getMaskUrl());
+        visite.setOriginalImageUrl(request.getOriginalImageUrl());
         visite.setTypeVisite(request.getTypeVisite());
         visite.setTypeBlessure(request.getTypeBlessure());
         visite.setIdBodyPart(request.getIdBodyPart());
@@ -245,6 +252,9 @@ public class VisiteService {
                 .dateCreation(visite.getDateCreation())
                 .planTraitement(visite.getPlanTraitement())
                 .observations(visite.getObservations())
+                .overlayUrl(visite.getOverlayUrl())
+                .maskUrl(visite.getMaskUrl())
+                .originalImageUrl(visite.getOriginalImageUrl())
                 .dateFermeture(visite.getDateFermeture())
                 .build();
 

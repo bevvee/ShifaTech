@@ -1,0 +1,63 @@
+<div class="wound-analysis-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Analyse en cours...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="alert alert-danger">
+    <div class="alert-content">
+      <h3 class="alert-title">Erreur lors de l'analyse</h3>
+      <p class="alert-message">{{ error }}</p>
+      <button (click)="retry()" class="btn-retry">Réessayer</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div *ngIf="result && !isLoading && !error" class="results-container">
+    
+    <!-- Urgent Alert -->
+    <div *ngIf="isUrgent()" class="alert alert-danger">
+      <span class="alert-icon">🔴</span>
+      <div class="alert-content">
+        <h3 class="alert-title">URGENT - Plaie extensive</h3>
+        <p class="alert-message">Évaluation médicale immédiate requise</p>
+      </div>
+    </div>
+
+    <!-- Low Confidence Alert -->
+    <div *ngIf="isLowConfidence()" class="alert alert-warning">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-content">
+        <h3 class="alert-title">Confiance faible du modèle</h3>
+        <p class="alert-message">Relecture clinique impérative</p>
+      </div>
+    </div>
+
+    <!-- Diagnostic Préliminaire removed (moved to Observations textarea) -->
+
+    <!-- Images Section -->
+    <div *ngIf="result.mask_url || result.overlay_url" class="images-section">
+      <h3 class="images-title">Visualisation</h3>
+      <div class="images-grid">
+        <div *ngIf="result.overlay_url" class="image-container">
+          <h4>Détection de plaie</h4>
+          <img [src]="woundService.getImageUrl(result.overlay_url)" alt="Overlay" class="diagnostic-image">
+        </div>
+        <div *ngIf="result.mask_url" class="image-container">
+          <h4>Masque binaire</h4>
+          <img [src]="woundService.getImageUrl(result.mask_url)" alt="Mask" class="diagnostic-image">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!result && !isLoading && !error" class="empty-state">
+    <p class="empty-message">Aucune analyse disponible</p>
+    <button *ngIf="imageName && visitId" (click)="analyze()" class="btn-analyze">
+      Analyser l'image
+    </button>
+  </div>
+</div>

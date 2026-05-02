@@ -54,6 +54,15 @@ public class Visite {
     @Column(name = "date_fermeture")
     private LocalDateTime dateFermeture;
 
+    @Column(name = "overlay_url", columnDefinition = "TEXT")
+    private String overlayUrl;
+
+    @Column(name = "mask_url", columnDefinition = "TEXT")
+    private String maskUrl;
+
+    @Column(name = "original_image_url", columnDefinition = "TEXT")
+    private String originalImageUrl;
+
     @Column(name = "created_by")
     private Long createdBy;
 
