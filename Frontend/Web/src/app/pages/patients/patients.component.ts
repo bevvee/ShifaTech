@@ -126,9 +126,18 @@ export class PatientsComponent implements OnInit {
       next: () => this.loadPatients(),
       error: (err) => {
         console.error('Erreur suppression patient', err);
-        void this.alerts.error('Erreur lors de la suppression du patient');
+        const msg = this.extractErrorMessage(err);
+        void this.alerts.error(msg || 'Erreur lors de la suppression du patient');
       }
     });
+  }
+
+  private extractErrorMessage(err: any): string | null {
+    if (err.error?.data && typeof err.error.data === 'object') {
+      const errors = err.error.data;
+      return Object.values(errors).join('\n');
+    }
+    return err.error?.message || err.message || null;
   }
 
   getInitials(row: PatientDto): string {
