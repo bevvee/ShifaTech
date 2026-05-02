@@ -316,7 +316,11 @@ services:
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: admin123
-      MINIO_PUBLIC_URL: http://localhost/minio
+      MINIO_PUBLIC_URL: http://localhost:9000
+      # Prefer presigned URLs so the browser can fetch private objects.
+      MINIO_USE_PUBLIC_URL: "false"
+      # Host:port reachable from the browser to build presigned URLs.
+      MINIO_PUBLIC_ENDPOINT: localhost:9000
       WOUND_INPUT_NORMALIZATION: imagenet
       WOUND_CONFIDENCE_MIN_ACCEPTED: "0.35"
       WOUND_SUPPRESS_MASK_ON_LOW_CONFIDENCE: "false"

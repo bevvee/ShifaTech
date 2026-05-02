@@ -25,6 +25,9 @@ public class VisiteDTO {
     private LocalDateTime dateCreation;
     private String planTraitement;
     private String observations;
+    private String overlayUrl;
+    private String maskUrl;
+    private String originalImageUrl;
     private LocalDateTime dateFermeture;
 
     // Infos pour l'affichage

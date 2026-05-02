@@ -115,7 +115,7 @@ export class AlertService {
       title,
       text,
       background: undefined,
-      didOpen: (toast) => {
+      didOpen: (toast: any) => {
         toast.addEventListener('mouseenter', Swal.stopTimer);
         toast.addEventListener('mouseleave', Swal.resumeTimer);
       },

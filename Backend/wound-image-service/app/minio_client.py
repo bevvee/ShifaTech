@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from minio import Minio
 from minio.error import S3Error
 
@@ -6,11 +7,18 @@ MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "admin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "admin123")
 
-# Use nginx gateway for public access (accessible from frontend)
-# Format: http://localhost/minio/ (configured in nginx)
-MINIO_PUBLIC_URL = os.getenv("MINIO_PUBLIC_URL", "http://localhost/minio")
+# Use the public MinIO endpoint as a fallback when presigned URL generation fails.
+# Format: http://localhost:9000/ (configured in docker-compose)
+MINIO_PUBLIC_URL = os.getenv("MINIO_PUBLIC_URL", "http://localhost:9000")
 
 MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
+
+# When True the service will use the MINIO_PUBLIC_URL directly.
+# Set `MINIO_USE_PUBLIC_URL=false` to return presigned URLs instead (recommended
+# when the bucket is private). Presigned URLs are built using
+# `MINIO_PUBLIC_ENDPOINT` which should be reachable from the browser.
+MINIO_USE_PUBLIC_URL = os.getenv("MINIO_USE_PUBLIC_URL", "false").lower() == "true"
+MINIO_PUBLIC_ENDPOINT = os.getenv("MINIO_PUBLIC_ENDPOINT")
 
 print(f"Connecting to MinIO at: {MINIO_ENDPOINT}")
 print(f"Public URL for downloads: {MINIO_PUBLIC_URL}")
@@ -58,7 +66,39 @@ def upload_file(object_name, file_path):
 
 
 def build_object_url(object_name):
-    """Build a publicly accessible URL for the uploaded object via nginx gateway"""
-    # Using nginx gateway which proxies to MinIO
-    # Accessible from frontend as: http://localhost/minio/bucket/object
-    return f"{MINIO_PUBLIC_URL}/{BUCKET}/{object_name}"
+    """Return a URL that can be used by the browser to download the object.
+
+    Behavior:
+    - If `MINIO_USE_PUBLIC_URL` is true (default), return the nginx gateway URL
+      constructed from `MINIO_PUBLIC_URL`.
+    - Otherwise attempt to generate a presigned GET URL using the MinIO
+      credentials. The presign client will use `MINIO_PUBLIC_ENDPOINT` if set,
+      otherwise falls back to `MINIO_ENDPOINT`.
+    """
+    if MINIO_USE_PUBLIC_URL:
+        return f"{MINIO_PUBLIC_URL}/{BUCKET}/{object_name}"
+
+    # Build a presigned URL so the browser can fetch the object even if the
+    # bucket is not public.
+    endpoint_for_presign = MINIO_PUBLIC_ENDPOINT or MINIO_ENDPOINT
+    # Normalize: remove scheme if provided (Minio client expects host:port)
+    if endpoint_for_presign.startswith("http://"):
+        endpoint_for_presign = endpoint_for_presign[len("http://"):]
+    elif endpoint_for_presign.startswith("https://"):
+        endpoint_for_presign = endpoint_for_presign[len("https://"):]
+
+    try:
+        presign_client = Minio(
+            endpoint_for_presign,
+            access_key=MINIO_ACCESS_KEY,
+            secret_key=MINIO_SECRET_KEY,
+            secure=MINIO_SECURE,
+            region="us-east-1",
+        )
+        # MinIO expects a timedelta for the presign expiry.
+        url = presign_client.presigned_get_object(BUCKET, object_name, expires=timedelta(hours=1))
+        return url
+    except Exception as e:
+        # Fall back to the public gateway URL if presign fails
+        print(f"Failed to generate presigned URL: {e}")
+        return f"{MINIO_PUBLIC_URL}/{BUCKET}/{object_name}"

@@ -1,4 +1,5 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
+import { EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WoundAnalysisService, WoundAnalysisResult } from '../../services/wound-analysis.service';
 import { ToastService } from '../../services/toast.service';
@@ -14,6 +15,9 @@ export class WoundAnalysisComponent implements OnInit {
   @Input() visitId: number = 0;
   @Input() imageName: string = '';
   @Input() autoAnalyze: boolean = true;
+  @Input() localisation: string = '';
+
+  @Output() analysisReady = new EventEmitter<{ result: WoundAnalysisResult; summary: string }>();
 
   woundService = inject(WoundAnalysisService);
   private toastService = inject(ToastService);
@@ -42,6 +46,10 @@ export class WoundAnalysisComponent implements OnInit {
         next: (response) => {
           this.result = response.result;
           this.isLoading = false;
+          this.analysisReady.emit({
+            result: response.result,
+            summary: this.woundService.buildClinicalSummary(response.result, this.localisation),
+          });
           this.toastService.success(
             'Analyse Complète',
             `Sévérité: ${this.result.diagnostic.severite}`

@@ -43,12 +43,24 @@ export interface WoundAnalysisResponse {
   result: WoundAnalysisResult;
 }
 
+export interface WoundUploadResponse {
+  object_name: string;
+  object_url: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class WoundAnalysisService {
   private http = inject(HttpClient);
   private readonly API_BASE = environment.api.wound;
+
+  private readonly severityTypeMap: Record<MedicalDiagnostic['severite'], string> = {
+    minimal: 'superficielle',
+    'limité': 'superficielle',
+    'modéré': 'modérée',
+    'étendu': 'étendue',
+  };
 
   /**
    * Analyze wound image from a visit
@@ -58,6 +70,14 @@ export class WoundAnalysisService {
       image_name: imageName,
       visit_id: visitId
     });
+  }
+
+  uploadWoundImage(file: File, visitId: number) {
+    const formData = new FormData();
+    formData.append('image', file, file.name);
+    formData.append('visit_id', String(visitId));
+
+    return this.http.post<WoundUploadResponse>(`${this.API_BASE}/upload-image`, formData);
   }
 
   /**
@@ -72,6 +92,13 @@ export class WoundAnalysisService {
    */
   getImageUrl(imageUrl: string): string {
     if (!imageUrl) return '';
+
+    // Legacy records may store raw MinIO API URLs. Route those through the
+    // wound service so the browser receives a presigned redirect instead.
+    if (imageUrl.includes('/wound-images/') && !imageUrl.includes('X-Amz-Algorithm=')) {
+      return `${this.API_BASE}/signed-url?object_name=${encodeURIComponent(imageUrl)}`;
+    }
+
     return imageUrl;
   }
 
@@ -111,5 +138,46 @@ export class WoundAnalysisService {
       'élevé': 'Élevé (✅)'
     };
     return labels[confidence as keyof typeof labels] || confidence;
+  }
+
+  getWoundTypeLabel(severity: MedicalDiagnostic['severite']): string {
+    return this.severityTypeMap[severity] || 'superficielle';
+  }
+
+  buildClinicalSummary(result: WoundAnalysisResult, localisation: string): string {
+    const severity = result.diagnostic.severite;
+    const typeDePlaie = this.getWoundTypeLabel(severity);
+    const localisationLabel = localisation.trim() || 'Non renseignée';
+    const confidencePercent = Math.round((result.confidence.max_probability || 0) * 100);
+    const confidenceLabel = this.getConfidenceLabel(result.diagnostic.niveau_confiance);
+
+    const interpretation = this.getClinicalInterpretation(severity, confidencePercent);
+
+    return [
+      'Résumé (généré automatiquement) :',
+      `- Localisation: ${localisationLabel}`,
+      `- Type de plaie: ${typeDePlaie}`,
+      `- Surface en %: ${result.diagnostic.pourcentage_plaie.toFixed(2)}%`,
+      `- Pixel count: ${result.diagnostic.pixels_plaie}`,
+      '- Aire réelle: non disponible (absence d’échelle de calibration)',
+      `- Interprétation clinique: ${interpretation}`,
+    ].join('\n');
+  }
+
+  private getClinicalInterpretation(severity: MedicalDiagnostic['severite'], confidencePercent: number): string {
+    const interpretationBySeverity: Record<MedicalDiagnostic['severite'], string> = {
+      minimal: 'Aspect compatible avec une plaie superficielle à extension limitée.',
+      'limité': 'Aspect compatible avec une plaie localisée nécessitant surveillance clinique.',
+      'modéré': 'Aspect compatible avec une plaie modérée à suivre de près.',
+      'étendu': 'Aspect compatible avec une plaie étendue nécessitant une prise en charge rapide.',
+    };
+
+    const baseText = interpretationBySeverity[severity] || 'Aspect compatible avec une lésion à confirmer par évaluation clinique.';
+
+    if (confidencePercent < 60) {
+      return `${baseText} Interprétation prudente en raison d’une confiance limitée.`;
+    }
+
+    return baseText;
   }
 }

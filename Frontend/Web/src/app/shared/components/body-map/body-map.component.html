@@ -1,9 +1,9 @@
 <div class="body-map-container" *ngIf="!loading; else spinner">
 
   <!-- Onglets des sections -->
-  <div class="sections-tabs" *ngIf="sections.length > 1">
+  <div class="sections-tabs" *ngIf="visibleSections.length > 1">
     <div
-      *ngFor="let section of sections"
+      *ngFor="let section of visibleSections"
       class="section-tab"
       [class.active]="activeSection?.code === section.code"
       (click)="selectSection(section)"

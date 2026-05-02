@@ -2,6 +2,11 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
+
+class UploadImageResponse(BaseModel):
+    object_name: str
+    object_url: str
+
 class WoundRequest(BaseModel):
     image_name: str
     visit_id: int

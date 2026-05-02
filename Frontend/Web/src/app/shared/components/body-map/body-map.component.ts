@@ -28,8 +28,11 @@ export class BodyMapComponent implements OnInit, OnChanges {
   @Input() readOnly = false;
   /** Active des logs console (voir aussi `environment.debugBodyMap`). */
   @Input() debug = environment.debugBodyMap;
+  /** When true, only show sections containing selected parts (read-only view mode). */
+  @Input() showOnlySelected = false;
 
   @Output() selectionChange = new EventEmitter<string[]>();
+  @Output() selectionLabelsChange = new EventEmitter<string[]>();
   @Output() firstPartIdChange = new EventEmitter<number | null>();
 
   sections: BodySection[] = [];
@@ -48,6 +51,10 @@ export class BodyMapComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedCodes'] && !changes['selectedCodes'].firstChange && this.sections.length > 0) {
       this.normalizeLegacySelectionKeys(true);
+      // When showing only selected sections, auto-select the first visible section
+      if (this.showOnlySelected && this.visibleSections.length > 0 && !this.activeSection?.code) {
+        this.selectSection(this.visibleSections[0]);
+      }
     }
   }
 
@@ -57,7 +64,13 @@ export class BodyMapComponent implements OnInit, OnChanges {
       next: (data) => {
         this.sections = data.sort((a, b) => a.order - b.order);
         if (this.sections.length > 0) {
-          this.activeSection = this.sections[0];
+          // If showOnlySelected and we have selected codes, set activeSection to first visible section
+          if (this.showOnlySelected && this.selectedCodes.length > 0) {
+            const visible = this.visibleSections;
+            this.activeSection = visible.length > 0 ? visible[0] : this.sections[0];
+          } else {
+            this.activeSection = this.sections[0];
+          }
         }
         if (this.debug) {
           console.debug(
@@ -77,6 +90,17 @@ export class BodyMapComponent implements OnInit, OnChanges {
         this.loading = false;
       },
     });
+  }
+
+  /** Get sections to display: all sections or only those with selected parts depending on showOnlySelected. */
+  get visibleSections(): BodySection[] {
+    if (!this.showOnlySelected || this.selectedCodes.length === 0) {
+      return this.sections;
+    }
+    // Filter to show only sections that contain at least one selected part
+    return this.sections.filter(section =>
+      section.parts.some(part => this.isSelected(part.code, section.code))
+    );
   }
 
   selectSection(section: BodySection): void {
@@ -207,5 +231,6 @@ export class BodyMapComponent implements OnInit, OnChanges {
 
   private emitSelection(): void {
     this.selectionChange.emit([...this.selectedCodes]);
+    this.selectionLabelsChange.emit([...this.selectedLabels]);
   }
 }

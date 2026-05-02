@@ -23,5 +23,8 @@ public class CreateVisiteRequest {
     private String planTraitement;
 
     private String observations;
+    private String overlayUrl;
+    private String maskUrl;
+    private String originalImageUrl;
     private com.shifatech.patient_service.entity.Visite.StatusVisite status;
 }
