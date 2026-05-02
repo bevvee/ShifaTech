@@ -32,11 +32,14 @@ export class VisitesComponent implements OnInit {
   visites: VisiteDto[] = [];
   loading = true;
 
+  private readonly authStore = inject(NgrxStore);
+  userRole$ = this.authStore.select(selectUserRole);
+  protected readonly Role = Role;
+
   private readonly router = inject(Router);
   private readonly store = inject(VisiteStore);
   private readonly alerts = inject(AlertService);
   private readonly doctorService = inject(DoctorService);
-  private readonly authStore = inject(NgrxStore);
   private readonly dossierStore = inject(DossierMedicalStore);
 
   ngOnInit(): void {
@@ -65,6 +68,10 @@ export class VisitesComponent implements OnInit {
       error: (err) => console.error('Erreur chargement visites', err),
       complete: () => this.loading = false,
     });
+  }
+
+  createVisite() {
+    this.router.navigate(['/visites', 'new']);
   }
 
   viewVisite(id: number) {
@@ -98,17 +105,32 @@ export class VisitesComponent implements OnInit {
   }
   */
 
-  async deleteVisite(id: number) {
+  deleteVisite(id: number) {
+    void this.confirmAndDeleteVisite(id);
+  }
+
+  private async confirmAndDeleteVisite(id: number) {
     const ok = await this.alerts.confirmDelete('cette visite');
     if (!ok) return;
 
     this.store.delete(id).subscribe({
-      next: () => this.loadVisites(),
+      next: () => {
+        this.loadVisites();
+      },
       error: (err) => {
         console.error('Erreur suppression visite', err);
-        void this.alerts.error('Erreur lors de la suppression de la visite.');
+        const msg = this.extractErrorMessage(err);
+        void this.alerts.error(msg || 'Erreur lors de la suppression de la visite');
       }
     });
+  }
+
+  private extractErrorMessage(err: any): string | null {
+    if (err.error?.data && typeof err.error.data === 'object') {
+      const errors = err.error.data;
+      return Object.values(errors).join('\n');
+    }
+    return err.error?.message || err.message || null;
   }
 
   get filteredVisites(): VisiteDto[] {

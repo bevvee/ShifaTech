@@ -16,6 +16,7 @@ public class OrdonnanceDTO {
     private Long idPatient;
     private Long idDoctor;
     private Long idVisite;
+    @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private LocalDateTime dateCreation;
     private String description;
     private String medicaments;
@@ -28,4 +29,5 @@ public class OrdonnanceDTO {
     // Infos pour l'affichage
     private String nomPatient;
     private String numDossier;
+    private String sexePatient;
 }

@@ -187,7 +187,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           mode: "view",
-          roles: [Role.SECRETAIRE],
+          roles: [Role.SECRETAIRE, Role.DOCTEUR, Role.INFIRMIER],
         },
       },
       {
@@ -249,14 +249,14 @@ export const routes: Routes = [
         component: VisitesFormPageComponent,
         title: 'Détails Visite | ShifaTech',
         canActivate: [roleGuard],
-        data: { mode: 'view', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: { mode: 'view', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER, Role.SECRETAIRE] }
       },
       {
         path: 'visites/:id/edit',
         component: VisitesFormPageComponent,
         title: 'Modifier Visite | ShifaTech',
         canActivate: [roleGuard],
-        data: { mode: 'edit', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER] }
+        data: { mode: 'edit', roles: [Role.ADMIN, Role.DOCTEUR, Role.INFIRMIER, Role.SECRETAIRE] }
       },
       // Ordonnances
       {

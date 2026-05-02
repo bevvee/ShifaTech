@@ -76,12 +76,12 @@
 			<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
 				<div>
 					<app-label>Patient <span class="font-semibold text-error-500">*</span></app-label>
-					<app-select [options]="patientOptions" [(value)]="form.idPatient" [hasSearch]="true" [disabled]="isReadOnly || mode === 'edit'" />
+					<app-select [options]="patientOptions" [(value)]="form.idPatient" (valueChange)="onPatientChange($event)" [hasSearch]="true" [disabled]="isReadOnly || mode === 'edit'" />
 				</div>
 
 				<div>
 					<app-label>Visite associée (optionnel)</app-label>
-					<app-select [options]="visiteOptions" [(value)]="form.idVisite" [hasSearch]="true" [disabled]="isReadOnly" />
+					<app-select [options]="visiteOptions" [(value)]="form.idVisite" [hasSearch]="true" [disabled]="isReadOnly || visiteDisabled" />
 				</div>
 
 				<div class="sm:col-span-2">

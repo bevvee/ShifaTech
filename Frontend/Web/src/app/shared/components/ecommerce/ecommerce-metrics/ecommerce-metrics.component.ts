@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Subscription, of } from 'rxjs';
-import { catchError, map, take } from 'rxjs/operators';
+import { Subscription, of, forkJoin } from 'rxjs';
+import { catchError, map, take, switchMap } from 'rxjs/operators';
+import { Doctor } from '../../../../core/models/doctor.model';
 import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 import { Role } from '../../../../core/models/role.enum';
 import { selectAuthUser, selectUserProfile, selectUserRole } from '../../../../core/store/auth/auth.selectors';
@@ -189,51 +190,40 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
     ];
 
     this.subscription.add(
-      this.store
-        .select(selectUserProfile)
-        .pipe(take(1), catchError(() => of(null)))
-        .subscribe((profile) => {
-          this.loadDoctorRdvMetrics(profile);
-        }),
-    );
-
-    this.subscription.add(
-      this.store
-        .select(selectAuthUser)
-        .pipe(take(1), catchError(() => of(null)))
-        .subscribe((user) => {
-          this.loadDoctorRdvMetrics(user);
-        }),
+      this.doctorService.getDoctors().pipe(
+        switchMap((doctors: Doctor[]) => {
+          return forkJoin({
+            profile: this.store.select(selectUserProfile).pipe(take(1), catchError(() => of(null))),
+            user: this.store.select(selectAuthUser).pipe(take(1), catchError(() => of(null)))
+          }).pipe(
+            map(({ profile, user }) => {
+              const rawUserId = (profile as any)?.idUser ?? (profile as any)?.id_user ?? (profile as any)?.userId ?? (profile as any)?.id ??
+                                (user as any)?.idUser ?? (user as any)?.id_user ?? (user as any)?.userId ?? (user as any)?.id ?? null;
+              const userId = rawUserId != null ? Number(rawUserId) : null;
+              const match = doctors.find(d => Number(d.idUser) === Number(userId));
+              return (match?.idDocteur ?? userId) as number | null;
+            })
+          );
+        })
+      ).subscribe((id: number | null) => {
+        if (id) this.loadDoctorRdvMetrics(id);
+      })
     );
   }
 
-  private loadDoctorRdvMetrics(source: any): void {
-    const rawUserId =
-      source?.idUser ??
-      source?.id_user ??
-      source?.userId ??
-      source?.id ??
-      null;
+  private loadDoctorRdvMetrics(doctorId: number): void {
+    if (!doctorId || Number.isNaN(doctorId)) return;
+    if (this.doctorRdvMetricsUserId === doctorId) return;
+    this.doctorRdvMetricsUserId = doctorId;
 
-    const doctorUserId = rawUserId != null ? Number(rawUserId) : null;
-    if (!doctorUserId || Number.isNaN(doctorUserId)) return;
-    if (this.doctorRdvMetricsUserId === doctorUserId) return;
-    this.doctorRdvMetricsUserId = doctorUserId;
-
-    this.rdvService
-      .getRendezVousViewList({ id_docteur: doctorUserId, pagination: false, itemsPerPage: 1000 })
+    // Use proxy from doctor-service
+    this.doctorService.getMyAppointments()
       .pipe(
-        map((res) => ({
-          totalItems: typeof res?.totalItems === 'number' ? (res.totalItems as number) : null,
-          items: this.extractArrayFromResponse(res),
-        })),
-        catchError(() => of({ totalItems: null, items: [] as any[] })),
+        map((res: any) => this.extractArrayFromResponse(res.data || res)),
+        catchError(() => of([] as any[])),
       )
-      .subscribe((payload: any) => {
-        const items: any[] = Array.isArray(payload?.items) ? payload.items : [];
-        const totalItems: number | null = typeof payload?.totalItems === 'number' ? payload.totalItems : null;
-
-        this.setMetricValue('rdv', totalItems ?? items.length);
+      .subscribe((items: any[]) => {
+        this.setMetricValue('rdv', items.length);
 
         const finishedPatientIds = new Set<number>();
         for (const it of items) {

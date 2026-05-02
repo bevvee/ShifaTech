@@ -14,7 +14,6 @@ import { DoctorService } from '../../core/services/doctor.service';
 import { forkJoin } from 'rxjs';
 import { take, switchMap, map } from 'rxjs/operators';
 import { Role } from '../../core/models/role.enum';
-import { Store } from '@ngrx/store';
 
 @Component({
   selector: 'app-dossier-medical',
@@ -38,15 +37,12 @@ export class DossierMedicalComponent implements OnInit {
   private readonly alerts = inject(AlertService);
   private readonly doctorService = inject(DoctorService);
   private readonly authStore = inject(NgrxStore);
-  private readonly ngrxStore = inject(Store);
-
-  role: Role | null = null;
+  
+  userRole$ = this.authStore.select(selectUserRole);
+  protected readonly Role = Role;
 
   ngOnInit(): void {
     this.loadDossiers();
-    this.ngrxStore.select(selectUserRole).pipe(take(1)).subscribe(r => {
-      this.role = r;
-    });
   }
 
   /*
@@ -95,10 +91,7 @@ export class DossierMedicalComponent implements OnInit {
     this.loadDossiers();
   }
   */
-  get isInfirmier(): boolean {
-    return String(this.role ?? '').toUpperCase() === 'INFIRMIER';
-  }
-  
+
   deleteDossier(id: number) {
     void this.confirmAndDeleteDossier(id);
   }
@@ -111,9 +104,45 @@ export class DossierMedicalComponent implements OnInit {
       next: () => this.loadDossiers(),
       error: (err) => {
         console.error('Erreur suppression dossier', err);
-        void this.alerts.error('Impossible de supprimer ce dossier.');
+        const msg = this.extractErrorMessage(err);
+        void this.alerts.error(msg || 'Erreur lors de la suppression du dossier');
       }
     });
+  }
+
+  archiveDossier(id: number) {
+    void this.confirmAndArchiveDossier(id);
+  }
+
+  private async confirmAndArchiveDossier(id: number) {
+    const ok = await this.alerts.confirm({
+      title: 'Archivage du dossier',
+      text: 'Voulez-vous vraiment archiver ce dossier médical ? Il ne sera plus modifiable.',
+      confirmText: 'Archiver',
+      cancelText: 'Annuler',
+      icon: 'question'
+    });
+    if (!ok) return;
+
+    this.store.update(id, { status: 'ARCHIVED' as any }).subscribe({
+      next: () => {
+        this.alerts.success('Dossier archivé avec succès');
+        this.loadDossiers();
+      },
+      error: (err) => {
+        console.error('Erreur archivage dossier', err);
+        const msg = this.extractErrorMessage(err);
+        this.alerts.error(msg || 'Erreur lors de l\'archivage du dossier');
+      }
+    });
+  }
+
+  private extractErrorMessage(err: any): string | null {
+    if (err.error?.data && typeof err.error.data === 'object') {
+      const errors = err.error.data;
+      return Object.values(errors).join('\n');
+    }
+    return err.error?.message || err.message || null;
   }
 
   getStatusBadgeColor(status: DossierStatus): 'success' | 'warning' | 'error' {
@@ -121,6 +150,16 @@ export class DossierMedicalComponent implements OnInit {
     if (status === 'ARCHIVED') return 'warning';
     return 'error';
   }
+
+  getInitials(row: DossierMedicalDto): string {
+    const name = row.nomPatient?.trim() ?? '';
+    if (!name) return '?';
+    const parts = name.split(' ');
+    const first = parts[0] ? parts[0][0] : '';
+    const second = parts[1] ? parts[1][0] : '';
+    return `${first}${second}`.toUpperCase() || '?';
+  }
+
 
   get filteredDossiers(): DossierMedicalDto[] {
     const q = this.searchTerm.trim().toLowerCase();

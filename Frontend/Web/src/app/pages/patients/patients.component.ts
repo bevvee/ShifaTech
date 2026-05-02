@@ -94,8 +94,11 @@ export class PatientsComponent implements OnInit {
   }
 
   onViewDetails(patientId: number) {
+    console.log('[DEBUG] Clic sur Voir Détails pour le patient:', patientId);
     this.userRole$.pipe(take(1)).subscribe((role) => {
-      if (role === Role.SECRETAIRE) {
+      console.log('[DEBUG] Rôle détecté:', role);
+      // Redirection vers les détails pour tous les rôles autorisés
+      if (role === Role.SECRETAIRE || role === Role.DOCTEUR || role === Role.INFIRMIER) {
         this.viewPatient(patientId);
       } else {
         this.viewDossierByPatient(patientId);
@@ -123,14 +126,23 @@ export class PatientsComponent implements OnInit {
       next: () => this.loadPatients(),
       error: (err) => {
         console.error('Erreur suppression patient', err);
-        void this.alerts.error('Erreur lors de la suppression du patient');
+        const msg = this.extractErrorMessage(err);
+        void this.alerts.error(msg || 'Erreur lors de la suppression du patient');
       }
     });
   }
 
+  private extractErrorMessage(err: any): string | null {
+    if (err.error?.data && typeof err.error.data === 'object') {
+      const errors = err.error.data;
+      return Object.values(errors).join('\n');
+    }
+    return err.error?.message || err.message || null;
+  }
+
   getInitials(row: PatientDto): string {
-    const nom = row.nom?.trim() ?? '';
-    const prenom = row.prenom?.trim() ?? '';
+    const nom = (row.userInfo?.nom || row.nom || '').trim();
+    const prenom = (row.userInfo?.prenom || row.prenom || '').trim();
     const first = nom.length > 0 ? nom[0] : '';
     const second = prenom.length > 0 ? prenom[0] : '';
     const initials = `${first}${second}`.toUpperCase();
@@ -144,10 +156,10 @@ export class PatientsComponent implements OnInit {
 
     return this.patients.filter((p) => {
       const haystack = [
-        p.nom,
-        p.prenom,
+        p.userInfo?.nom || p.nom,
+        p.userInfo?.prenom || p.prenom,
         p.cin,
-        p.email,
+        p.userInfo?.email || p.email,
         p.telephone,
         p.adresse,
       ]

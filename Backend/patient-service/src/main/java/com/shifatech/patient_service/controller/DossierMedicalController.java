@@ -22,7 +22,7 @@ public class DossierMedicalController {
     private final DossierMedicalService dossierMedicalService;
     private final JwtUtil jwtUtil;
 
-    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTEUR', 'ADMIN', 'INFIRMIER', 'SECRETAIRE')")
     @GetMapping("/{idPatient}/dossier-medical")
     public ResponseEntity<ApiResponse<DossierMedicalDTO>> getDossierMedical(
             @PathVariable Long idPatient,
@@ -32,7 +32,7 @@ public class DossierMedicalController {
         return ResponseEntity.ok(ApiResponse.success(dossier, "Dossier médical récupéré avec succès"));
     }
 
-    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('INFIRMIER', 'DOCTEUR', 'ADMIN', 'SECRETAIRE')")
     @GetMapping("/dossiers")
     public ResponseEntity<ApiResponse<java.util.List<DossierMedicalDTO>>> getAllDossiers(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {

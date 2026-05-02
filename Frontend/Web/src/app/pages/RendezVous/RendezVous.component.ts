@@ -193,16 +193,13 @@ export class RendezVousComponent implements OnInit {
         const userId = this.getAuthUserId(user, profile);
         const myDoctorId = isDoctor ? this.resolveDoctorId(userId, doctors) : null;
 
-        // rdv-service is secured and commonly stores id_docteur as the auth userId.
-        // Use userId as primary filter for doctors; keep doctor-table-id as fallback only.
-        const primaryDoctorIdForQuery = isDoctor ? userId : null;
-        const secondaryDoctorIdForQuery = isDoctor ? myDoctorId : null;
+        // Prioritize myDoctorId (real doctor PK) over userId, as requested by the user.
+        const primaryDoctorIdForQuery = isDoctor ? myDoctorId : null;
+        const secondaryDoctorIdForQuery = isDoctor ? userId : null;
 
-        const today = new Date().toISOString().slice(0, 10);
         const baseParams: Record<string, string | number> = {
           page: this.page,
           itemsPerPage: this.itemsPerPage,
-          ...(role === Role.INFIRMIER && !this.selectedDate ? { 'date_rdv[after]': today } : {}),
         };
 
         // Backend-supported filters (from your routes)

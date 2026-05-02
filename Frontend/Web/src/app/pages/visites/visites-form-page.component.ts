@@ -17,6 +17,7 @@ import { VisiteStatus } from '../../core/models/visite.model';
 import { ToastService } from '../../shared/services/toast.service';
 import { BodyMapComponent } from '../../shared/components/body-map/body-map.component';
 import { environment } from '../../../environments/environment';
+import { take } from 'rxjs';
 
 type Mode = 'create' | 'edit' | 'view';
 
@@ -134,15 +135,26 @@ export class VisitesFormPageComponent implements OnInit {
   }
 
   loadDossiers() {
-    this.dossiersStore.getAll().subscribe(list => {
-      const qDossierId = this.route.snapshot.queryParamMap.get('dossierId');
-      
-      this.dossierOptions = list
-        .filter(d => !qDossierId || String(d.id) === qDossierId || this.mode !== 'create')
-        .map(d => ({
-          value: String(d.id),
-          label: `${d.nomPatient} (${d.numDossier})`
-        }));
+    this.userRole$.pipe(take(1)).subscribe(role => {
+      this.dossiersStore.getAll().subscribe(list => {
+        const qDossierId = this.route.snapshot.queryParamMap.get('dossierId');
+        const isSecretaire = role === Role.SECRETAIRE;
+        
+        this.dossierOptions = list
+          .filter(d => {
+            const matchesFilter = isSecretaire || !qDossierId || String(d.id) === qDossierId;
+            const isActive = d.status === 'ACTIVE';
+            const isCurrent = this.id != null && Number(this.form.idDossier) === d.id;
+            
+            // Pour une nouvelle visite, on ne veut que les dossiers actifs qui correspondent au filtre
+            // Pour l'édition/vue, on garde aussi le dossier déjà sélectionné
+            return (matchesFilter && isActive) || isCurrent;
+          })
+          .map(d => ({
+            value: String(d.id),
+            label: `${d.nomPatient} (${d.numDossier})`
+          }));
+      });
     });
   }
 
@@ -210,7 +222,11 @@ export class VisitesFormPageComponent implements OnInit {
           this.toastService.success('Succès', 'Visite enregistrée avec succès');
           this.router.navigate(['/visites']);
         },
-        error: () => this.toastService.error('Erreur', 'Erreur lors de l\'enregistrement')
+        error: (err) => {
+          console.error(err);
+          const msg = this.extractErrorMessage(err);
+          this.toastService.error('Erreur', msg || 'Erreur lors de l\'enregistrement');
+        }
       });
     } else if (this.id != null) {
       this.store.update(this.id, payload).subscribe({
@@ -218,8 +234,19 @@ export class VisitesFormPageComponent implements OnInit {
           this.toastService.success('Succès', 'Visite mise à jour avec succès');
           this.router.navigate(['/visites']);
         },
-        error: () => this.toastService.error('Erreur', 'Erreur lors de la mise à jour')
+        error: (err) => {
+          console.error(err);
+          const msg = this.extractErrorMessage(err);
+          this.toastService.error('Erreur', msg || 'Erreur lors de la mise à jour');
+        }
       });
     }
+  }
+  private extractErrorMessage(err: any): string | null {
+    if (err.error?.data && typeof err.error.data === 'object') {
+      const errors = err.error.data;
+      return Object.values(errors).join('\n');
+    }
+    return err.error?.message || err.message || null;
   }
 }

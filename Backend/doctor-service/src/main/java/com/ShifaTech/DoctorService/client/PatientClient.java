@@ -23,6 +23,14 @@ public interface PatientClient {
     ApiResponse<PatientDTO> getPatientByUserId(@PathVariable("userId") Long userId,
             @RequestHeader("Authorization") String authHeader);
 
+    @GetMapping("/patients/details/{id}")
+    PatientDTO getFullPatientDetails(@PathVariable("id") Long id,
+            @RequestHeader("Authorization") String authHeader);
+
+    @PostMapping("/patients/bulk")
+    List<PatientDTO> getPatientsBulk(@RequestBody List<Long> ids,
+            @RequestHeader("Authorization") String authHeader);
+
     @GetMapping("/{idPatient}/dossier-medical")
     ConsultationDTO getMedicalRecordByPatient(@PathVariable("idPatient") Long patientId);
 
@@ -43,6 +51,10 @@ public interface PatientClient {
 
     @GetMapping("/visites")
     ApiResponse<List<Object>> getAllVisites(@RequestHeader("Authorization") String authHeader);
+
+    @GetMapping("/ordonnances")
+    ApiResponse<List<Object>> getAllOrdonnances(@RequestParam(name = "id_doctor", required = false) List<Long> ids_doctor,
+                                               @RequestHeader("Authorization") String authHeader);
 
     @GetMapping("/dossiers")
     ApiResponse<List<Object>> getAllDossiers(@RequestHeader("Authorization") String authHeader);

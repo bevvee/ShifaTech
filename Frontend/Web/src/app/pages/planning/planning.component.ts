@@ -6,6 +6,7 @@ import { ComponentCardComponent } from '../../shared/components/common/component
 import { Store } from '@ngrx/store';
 import { combineLatest, forkJoin, of } from 'rxjs';
 import { catchError, filter, map, switchMap, take } from 'rxjs/operators';
+
 import { selectAuthUser, selectUserProfile, selectUserRole } from '../../core/store/auth/auth.selectors';
 import { Role } from '../../core/models/role.enum';
 import { DoctorService } from '../../core/services/doctor.service';
@@ -35,8 +36,6 @@ export class PlanningComponent {
   errorMessage = '';
 
   doctorId: number | null = null; // doctor table idDocteur
-  doctors: Doctor[] = [];
-  selectedDoctorId: number | null = null;
 
   readonly days: Array<{ key: DayKey; label: string }> = [
     { key: 'MONDAY', label: 'Lundi' },
@@ -55,9 +54,6 @@ export class PlanningComponent {
   get isDoctor(): boolean {
     return String(this.role ?? '').toUpperCase() === 'DOCTEUR';
   }
-  get isInfirmier(): boolean {
-    return String(this.role ?? '').toUpperCase() === 'INFIRMIER';
-  }
 
   get isFormDisabled(): boolean {
     return !this.isAuthReady || !this.isDoctor || this.isLoading || this.isSaving;
@@ -65,27 +61,6 @@ export class PlanningComponent {
 
   get activeDayLabel(): string {
     return this.days.find((d) => d.key === this.activeDay)?.label ?? this.activeDay;
-  }
-  get availabilityByDay(): Record<string, { heureDebut: string; heureFin: string; pauseDebut: string; pauseFin: string }[]> {
-    const result: Record<string, any[]> = {};
-    for (const d of this.days) {
-      const form = this.formByDay[d.key];
-      if (form.heureDebut && form.heureFin) {
-        result[d.key] = [{ 
-          heureDebut: form.heureDebut, 
-          heureFin: form.heureFin,
-          pauseDebut: form.pauseDebut,
-          pauseFin: form.pauseFin
-        }];
-      }
-    }
-    return result;
-  }
-
-  get hasAvailability(): boolean {
-    return this.days.some(d => 
-      this.formByDay[d.key].heureDebut && this.formByDay[d.key].heureFin
-    );
   }
 
   // One slot per day for now (matches the requested DB columns).
@@ -112,33 +87,7 @@ export class PlanningComponent {
   cancel() {
     this.load();
   }
-    onDoctorChange(doctorId: number) {
-      this.selectedDoctorId = doctorId;
-      if (doctorId) {
-        this.isLoading = true;
-        this.planningService.getByDoctor(doctorId).pipe(
-          catchError(() => of([] as PlanningDto[]))
-        ).subscribe(plans => {
-          for (const d of this.days) {
-            this.formByDay[d.key] = this.emptyForm(d.key);
-          }
-          for (const p of plans ?? []) {
-            const dayKey = this.normalizeDayKey((p as any).jour);
-            if (!dayKey) continue;
-            this.formByDay[dayKey] = {
-              idPlan: (p as any).idPlan ?? undefined,
-              jour: dayKey,
-              heureDebut: this.toHHmm((p as any).heureDebut),
-              heureFin: this.toHHmm((p as any).heureFin),
-              pauseDebut: this.toHHmm((p as any).pauseDebut),
-              pauseFin: this.toHHmm((p as any).pauseFin),
-            };
-          }
-          this.activeForm = this.formByDay[this.activeDay];
-          this.isLoading = false;
-        });
-      }
-    }
+
   saveChanges() {
     if (this.role !== Role.DOCTEUR) {
       this.toastService.error('Erreur', 'Seuls les docteurs peuvent modifier leur planning.');
@@ -222,7 +171,6 @@ export class PlanningComponent {
     this.errorMessage = '';
     this.isAuthReady = false;
     this.doctorId = null;
-    this.doctors = this.doctors;
 
     const auth$ = combineLatest({
       role: this.store.select(selectUserRole).pipe(catchError(() => of(null))),
@@ -241,14 +189,12 @@ export class PlanningComponent {
         map(({ auth, doctors }) => {
           this.role = auth.role;
           this.isAuthReady = true;
-          this.doctors = doctors;
 
           const userId = this.getAuthUserId(auth.user, auth.profile);
           const doctorId = this.resolveDoctorId(userId, doctors);
           return { doctorId, isDoctor: this.isDoctor };
         }),
         switchMap(({ doctorId, isDoctor }) => {
-          if (this.isInfirmier) return of([] as PlanningDto[]);
           if (!isDoctor) return of([] as PlanningDto[]);
           if (doctorId == null) return of([] as PlanningDto[]);
           this.doctorId = doctorId;
@@ -368,23 +314,8 @@ export class PlanningComponent {
       SATURDAY: 'SATURDAY', SAMEDI: 'SATURDAY',
       SUNDAY: 'SUNDAY', DIMANCHE: 'SUNDAY',
     };
-    if (map[s]) return map[s];
 
-  // Gérer les dates au format DD-MM-YYYY (ex: "06-04-2026")
-  try {
-    let dateStr = raw;
-    if (/^\d{2}-\d{2}-\d{4}$/.test(raw)) {
-      const [dd, mm, yyyy] = raw.split('-');
-      dateStr = `${yyyy}-${mm}-${dd}`; // → YYYY-MM-DD
-    }
-    const date = new Date(dateStr);
-    if (!isNaN(date.getTime())) {
-      const dayNames: DayKey[] = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-      return dayNames[date.getDay()];
-    }
-  } catch {}
-
-  return null;
+    return map[s] ?? null;
   }
 }
 

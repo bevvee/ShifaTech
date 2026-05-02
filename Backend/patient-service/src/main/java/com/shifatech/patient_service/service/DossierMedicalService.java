@@ -116,9 +116,9 @@ public class DossierMedicalService {
 
     @Transactional(readOnly = true)
     public java.util.List<DossierMedicalDTO> getAllDossiers(String authHeader) {
-        if (!isAdmin() && !isDocteur() && !isInfirmier()) {
+        if (!isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire()) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Seul le personnel médical peut lister les dossiers.");
+                    "Seul le personnel autorisé peut lister les dossiers.");
         }
         return dossierMedicalRepository.findByDeletedAtIsNull().stream()
                 .map(d -> mapToDTO(d, authHeader))
@@ -221,6 +221,7 @@ public class DossierMedicalService {
                         var user = authServiceClient.getUserById(patient.getIdUser(), authHeader);
                         if (user != null) {
                             dto.setNomPatient(user.getNom() + " " + user.getPrenom());
+                            dto.setSexePatient(user.getSexe());
                             log.info("[DEBUG] Dossier {}: Nom récupéré -> {}", dossier.getIdDossier(),
                                     dto.getNomPatient());
                         } else {
@@ -247,7 +248,7 @@ public class DossierMedicalService {
 
     private void checkReadAccess(Patient patient) {
         Long currentUserId = jwtUtil.getUserIdFromToken();
-        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() &&
+        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire() &&
                 !patient.getIdUser().equals(currentUserId)) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "Accès refusé au dossier médical de ce patient.");
@@ -271,5 +272,10 @@ public class DossierMedicalService {
     private boolean isInfirmier() {
         var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         return auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_INFIRMIER"));
+    }
+
+    private boolean isSecretaire() {
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_SECRETAIRE"));
     }
 }
