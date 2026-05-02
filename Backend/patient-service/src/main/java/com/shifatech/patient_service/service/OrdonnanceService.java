@@ -34,7 +34,8 @@ public class OrdonnanceService {
     // =========================================================================
 
     private Patient resolvePatient(Long idInput) {
-        if (idInput == null) return null;
+        if (idInput == null)
+            return null;
         return patientRepository.findById(idInput)
                 .orElseGet(() -> {
                     log.info("Patient non trouvé par ID PK {}. Tentative par idUser...", idInput);
@@ -51,9 +52,9 @@ public class OrdonnanceService {
         if (!isDocteur() && !isAdmin()) {
             throw new AccessDeniedException("Seul un médecin ou un administrateur peut créer une ordonnance.");
         }
-        
+
         log.info("Création d'une ordonnance - ID reçu: {}", request.getIdPatient());
-        
+
         Patient patient = resolvePatient(request.getIdPatient());
         Long actualIdPatient = patient.getIdPatient();
 
@@ -72,7 +73,7 @@ public class OrdonnanceService {
 
         Ordonnance saved = ordonnanceRepository.save(ordonnance);
         log.info("Ordonnance sauvegardée avec ID: {} pour patient: {}", saved.getIdOrdonnance(), actualIdPatient);
-        
+
         return mapToDTO(saved, authHeader);
     }
 
@@ -159,7 +160,7 @@ public class OrdonnanceService {
         ordonnance.setDureeTraitement(request.getDureeTraitement());
         ordonnance.setInstructions(request.getInstructions());
         ordonnance.setDateValidite(request.getDateValidite());
-        
+
         if (request.getStatut() != null) {
             ordonnance.setStatut(request.getStatut());
         }
@@ -178,7 +179,7 @@ public class OrdonnanceService {
         log.info("Suppression de l'ordonnance ID: {}", id);
         Ordonnance ordonnance = ordonnanceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ordonnance", "id", id));
-        
+
         ordonnance.setStatut(com.shifatech.patient_service.entity.StatusOrdonnance.CANCELLED); // Suppression logique
         ordonnanceRepository.save(ordonnance);
     }
@@ -241,7 +242,8 @@ public class OrdonnanceService {
                             dto.setSexePatient(user.getSexe());
                         }
                     } catch (Exception e) {
-                        log.warn("Erreur AuthServiceClient pour ordonnance {}: {}", ordonnance.getIdOrdonnance(), e.getMessage());
+                        log.warn("Erreur AuthServiceClient pour ordonnance {}: {}", ordonnance.getIdOrdonnance(),
+                                e.getMessage());
                     }
                 }
             });

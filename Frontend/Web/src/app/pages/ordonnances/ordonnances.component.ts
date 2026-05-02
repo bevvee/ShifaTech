@@ -172,8 +172,9 @@ export class OrdonnancesComponent implements OnInit {
   }
   */
 
-  deleteOrdonnance(id: number) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette ordonnance ?')) {
+  async deleteOrdonnance(id: number) {
+    const ok = await this.alerts.confirmDelete('cette ordonnance');
+    if (ok) {
       this.store.delete(id).subscribe(() => {
         this.loadOrdonnances();
       });

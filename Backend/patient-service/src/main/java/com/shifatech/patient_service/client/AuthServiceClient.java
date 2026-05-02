@@ -6,6 +6,7 @@ import com.shifatech.patient_service.dto.UserDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -52,8 +53,7 @@ public class AuthServiceClient {
                     url,
                     HttpMethod.GET,
                     entity,
-                    Map.class
-            );
+                    Map.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<?, ?> body = response.getBody();
@@ -69,14 +69,16 @@ public class AuthServiceClient {
     }
 
     /**
-     * Récupère les infos d'un utilisateur par son ID (appel Admin/Docteur).
+     * Récupère les informations d'un utilisateur par son ID (Mis en cache).
      */
+    @Cacheable(value = "users", key = "#idUser", unless = "#result == null")
     public UserDTO getUserById(Long idUser, String authHeader) {
-        if (idUser == null) return null;
+        if (idUser == null)
+            return null;
         try {
             String url = authServiceUrl + "/user/" + idUser;
             log.info("[DEBUG] Appel Auth Service pour récupérer l'utilisateur ID: {} | URL: {}", idUser, url);
-            
+
             HttpHeaders headers = new HttpHeaders();
             if (authHeader != null) {
                 headers.set("Authorization", authHeader);
@@ -84,7 +86,7 @@ public class AuthServiceClient {
                 log.warn("[DEBUG] Aucun Authorization header fourni pour l'appel à Auth Service !");
             }
             HttpEntity<Void> entity = new HttpEntity<>(headers);
-            
+
             ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
             log.info("[DEBUG] Réponse de Auth Service (Status: {}): {}", response.getStatusCode(), response.getBody());
 
@@ -106,9 +108,11 @@ public class AuthServiceClient {
                 log.error("[DEBUG] La réponse de Auth Service n'est pas successful ou vide.");
             }
         } catch (org.springframework.web.client.HttpClientErrorException.Unauthorized e) {
-            log.error("[DEBUG] 401 Unauthorized lors de l'appel à Auth Service. Le token est peut-être expiré ou invalide.");
+            log.error(
+                    "[DEBUG] 401 Unauthorized lors de l'appel à Auth Service. Le token est peut-être expiré ou invalide.");
         } catch (Exception e) {
-            log.error("[DEBUG] Erreur critique lors de la récupération de l'utilisateur {} : {}", idUser, e.getMessage());
+            log.error("[DEBUG] Erreur critique lors de la récupération de l'utilisateur {} : {}", idUser,
+                    e.getMessage());
             e.printStackTrace();
         }
         return null;
@@ -121,7 +125,7 @@ public class AuthServiceClient {
         try {
             String url = authServiceUrl + "/register";
             log.info("Appel Auth Service: POST {}", url);
-            
+
             ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -140,8 +144,10 @@ public class AuthServiceClient {
     /**
      * Met à jour un utilisateur dans auth-service.
      */
+    @org.springframework.cache.annotation.CacheEvict(value = "users", key = "#userId")
     public UserDTO updateUser(Long userId, UpdateUserRequest request, String authHeader) {
-        if (userId == null) return null;
+        if (userId == null)
+            return null;
         try {
             String url = authServiceUrl + "/update/" + userId;
             log.info("Appel Auth Service: PUT {}", url);
@@ -170,19 +176,22 @@ public class AuthServiceClient {
     private UserDTO mapToUserDTO(Map<?, ?> map) {
         try {
             log.debug("[DEBUG] Mapping de la map utilisateur: {}", map);
-            
+
             // Tentative de récupération flexible pour l'id (idUser ou id_user)
             Object idObj = map.get("idUser");
-            if (idObj == null) idObj = map.get("id_user");
-            
+            if (idObj == null)
+                idObj = map.get("id_user");
+
             Long idUser = idObj != null ? Long.valueOf(idObj.toString()) : null;
 
             // Mapping des champs avec logs si null
             String nom = (String) map.get("nom");
             String prenom = (String) map.get("prenom");
-            
-            if (nom == null) log.warn("[DEBUG] Le champ 'nom' est null dans le mapping.");
-            if (prenom == null) log.warn("[DEBUG] Le champ 'prenom' est null dans le mapping.");
+
+            if (nom == null)
+                log.warn("[DEBUG] Le champ 'nom' est null dans le mapping.");
+            if (prenom == null)
+                log.warn("[DEBUG] Le champ 'prenom' est null dans le mapping.");
 
             LocalDate dateNaissance = null;
             Object dob = map.get("dateNaissance");

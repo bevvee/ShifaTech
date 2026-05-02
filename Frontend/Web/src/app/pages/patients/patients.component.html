@@ -84,7 +84,7 @@
 												type="button"
 												(click)="onViewDetails(p.id)"
 												title="Voir Détails"
-												class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-brand-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-brand-400 dark:hover:bg-white/6"
+												class="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white text-brand-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-brand-400 dark:hover:bg-white/6"
 											>
 												<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 													<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -106,7 +106,7 @@
 												</button>
 											}
 
-											@if ((userRole$ | async) === Role.ADMIN) {
+											@if ((userRole$ | async) === Role.ADMIN || (userRole$ | async) === Role.SECRETAIRE) {
 												<button
 													type="button"
 													(click)="deletePatient(p.id)"

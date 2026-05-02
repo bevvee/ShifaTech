@@ -59,7 +59,8 @@ public class PatientService {
 
             UserDTO createdUser = authServiceClient.registerUser(registerRequest);
             if (createdUser == null || createdUser.getIdUser() == null) {
-                log.error("Échec de la création automatique de l'utilisateur dans le service Auth pour {}", request.getEmail());
+                log.error("Échec de la création automatique de l'utilisateur dans le service Auth pour {}",
+                        request.getEmail());
                 throw new RuntimeException("Échec de la création de l'utilisateur dans le service Auth");
             }
             idUser = createdUser.getIdUser();
@@ -83,7 +84,7 @@ public class PatientService {
 
         try {
             Patient savedPatient = patientRepository.save(patient);
-            log.info("Patient enregistré en base avec succès. ID: {}, NumDossier: {}", 
+            log.info("Patient enregistré en base avec succès. ID: {}, NumDossier: {}",
                     savedPatient.getIdPatient(), savedPatient.getNumDossier());
             return mapToDTO(savedPatient, authHeader);
         } catch (Exception e) {
@@ -98,7 +99,8 @@ public class PatientService {
         Patient patient = patientRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
 
-        // Sécurité : Vérifier que c'est le patient lui-même, un médecin, infirmier, secrétaire ou un admin
+        // Sécurité : Vérifier que c'est le patient lui-même, un médecin, infirmier,
+        // secrétaire ou un admin
         Long currentUserId = jwtUtil.getUserIdFromToken();
         if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire() &&
                 !patient.getIdUser().equals(currentUserId)) {
@@ -182,21 +184,21 @@ public class PatientService {
         patient.setUpdatedBy(updatedBy);
 
         // Synchroniser avec Auth-Service si des champs utilisateur sont présents
-        if (patient.getIdUser() != null && (request.getNom() != null || request.getPrenom() != null || 
-            request.getEmail() != null || request.getTelephone() != null || request.getSexe() != null ||
-            request.getDateNaissance() != null || request.getAdresse() != null)) {
-            
+        if (patient.getIdUser() != null && (request.getNom() != null || request.getPrenom() != null ||
+                request.getEmail() != null || request.getTelephone() != null || request.getSexe() != null ||
+                request.getDateNaissance() != null || request.getAdresse() != null)) {
+
             log.info("Synchronisation des modifications avec Auth-Service pour idUser: {}", patient.getIdUser());
             UpdateUserRequest authSyncRequest = UpdateUserRequest.builder()
-                .nom(request.getNom())
-                .prenom(request.getPrenom())
-                .email(request.getEmail())
-                .telephone(request.getTelephone())
-                .sexe(request.getSexe())
-                .dateNaissance(request.getDateNaissance())
-                .adresse(request.getAdresse())
-                .build();
-                
+                    .nom(request.getNom())
+                    .prenom(request.getPrenom())
+                    .email(request.getEmail())
+                    .telephone(request.getTelephone())
+                    .sexe(request.getSexe())
+                    .dateNaissance(request.getDateNaissance())
+                    .adresse(request.getAdresse())
+                    .build();
+
             authServiceClient.updateUser(patient.getIdUser(), authSyncRequest, authHeader);
         }
 
@@ -212,9 +214,9 @@ public class PatientService {
         Patient patient = patientRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
 
-        if (!isAdmin()) {
+        if (!isAdmin() && !isSecretaire()) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Seuls les administrateurs peuvent supprimer un dossier patient.");
+                    "Seuls les administrateurs et secrétaires peuvent supprimer un dossier patient.");
         }
 
         patient.setDeletedAt(LocalDateTime.now());
@@ -239,29 +241,33 @@ public class PatientService {
 
         if (patient.getIdUser() != null) {
             UserDTO userInfo = null;
-            
+
             // 1. Tenter de récupérer les infos via le token (si c'est le patient lui-même)
             if (authHeader != null) {
                 Long tokenUserId = jwtUtil.getUserIdFromToken();
                 if (tokenUserId != null && tokenUserId.equals(patient.getIdUser())) {
-                    log.info("[DEBUG] Patient {}: Le demandeur est le patient lui-même. Récupération du profil...", patient.getIdPatient());
+                    log.info("[DEBUG] Patient {}: Le demandeur est le patient lui-même. Récupération du profil...",
+                            patient.getIdPatient());
                     userInfo = authServiceClient.getProfileWithToken(authHeader);
                 }
             }
-            
-            // 2. Si non récupéré et que le demandeur est Admin/Docteur/Infirmier/Secretaire, utiliser getUserById
+
+            // 2. Si non récupéré et que le demandeur est
+            // Admin/Docteur/Infirmier/Secretaire, utiliser getUserById
             if (userInfo == null && (isAdmin() || isDocteur() || isInfirmier() || isSecretaire())) {
-                log.info("[DEBUG] Patient {}: Le demandeur a des droits d'accès. Récupération via getUserById(idUser: {})...", 
+                log.info(
+                        "[DEBUG] Patient {}: Le demandeur a des droits d'accès. Récupération via getUserById(idUser: {})...",
                         patient.getIdPatient(), patient.getIdUser());
                 userInfo = authServiceClient.getUserById(patient.getIdUser(), authHeader);
             }
 
             if (userInfo != null) {
                 enrichWithUserInfo(dto, userInfo, patient.getIdUser());
-                log.info("[DEBUG] Patient {}: Enrichi avec succès -> {} {}", 
+                log.info("[DEBUG] Patient {}: Enrichi avec succès -> {} {}",
                         patient.getIdPatient(), dto.getNom(), dto.getPrenom());
             } else {
-                log.warn("[DEBUG] Patient {}: Aucune info utilisateur trouvée (userInfo est NULL).", patient.getIdPatient());
+                log.warn("[DEBUG] Patient {}: Aucune info utilisateur trouvée (userInfo est NULL).",
+                        patient.getIdPatient());
             }
         } else {
             log.warn("[DEBUG] Patient {}: idUser est NULL !", patient.getIdPatient());
@@ -271,7 +277,7 @@ public class PatientService {
     }
 
     /**
-     * Version interne de mapToDTO qui récupère TOUJOURS les infos utilisateur 
+     * Version interne de mapToDTO qui récupère TOUJOURS les infos utilisateur
      * sans vérifier les rôles du demandeur actuel (SecurityContext).
      */
     private PatientDTO mapToDTOInternal(Patient patient, String authHeader) {

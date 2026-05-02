@@ -20,7 +20,8 @@ import { AlertService } from '../../core/services/alert.service';
 import { DoctorService } from '../../core/services/doctor.service';
 import { Store } from '@ngrx/store';
 import { selectUserRole, selectUserId } from '../../core/store/auth/auth.selectors';
-import { take } from 'rxjs';
+import { take, forkJoin } from 'rxjs';
+import { Role } from '../../core/models/role.enum';
 
 
 type Mode = 'create' | 'edit' | 'view';
@@ -62,6 +63,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
 
   patientOptions: Option[] = [];
   visiteOptions: Option[] = [];
+  visiteDisabled = false;
 
   patient: PatientDto | null = null;
   dossier: DossierMedicalDto | null = null;
@@ -95,9 +97,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
 
   ngOnInit() {
     this.loadPatients();
-    this.loadVisites();
     this.resolveCurrentDoctor();
-
 
     if (this.mode !== 'create' && this.id != null) {
       this.store.getById(this.id).subscribe(existing => {
@@ -122,14 +122,20 @@ export class OrdonnancesFormPageComponent implements OnInit {
 
         // Fetch patient and dossier details
         this.fetchPatientAndDossier(existing.idPatient);
+        this.loadVisites(); // Normal load
       });
     } else {
       const qPatientId = this.route.snapshot.queryParamMap.get('patientId');
       const qVisiteId = this.route.snapshot.queryParamMap.get('visiteId');
+      
       if (qPatientId) {
         this.form.idPatient = qPatientId;
         this.fetchPatientAndDossier(Number(qPatientId));
+        // loadVisites sera appelé à l'intérieur de fetchPatientAndDossier une fois le dossier récupéré
+      } else {
+        this.loadVisites();
       }
+      
       if (qVisiteId) this.form.idVisite = qVisiteId;
     }
   }
@@ -147,21 +153,77 @@ export class OrdonnancesFormPageComponent implements OnInit {
   }
 
 
-  loadVisites() {
-    this.visitesStore.getAll().subscribe(list => {
-      this.visiteOptions = list.map(v => ({
-        value: String(v.id),
-        label: `Visite du ${v.dateCreation?.substring(0, 10) ?? 'Date inconnue'} - ${v.nomPatient}`
-      }));
+  loadVisites(idDossierFilter?: number) {
+    const qVisiteId = this.route.snapshot.queryParamMap.get('visiteId');
+
+    forkJoin({
+      role: this.authStore.select(selectUserRole).pipe(take(1)),
+      userId: this.authStore.select(selectUserId).pipe(take(1))
+    }).subscribe(({ role, userId }) => {
+      const isDoctor = role === Role.DOCTEUR;
+
+      this.visitesStore.getAll().subscribe(list => {
+        // Si c'est un docteur, on récupère d'abord son idDocteur (on l'a déjà dans this.form.idDoctor résolu par resolveCurrentDoctor)
+        const myDoctorId = isDoctor ? this.form.idDoctor : null;
+
+        const filtered = list.filter(v => {
+          // 1. Filtrer par dossier du patient
+          const matchDossier = !idDossierFilter || v.idDossier === idDossierFilter;
+          // 2. Filtrer par visite spécifique (via URL)
+          const matchVisite = !qVisiteId || String(v.id) === qVisiteId;
+          // 3. SI DOCTEUR : Filtrer par son propre ID de docteur
+          const matchMyDoctor = !myDoctorId || Number(v.idDoctor) === myDoctorId;
+
+          return matchDossier && matchVisite && matchMyDoctor;
+        });
+
+        this.visiteDisabled = filtered.length === 0;
+
+        this.visiteOptions = filtered.map(v => ({
+          value: String(v.id),
+          label: `Visite du ${v.dateCreation?.substring(0, 10) ?? 'Date inconnue'} - ${v.nomPatient}`
+        }));
+
+        if (this.form.idVisite && !this.visiteOptions.find(o => o.value === this.form.idVisite)) {
+          this.form.idVisite = '';
+        }
+      });
     });
   }
 
+  onPatientChange(patientId: string) {
+    if (!patientId) {
+      this.visiteOptions = [];
+      this.visiteDisabled = true;
+      this.form.idVisite = '';
+      this.patient = null;
+      this.dossier = null;
+      return;
+    }
+    this.form.idVisite = '';
+    this.fetchPatientAndDossier(Number(patientId));
+  }
+
   loadPatients() {
-    this.patientsStore.getAll().subscribe(list => {
-      this.patientOptions = list.map(p => ({
-        value: String(p.id),
-        label: `${p.nom} ${p.prenom} (${p.numDossier})`
-      }));
+    const qPatientId = this.route.snapshot.queryParamMap.get('patientId');
+    
+    this.authStore.select(selectUserRole).pipe(take(1)).subscribe(role => {
+      const isDoctor = role === Role.DOCTEUR;
+      
+      const fetch$ = isDoctor 
+        ? this.doctorService.getMyPatients() 
+        : this.patientsStore.getAll();
+        
+      fetch$.subscribe(list => {
+        const actualList = Array.isArray(list) ? list : (list as any).data || [];
+        
+        this.patientOptions = actualList
+          .filter((p: any) => !qPatientId || String(p.id || p.idPatient) === qPatientId)
+          .map((p: any) => ({
+            value: String(p.id || p.idPatient),
+            label: `${p.nom} ${p.prenom} (${p.numDossier || ''})`
+          }));
+      });
     });
   }
 
@@ -174,6 +236,8 @@ export class OrdonnancesFormPageComponent implements OnInit {
 
     this.dossierStore.getByPatientId(patientId).subscribe(d => {
       this.dossier = d;
+      // Maintenant qu'on a le dossier, on peut filtrer les visites par idDossier
+      this.loadVisites(d.id); 
     });
   }
 
@@ -289,6 +353,14 @@ export class OrdonnancesFormPageComponent implements OnInit {
       this.form.medicaments.trim().length > 0 &&
       this.form.dateValidite !== ''
     );
+  }
+
+  private extractErrorMessage(err: any): string | null {
+    if (err.error?.data && typeof err.error.data === 'object') {
+      const errors = err.error.data;
+      return Object.values(errors).join('\n');
+    }
+    return err.error?.message || err.message || null;
   }
 
   cancel = () => {

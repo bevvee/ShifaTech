@@ -94,8 +94,11 @@ export class PatientsComponent implements OnInit {
   }
 
   onViewDetails(patientId: number) {
+    console.log('[DEBUG] Clic sur Voir Détails pour le patient:', patientId);
     this.userRole$.pipe(take(1)).subscribe((role) => {
-      if (role === Role.SECRETAIRE) {
+      console.log('[DEBUG] Rôle détecté:', role);
+      // Redirection vers les détails pour tous les rôles autorisés
+      if (role === Role.SECRETAIRE || role === Role.DOCTEUR || role === Role.INFIRMIER) {
         this.viewPatient(patientId);
       } else {
         this.viewDossierByPatient(patientId);

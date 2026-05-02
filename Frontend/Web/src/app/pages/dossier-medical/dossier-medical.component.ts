@@ -37,6 +37,9 @@ export class DossierMedicalComponent implements OnInit {
   private readonly alerts = inject(AlertService);
   private readonly doctorService = inject(DoctorService);
   private readonly authStore = inject(NgrxStore);
+  
+  userRole$ = this.authStore.select(selectUserRole);
+  protected readonly Role = Role;
 
   ngOnInit(): void {
     this.loadDossiers();
@@ -100,6 +103,32 @@ export class DossierMedicalComponent implements OnInit {
     this.store.delete(id).subscribe({
       next: () => this.loadDossiers(),
       error: (err) => console.error('Erreur suppression dossier', err)
+    });
+  }
+
+  archiveDossier(id: number) {
+    void this.confirmAndArchiveDossier(id);
+  }
+
+  private async confirmAndArchiveDossier(id: number) {
+    const ok = await this.alerts.confirm({
+      title: 'Archivage du dossier',
+      text: 'Voulez-vous vraiment archiver ce dossier médical ? Il ne sera plus modifiable.',
+      confirmText: 'Archiver',
+      cancelText: 'Annuler',
+      icon: 'question'
+    });
+    if (!ok) return;
+
+    this.store.update(id, { status: 'ARCHIVED' as any }).subscribe({
+      next: () => {
+        this.alerts.success('Dossier archivé avec succès');
+        this.loadDossiers();
+      },
+      error: (err) => {
+        console.error('Erreur archivage dossier', err);
+        this.alerts.error('Erreur lors de l\'archivage du dossier');
+      }
     });
   }
 

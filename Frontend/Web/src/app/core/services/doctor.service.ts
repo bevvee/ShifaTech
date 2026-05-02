@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 import { ApiService } from './api.service';
 import { environment } from '../../../environments/environment';
 import { Doctor } from '../models/doctor.model';
@@ -36,7 +37,12 @@ export class DoctorService extends ApiService {
   }
 
   getMyPatients() {
-    return this.get<any[]>(`${this.base}/my-patients`);
+    return this.get<any[]>(`${this.base}/my-patients`).pipe(
+      map(patients => patients.map(p => ({
+        ...p,
+        id: p.id || p.idPatient // Assure la compatibilité de l'ID pour le clic
+      })))
+    );
   }
 
   getAppointmentsByDoctor(id: number) {

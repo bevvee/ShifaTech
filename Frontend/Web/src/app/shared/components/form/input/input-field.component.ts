@@ -18,6 +18,9 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
         [disabled]="disabled"
         [ngClass]="inputClasses"
         (input)="onInput($event)"
+        (wheel)="$event.preventDefault()"
+        (keydown.arrowup)="$event.preventDefault()"
+        (keydown.arrowdown)="$event.preventDefault()"
       />
 
       @if (hint) {

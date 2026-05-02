@@ -33,8 +33,9 @@ public class VisiteService {
     private final JwtUtil jwtUtil;
 
     public VisiteDTO createVisite(CreateVisiteRequest request, Long createdBy, String authHeader) {
-        if (!isInfirmier() && !isAdmin()) {
-            throw new AccessDeniedException("Seul un infirmier ou un administrateur peut créer une visite.");
+        if (!isInfirmier() && !isAdmin() && !isSecretaire()) {
+            throw new AccessDeniedException(
+                    "Seul un infirmier, un secrétaire ou un administrateur peut créer une visite.");
         }
         log.info("Création d'une visite pour le dossier ID: {}", request.getIdDossier());
 
@@ -55,9 +56,9 @@ public class VisiteService {
 
         // Seuls les infirmiers ou admins peuvent créer des visites
         // Exception pour le patient lui-même (Pour Testing)
-        if (!isAdmin() && !isInfirmier() && !patient.getIdUser().equals(createdBy)) {
+        if (!isAdmin() && !isInfirmier() && !isSecretaire() && !patient.getIdUser().equals(createdBy)) {
             throw new AccessDeniedException(
-                    "Seul un infirmier ou un administrateur peut créer une visite.");
+                    "Seul un infirmier, un secrétaire ou un administrateur peut créer une visite.");
         }
 
         Visite visite = new Visite();
@@ -68,10 +69,12 @@ public class VisiteService {
         visite.setIdBodyPart(request.getIdBodyPart());
 
         // 🛡️ Validation métier : si BLESSURE, typeBlessure est obligatoire.
-        if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.BLESSURE && request.getTypeBlessure() == null) {
+        if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.BLESSURE
+                && request.getTypeBlessure() == null) {
             throw new IllegalArgumentException("Le type de blessure est obligatoire pour une visite de type BLESSURE.");
         }
-        // Assouplissement : on ignore si typeBlessure est présent pour une CONSULTATION au lieu de lancer une exception, 
+        // Assouplissement : on ignore si typeBlessure est présent pour une CONSULTATION
+        // au lieu de lancer une exception,
         // ou on le force à null si c'est ce que l'on veut.
         if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.CONSULTATION) {
             visite.setTypeBlessure(null);
@@ -130,8 +133,9 @@ public class VisiteService {
 
     @Transactional(readOnly = true)
     public List<VisiteDTO> getAllVisites(String authHeader) {
-        if (!isAdmin() && !isDocteur() && !isInfirmier()) {
-            throw new AccessDeniedException("Seul le personnel médical peut lister les visites.");
+        if (!isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire()) {
+            throw new AccessDeniedException(
+                    "Seul le personnel médical ou administratif autorisé peut lister les visites.");
         }
         log.info("Récupération de toutes les visites");
         return visiteRepository.findAll().stream()
@@ -140,8 +144,8 @@ public class VisiteService {
     }
 
     public VisiteDTO updateVisite(Long id, CreateVisiteRequest request, String authHeader) {
-        if (!isInfirmier() && !isDocteur() && !isAdmin()) {
-            throw new AccessDeniedException("Seul un infirmier ou un médecin peut modifier une visite.");
+        if (!isInfirmier() && !isDocteur() && !isAdmin() && !isSecretaire()) {
+            throw new AccessDeniedException("Seul un infirmier, un médecin ou un secrétaire peut modifier une visite.");
         }
         log.info("Mise à jour de la visite ID: {}", id);
         Visite visite = visiteRepository.findById(id)
@@ -161,7 +165,8 @@ public class VisiteService {
         }
 
         // 🛡️ Validation métier identique pour l'update
-        if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.BLESSURE && request.getTypeBlessure() == null) {
+        if (request.getTypeVisite() == com.shifatech.patient_service.entity.TypeVisite.BLESSURE
+                && request.getTypeBlessure() == null) {
             throw new IllegalArgumentException("Le type de blessure est obligatoire pour une visite de type BLESSURE.");
         }
 
@@ -182,7 +187,7 @@ public class VisiteService {
 
     private void checkReadAccess(Patient patient) {
         Long currentUserId = jwtUtil.getUserIdFromToken();
-        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier()
+        if (currentUserId != null && !isAdmin() && !isDocteur() && !isInfirmier() && !isSecretaire()
                 && !patient.getIdUser().equals(currentUserId)) {
             throw new AccessDeniedException("Accès refusé aux visites de ce patient.");
         }
@@ -217,6 +222,15 @@ public class VisiteService {
             return false;
         return authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_INFIRMIER"));
+    }
+
+    private boolean isSecretaire() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication();
+        if (authentication == null)
+            return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SECRETAIRE"));
     }
 
     private VisiteDTO mapToDTO(Visite visite, String authHeader) {

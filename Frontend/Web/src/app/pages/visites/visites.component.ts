@@ -32,11 +32,14 @@ export class VisitesComponent implements OnInit {
   visites: VisiteDto[] = [];
   loading = true;
 
+  private readonly authStore = inject(NgrxStore);
+  userRole$ = this.authStore.select(selectUserRole);
+  protected readonly Role = Role;
+
   private readonly router = inject(Router);
   private readonly store = inject(VisiteStore);
   private readonly alerts = inject(AlertService);
   private readonly doctorService = inject(DoctorService);
-  private readonly authStore = inject(NgrxStore);
   private readonly dossierStore = inject(DossierMedicalStore);
 
   ngOnInit(): void {
@@ -65,6 +68,10 @@ export class VisitesComponent implements OnInit {
       error: (err) => console.error('Erreur chargement visites', err),
       complete: () => this.loading = false,
     });
+  }
+
+  createVisite() {
+    this.router.navigate(['/visites', 'new']);
   }
 
   viewVisite(id: number) {
