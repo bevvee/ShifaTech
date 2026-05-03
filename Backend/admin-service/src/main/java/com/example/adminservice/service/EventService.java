@@ -7,7 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -15,8 +17,11 @@ import java.util.List;
 public class EventService {
 
     private final NotificationService notificationService;
-    private final EmailService        emailService;
-    private final ApiClient           apiClient;
+    private final EmailService emailService;
+    private final ApiClient apiClient;
+    
+    // Cache statique partagé pour le dédoublonnement global (JVM)
+    private static final java.util.Set<String> processedEvents = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     // ─────────────────────────────────────────────────────────────
     // Annulation
@@ -25,26 +30,30 @@ public class EventService {
     @Async("notificationTaskExecutor")
     public void handleAnnulation(Integer idRdv, Integer idPatient,
                                  Integer idDocteur, Integer idInfirmier, String dateRdv) {
-        log.info("[ANNULATION▶] RDV#{} patient={} docteur={} infirmier={} date={} | thread={}",
-                 idRdv, idPatient, idDocteur, idInfirmier, dateRdv,
-                 Thread.currentThread().getName());
+        String msg = "Votre rendez-vous du " + dateRdv + " a été annulé.";
+        processRdvEvent("ANNUL", idRdv, idPatient, idDocteur, TypeNotif.INFO, msg, "Annulation de rendez-vous", false, dateRdv);
+    }
 
-        String token = apiClient.fetchJwtToken();
-        if (token == null) {
-            log.error("[ANNULATION✗] Token JWT null — événement ignoré pour RDV#{}", idRdv);
-            return;
-        }
+    private static synchronized boolean isDuplicate(String eventKey) {
+        if (!processedEvents.add(eventKey)) return true;
+        new java.util.Timer().schedule(new java.util.TimerTask() {
+            @Override
+            public void run() { processedEvents.remove(eventKey); }
+        }, 10000); // 10s
+        return false;
+    }
 
-        String msgPatient = "Votre rendez-vous du " + dateRdv + " a été annulé.";
-        String msgInf     = "Le rendez-vous du " + dateRdv + " a été annulé.";
-
-        notifyPatient(idRdv, idPatient, TypeNotif.INFO,
-                      "ANNULE", msgPatient, "Annulation de rendez-vous", token);
-
-        notifyInfirmiers(idRdv, idDocteur, idInfirmier, TypeNotif.INFO,
-                         "ANNULE", msgInf, "Annulation de rendez-vous", token);
-
-        log.info("[ANNULATION✓] RDV#{} traité", idRdv);
+    // Clé partagée entre handleModification et handlePlanningModification.
+    private static synchronized boolean isStaffNotifDuplicate(Integer idDocteur, String date) {
+        String day = (date != null && date.length() >= 10) ? date.substring(0, 10) : String.valueOf(date);
+        String key = "STAFF_NOTIF_" + idDocteur + "_" + day;
+        if (!processedEvents.add(key)) return true;
+        
+        new java.util.Timer().schedule(new java.util.TimerTask() {
+            @Override
+            public void run() { processedEvents.remove(key); }
+        }, 10000); // 10s
+        return false;
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -54,26 +63,8 @@ public class EventService {
     @Async("notificationTaskExecutor")
     public void handleConfirmation(Integer idRdv, Integer idPatient,
                                    Integer idDocteur, Integer idInfirmier, String dateRdv) {
-        log.info("[CONFIRMATION▶] RDV#{} patient={} docteur={} infirmier={} date={} | thread={}",
-                 idRdv, idPatient, idDocteur, idInfirmier, dateRdv,
-                 Thread.currentThread().getName());
-
-        String token = apiClient.fetchJwtToken();
-        if (token == null) {
-            log.error("[CONFIRMATION✗] Token JWT null — événement ignoré pour RDV#{}", idRdv);
-            return;
-        }
-
-        String msgPatient = "Votre rendez-vous du " + dateRdv + " est confirmé.";
-        String msgInf     = "Le rendez-vous du " + dateRdv + " est confirmé.";
-
-        notifyPatient(idRdv, idPatient, TypeNotif.CONFIRMATION,
-                      "CONFIRME", msgPatient, "Rendez-vous confirmé", token);
-
-        notifyInfirmiers(idRdv, idDocteur, idInfirmier, TypeNotif.CONFIRMATION,
-                         "CONFIRME", msgInf, "Rendez-vous confirmé", token);
-
-        log.info("[CONFIRMATION✓] RDV#{} traité", idRdv);
+        String msg = "Votre rendez-vous du " + dateRdv + " est confirmé.";
+        processRdvEvent("CONFIRM", idRdv, idPatient, idDocteur, TypeNotif.CONFIRMATION, msg, "Rendez-vous confirmé", false, dateRdv);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -83,38 +74,8 @@ public class EventService {
     @Async("notificationTaskExecutor")
     public void handleModification(Integer idRdv, Integer idPatient,
                                    Integer idDocteur, Integer idInfirmier, String dateRdv) {
-        log.info("[MODIFICATION▶] RDV#{} patient={} docteur={} infirmier={} date={} | thread={}",
-                 idRdv, idPatient, idDocteur, idInfirmier, dateRdv,
-                 Thread.currentThread().getName());
-
-        String token = apiClient.fetchJwtToken();
-        if (token == null) {
-            log.error("[MODIFICATION✗] Token JWT null — événement ignoré pour RDV#{}", idRdv);
-            return;
-        }
-
-        String msgPatient = "Votre rendez-vous a été modifié. Nouvelle date : " + dateRdv + ".";
-        String msgInf     = "Le planning a été mis à jour. Nouvelle date : " + dateRdv + ".";
-
-        notifyPatient(idRdv, idPatient, TypeNotif.MODIFICATION,
-                      "MODIFIE", msgPatient, "Rendez-vous modifié", token);
-
-        if (idDocteur != null) {
-            Integer idUserDocteur = apiClient.getUserIdForDoctor(idDocteur, token);
-            if (idUserDocteur != null) {
-                String notifMsg = "[RDV#" + idRdv + "] " + msgPatient;
-                log.debug("[MODIFICATION→] Notification docteur userId={} RDV#{}", idUserDocteur, idRdv);
-                notificationService.createNotification(idUserDocteur, TypeNotif.MODIFICATION, notifMsg);
-                sendEmailSafe(idUserDocteur, "Rendez-vous modifié", msgPatient, token);
-            } else {
-                log.warn("[MODIFICATION✗] userId non résolu pour docteur#{} RDV#{}", idDocteur, idRdv);
-            }
-        }
-
-        notifyInfirmiers(idRdv, idDocteur, idInfirmier, TypeNotif.MODIFICATION,
-                         "MODIFIE", msgInf, "Modification du planning", token);
-
-        log.info("[MODIFICATION✓] RDV#{} traité", idRdv);
+        String msg = "Le planning a été mis à jour. Nouvelle date : " + dateRdv + ".";
+        processRdvEvent("MODIF", idRdv, idPatient, idDocteur, TypeNotif.MODIFICATION, msg, "Modification du planning", true, dateRdv);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -124,93 +85,99 @@ public class EventService {
     @Async("notificationTaskExecutor")
     public void handleNouveauRdv(Integer idRdv, Integer idPatient,
                                  Integer idDocteur, Integer idInfirmier, String dateRdv) {
-        log.info("[NOUVEAU_RDV▶] RDV#{} patient={} docteur={} infirmier={} date={} | thread={}",
-                 idRdv, idPatient, idDocteur, idInfirmier, dateRdv,
-                 Thread.currentThread().getName());
-
-        String token = apiClient.fetchJwtToken();
-        if (token == null) {
-            log.error("[NOUVEAU_RDV✗] Token JWT null — événement ignoré pour RDV#{}", idRdv);
-            return;
-        }
-
-        String msgInf = "Un nouveau rendez-vous est en attente de confirmation pour le " + dateRdv + ".";
-
-        notifyInfirmiers(idRdv, idDocteur, idInfirmier, TypeNotif.RDV,
-                         "EN_ATTENTE", msgInf, "Nouveau rendez-vous", token);
-
-        log.info("[NOUVEAU_RDV✓] RDV#{} traité", idRdv);
+        if (isDuplicate("NEW_RDV_" + idRdv)) return;
+        String msg = "Un nouveau rendez-vous est en attente de confirmation pour le " + dateRdv + ".";
+        notifyStaff(idRdv, idDocteur, TypeNotif.RDV, "Nouveau rendez-vous", msg);
     }
 
     // ─────────────────────────────────────────────────────────────
-    // Helpers
+    // Modification de Planning
     // ─────────────────────────────────────────────────────────────
 
-    private void notifyPatient(Integer idRdv, Integer idPatient, TypeNotif type,
-                                String statut, String message, String emailSubject, String token) {
-        if (idPatient == null) {
-            log.debug("[NOTIFY_PATIENT] idPatient null pour RDV#{} — ignoré", idRdv);
-            return;
-        }
+    @Async("notificationTaskExecutor")
+    public void handlePlanningModification(Integer idDocteur, String date) {
+        String eventKey = "PLANNING_" + idDocteur + "_" + date;
+        if (!processedEvents.add(eventKey)) return;
+        
+        new java.util.Timer().schedule(new java.util.TimerTask() {
+            @Override
+            public void run() { processedEvents.remove(eventKey); }
+        }, 5000);
 
-        Integer idUserPatient = apiClient.getPatientUserId(idPatient, token);
-        if (idUserPatient == null) {
-            log.warn("[NOTIFY_PATIENT✗] userId non résolu pour patient#{} RDV#{} — notification ignorée",
-                     idPatient, idRdv);
-            return;
-        }
+        if (isStaffNotifDuplicate(idDocteur, date)) return;
 
-        String notifMsg = "[RDV#" + idRdv + "] " + message;
-        log.debug("[NOTIFY_PATIENT→] RDV#{} userId={} msg='{}'", idRdv, idUserPatient, notifMsg);
-
-        notificationService.createNotification(idUserPatient, type, notifMsg);
-        sendEmailSafe(idUserPatient, emailSubject, message, token);
+        String msg = "Le planning a été mis à jour pour le " + date + ".";
+        notifyStaff(null, idDocteur, TypeNotif.MODIFICATION, "Planning modifié", msg);
     }
 
-    private void notifyInfirmiers(Integer idRdv, Integer idDocteur, Integer idInfirmier,
-                                   TypeNotif type, String statut, String message,
-                                   String emailSubject, String token) {
-        String notifMsg = "[RDV#" + idRdv + "] " + message;
+    // ─────────────────────────────────────────────────────────────
+    // Generic Processor & Helpers
+    // ─────────────────────────────────────────────────────────────
 
-        if (idInfirmier != null) {
-            log.debug("[NOTIFY_INF→] RDV#{} userId={} (direct) msg='{}'", idRdv, idInfirmier, notifMsg);
-            notificationService.createNotification(idInfirmier, type, notifMsg);
-            sendEmailSafe(idInfirmier, emailSubject, message, token);
-            return;
+    private void processRdvEvent(String prefix, Integer idRdv, Integer idPatient, Integer idDocteur,
+                                TypeNotif type, String msg, String subject, boolean checkStaffDupe, String date) {
+        if (isDuplicate(prefix + "_" + idRdv)) return;
+
+        log.info("[EVENT] {} RDV#{} - dispatching notifications", prefix, idRdv);
+
+        // 1. Patient
+        notifyPatient(idRdv, idPatient, type, msg, subject);
+
+        // 2. Docteur
+        Integer idUserDocteur = (idDocteur != null) ? apiClient.getUserIdForDoctor(idDocteur) : null;
+        if (idUserDocteur != null) {
+            notificationService.createNotification(idUserDocteur, type, subject, "[RDV#" + idRdv + "] " + msg);
+            sendEmailSafe(idUserDocteur, subject, msg);
         }
 
-        List<Integer> infirmierIds = resolveInfirmierIds(idDocteur, token);
-        log.debug("[NOTIFY_INF→] RDV#{} résolution via docteur={} → {} infirmier(s)",
-                  idRdv, idDocteur, infirmierIds.size());
-
-        if (infirmierIds.isEmpty()) {
-            log.warn("[NOTIFY_INF✗] Aucun infirmier résolu pour RDV#{} docteur={}", idRdv, idDocteur);
-        }
-
-        for (Integer idInf : infirmierIds) {
-            notificationService.createNotification(idInf, type, notifMsg);
-            sendEmailSafe(idInf, emailSubject, message, token);
+        // 3. Personnel (Infirmiers + Secrétaires)
+        if (!checkStaffDupe || !isStaffNotifDuplicate(idDocteur, date)) {
+            notifyStaff(idRdv, idDocteur, type, subject, msg);
         }
     }
 
-    private List<Integer> resolveInfirmierIds(Integer idDocteur, String token) {
-        Integer idService = apiClient.getServiceIdForDoctor(idDocteur, token);
-        if (idService != null) {
-            log.debug("[RESOLVE_INF] docteur={} → service={}", idDocteur, idService);
-            return apiClient.getInfirmiersUserIdsByService(idService, token);
+    private void notifyStaff(Integer idRdv, Integer idDocteur, TypeNotif type, String subject, String message) {
+        String notifMsg = (idRdv != null) ? "[RDV#" + idRdv + "] " + message : message;
+        Integer idUserDocteur = (idDocteur != null) ? apiClient.getUserIdForDoctor(idDocteur) : null;
+
+        Set<Integer> targetUserIds = new HashSet<>();
+        targetUserIds.addAll(resolveInfirmierIds(idDocteur));
+        targetUserIds.addAll(apiClient.getSecretairesUserIds());
+
+        Set<String> processedEmails = new HashSet<>();
+        for (Integer userId : targetUserIds) {
+            if (userId.equals(idUserDocteur)) continue;
+            
+            // 1. WebSocket / In-app (toujours par ID)
+            notificationService.createNotification(userId, type, subject, notifMsg);
+            
+            // 2. Email (dédupliqué par adresse)
+            String email = apiClient.getUserEmail(userId);
+            if (email != null && processedEmails.add(email.toLowerCase())) {
+                emailService.sendEmail(email, subject, buildEmailBody(message));
+            }
         }
-        log.warn("[RESOLVE_INF] service non résolu pour docteur={} — fallback tous infirmiers", idDocteur);
-        return apiClient.getAllInfirmiersUserIds(token);
     }
 
-    private void sendEmailSafe(Integer userId, String subject, String message, String token) {
-        String email = apiClient.getUserEmail(userId, token);
-        if (email == null) {
-            log.warn("[EMAIL✗] Aucun email résolu pour userId={} — sujet='{}' abandonné", userId, subject);
-            return;
+    private void notifyPatient(Integer idRdv, Integer idPatient, TypeNotif type, String message, String emailSubject) {
+        if (idPatient == null) return;
+        Integer idUserPatient = apiClient.getPatientUserId(idPatient);
+        if (idUserPatient == null) return;
+
+        notificationService.createNotification(idUserPatient, type, emailSubject, "[RDV#" + idRdv + "] " + message);
+        sendEmailSafe(idUserPatient, emailSubject, message);
+    }
+
+    private List<Integer> resolveInfirmierIds(Integer idDocteur) {
+        Integer idService = apiClient.getServiceIdForDoctor(idDocteur);
+        return (idService != null) ? apiClient.getInfirmiersUserIdsByService(idService) : apiClient.getAllInfirmiersUserIds();
+    }
+
+    private void sendEmailSafe(Integer userId, String subject, String message) {
+        String email = apiClient.getUserEmail(userId);
+        if (email != null) {
+            emailService.sendEmail(email, subject, buildEmailBody(message));
         }
-        log.debug("[EMAIL→] userId={} email={} sujet='{}'", userId, email, subject);
-        emailService.sendEmail(email, subject, buildEmailBody(message));
     }
 
     private String buildEmailBody(String message) {

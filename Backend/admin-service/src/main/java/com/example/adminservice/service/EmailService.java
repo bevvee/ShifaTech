@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private static final java.util.Map<String, Long> sentEmailsCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -24,6 +25,18 @@ public class EmailService {
             log.warn("[EMAIL] Envoi annulé — destinataire vide");
             return;
         }
+
+        // Anti-spam layer simple et efficace
+        String cacheKey = (to.toLowerCase() + "|" + subject).trim();
+        long now = System.currentTimeMillis();
+        
+        Long lastSent = sentEmailsCache.get(cacheKey);
+        if (lastSent != null && (now - lastSent) < 5000) {
+            log.warn("[EMAIL-FILTER] Doublon ignoré pour : {}", to);
+            return;
+        }
+        sentEmailsCache.put(cacheKey, now);
+
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);

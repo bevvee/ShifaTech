@@ -101,12 +101,12 @@ public class ApiClient {
     // Auth-service
     // ─────────────────────────────────────────────
 
-    public String getUserEmail(Integer userId, String token) {
+    public String getUserEmail(Integer userId) {
         try {
             ResponseEntity<UserResponseDTO> res = restTemplate.exchange(
                     authServiceUrl + "/user/" + userId,
                     HttpMethod.GET,
-                    bearerEntity(token),
+                    bearerEntity(),
                     UserResponseDTO.class
             );
             return res.getBody() != null ? res.getBody().resolveEmail() : null;
@@ -122,25 +122,15 @@ public class ApiClient {
     // Patient-service  — accès direct par ID
     // ─────────────────────────────────────────────
 
-    /**
-     * Résout le userId d'un patient à partir de son id patient.
-     *
-     * Appel direct GET /patients/{idPatient} (1 requête) — remplace l'ancien
-     * getUserIdForPatient qui chargeait TOUS les patients puis filtrait en Java.
-     */
-    public Integer getPatientUserId(Integer idPatient, String token) {
+    public Integer getPatientUserId(Integer idPatient) {
         try {
             ResponseEntity<PatientDTO> res = restTemplate.exchange(
                     patientServiceUrl + "/patients/" + idPatient,
                     HttpMethod.GET,
-                    bearerEntity(token),
+                    bearerEntity(),
                     PatientDTO.class
             );
-            Integer idUser = res.getBody() != null ? res.getBody().getIdUser() : null;
-            if (idUser == null) {
-                log.warn("[PATIENT] getPatientUserId({}) : idUser null dans la réponse", idPatient);
-            }
-            return idUser;
+            return res.getBody() != null ? res.getBody().getIdUser() : null;
         } catch (ResourceAccessException e) {
             throw new ServiceUnavailableException("patient-service", e);
         } catch (Exception e) {
@@ -153,22 +143,22 @@ public class ApiClient {
     // Doctor-service
     // ─────────────────────────────────────────────
 
-    public Integer getUserIdForDoctor(Integer idDocteur, String token) {
-        DoctorDTO doctor = fetchDoctorById(idDocteur, token);
+    public Integer getUserIdForDoctor(Integer idDocteur) {
+        DoctorDTO doctor = fetchDoctorById(idDocteur);
         return doctor != null ? doctor.getIdUser() : null;
     }
 
-    public Integer getServiceIdForDoctor(Integer idDocteur, String token) {
-        DoctorDTO doctor = fetchDoctorById(idDocteur, token);
+    public Integer getServiceIdForDoctor(Integer idDocteur) {
+        DoctorDTO doctor = fetchDoctorById(idDocteur);
         return doctor != null ? doctor.getIdService() : null;
     }
 
-    private DoctorDTO fetchDoctorById(Integer idDocteur, String token) {
+    private DoctorDTO fetchDoctorById(Integer idDocteur) {
         try {
             return restTemplate.exchange(
                     doctorServiceUrl + "/" + idDocteur,
                     HttpMethod.GET,
-                    bearerEntity(token),
+                    bearerEntity(),
                     DoctorDTO.class
             ).getBody();
         } catch (ResourceAccessException e) {
@@ -183,62 +173,43 @@ public class ApiClient {
     // Infirmier-service
     // ─────────────────────────────────────────────
 
-    /**
-     * Retourne les userIds des infirmiers associés au service du médecin.
-     *
-     * Optimisation : le paramètre id_service est passé en query string pour
-     * permettre un filtrage serveur si SearchFilter est configuré sur infirmier-service
-     * (GET /api/infirmier_specialites?id_service={id}).
-     * La vérification Java reste en filet de sécurité si le filtre est ignoré.
-     */
-    public List<Integer> getInfirmiersUserIdsByService(Integer idService, String token) {
-        Set<Integer> specialiteIds = getSpecialiteIdsByService(idService, token);
-        log.info("[INF] Service #{} → {} spécialité(s) résolue(s)", idService, specialiteIds.size());
+    public List<Integer> getInfirmiersUserIdsByService(Integer idService) {
+        Set<Integer> specialiteIds = getSpecialiteIdsByService(idService);
+        if (specialiteIds.isEmpty()) return getAllInfirmiersUserIds();
 
-        if (specialiteIds.isEmpty()) {
-            return getAllInfirmiersUserIds(token);
-        }
-
-        return fetchAllInfirmiers(token).stream()
+        return fetchAllInfirmiers().stream()
                 .filter(inf -> inf.getIdSpecialite() != null
                         && specialiteIds.contains(inf.getIdSpecialite()))
                 .map(InfirmierDTO::getIdUtilisateur)
                 .filter(Objects::nonNull)
+                .distinct()
                 .collect(Collectors.toList());
     }
 
-    public List<Integer> getAllInfirmiersUserIds(String token) {
-        return fetchAllInfirmiers(token).stream()
+    public List<Integer> getAllInfirmiersUserIds() {
+        return fetchAllInfirmiers().stream()
                 .map(InfirmierDTO::getIdUtilisateur)
                 .filter(Objects::nonNull)
+                .distinct()
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Récupère les spécialités d'un service avec filtrage serveur si disponible.
-     * Le paramètre id_service est envoyé en query string — API Platform applique
-     * le filtre si @ApiFilter(SearchFilter) est configuré, l'ignore sinon.
-     * Le filtre Java (.filter) garantit la cohérence dans les deux cas.
-     */
-    private Set<Integer> getSpecialiteIdsByService(Integer idService, String token) {
+    private Set<Integer> getSpecialiteIdsByService(Integer idService) {
         try {
             String url = infirmierServiceUrl + "/api/infirmier_specialites?id_service=" + idService;
             ResponseEntity<ApiCollectionResponse<SpecialiteDTO>> res = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
-                    bearerEntity(token),
+                    bearerEntity(),
                     new ParameterizedTypeReference<ApiCollectionResponse<SpecialiteDTO>>() {}
             );
             if (res.getBody() == null) return Set.of();
 
-            Set<Integer> ids = res.getBody().getMember().stream()
+            return res.getBody().getMember().stream()
                     .filter(s -> idService.equals(s.getIdService()))
                     .map(SpecialiteDTO::getId)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
-
-            log.debug("[SPECIALITES] Service #{} → spécialités={}", idService, ids);
-            return ids;
         } catch (ResourceAccessException e) {
             throw new ServiceUnavailableException("infirmier-service", e);
         } catch (Exception e) {
@@ -247,17 +218,15 @@ public class ApiClient {
         }
     }
 
-    private List<InfirmierDTO> fetchAllInfirmiers(String token) {
+    private List<InfirmierDTO> fetchAllInfirmiers() {
         try {
             ResponseEntity<ApiCollectionResponse<InfirmierDTO>> res = restTemplate.exchange(
                     infirmierServiceUrl + "/api/infirmier",
                     HttpMethod.GET,
-                    bearerEntity(token),
+                    bearerEntity(),
                     new ParameterizedTypeReference<ApiCollectionResponse<InfirmierDTO>>() {}
             );
-            List<InfirmierDTO> list = res.getBody() != null ? res.getBody().getMember() : List.of();
-            log.debug("[INFIRMIER] {} infirmier(s) récupéré(s)", list.size());
-            return list;
+            return res.getBody() != null ? res.getBody().getMember() : List.of();
         } catch (ResourceAccessException e) {
             throw new ServiceUnavailableException("infirmier-service", e);
         } catch (Exception e) {
@@ -266,16 +235,37 @@ public class ApiClient {
         }
     }
 
+    public List<Integer> getSecretairesUserIds() {
+        try {
+            ResponseEntity<List<UserResponseDTO>> res = restTemplate.exchange(
+                    authServiceUrl + "/users/role/SECRETAIRE",
+                    HttpMethod.GET,
+                    bearerEntity(),
+                    new ParameterizedTypeReference<List<UserResponseDTO>>() {}
+            );
+            return (res.getBody() != null ? res.getBody() : new ArrayList<UserResponseDTO>()).stream()
+                    .map(UserResponseDTO::getId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+        } catch (ResourceAccessException e) {
+            throw new ServiceUnavailableException("auth-service", e);
+        } catch (Exception e) {
+            log.warn("[SECRETAIRE] getSecretairesUserIds : {}", e.getMessage());
+            return List.of();
+        }
+    }
+
     // ─────────────────────────────────────────────
     // RDV-service
     // ─────────────────────────────────────────────
 
-    public List<AppointmentDTO> fetchAllAppointments(String token) {
+    public List<AppointmentDTO> fetchAllAppointments() {
         try {
             ResponseEntity<ApiCollectionResponse<AppointmentDTO>> res = restTemplate.exchange(
                     rdvServiceUrl + "/api/rendez_vouses",
                     HttpMethod.GET,
-                    bearerEntity(token),
+                    bearerEntity(),
                     new ParameterizedTypeReference<ApiCollectionResponse<AppointmentDTO>>() {}
             );
             return res.getBody() != null ? res.getBody().getMember() : List.of();
@@ -291,9 +281,10 @@ public class ApiClient {
     // Helpers
     // ─────────────────────────────────────────────
 
-    private HttpEntity<Void> bearerEntity(String token) {
+    private HttpEntity<Void> bearerEntity() {
+        String token = fetchJwtToken();
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
+        if (token != null) headers.setBearerAuth(token);
         return new HttpEntity<>(headers);
     }
 }

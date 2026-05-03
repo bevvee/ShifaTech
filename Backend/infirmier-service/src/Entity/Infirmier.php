@@ -12,6 +12,15 @@ use App\Repository\InfirmierRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: InfirmierRepository::class)]
+#[ApiResource(
+    operations: [
+        new GetCollection(uriTemplate: '/infirmier'),
+        new Get(uriTemplate: '/infirmier/{id}'),
+        new Post(uriTemplate: '/infirmier'),
+        new Put(uriTemplate: '/infirmier/{id}'),
+        new Delete(uriTemplate: '/infirmier/{id}'),
+    ]
+)]
 class Infirmier
 {
     #[ORM\Id]

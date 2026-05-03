@@ -7,6 +7,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserResponseDTO {
 
+    private Integer id;
     private String email;
     private UserDetailDTO user;
 

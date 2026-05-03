@@ -10,8 +10,10 @@ use App\Service\AuthServiceClient;
 use App\Service\DoctorServiceClient;
 use App\Service\PatientServiceClient;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 use App\Entity\RendezVous;
 
 class RendezVousProcessor implements ProcessorInterface
@@ -23,7 +25,9 @@ class RendezVousProcessor implements ProcessorInterface
         private PatientServiceClient $patientClient,
         private DoctorServiceClient $doctorClient,
         private AuthServiceClient $authClient,
-        private AppointmentMailer $mailer
+        private AppointmentMailer $mailer,
+        private HttpClientInterface $httpClient,
+        private LoggerInterface $logger
     ) {}
 
     public function process($data, Operation $operation, array $uriVariables = [], array $context = [])
@@ -109,6 +113,21 @@ class RendezVousProcessor implements ProcessorInterface
 
         if ($email) {
             $this->mailer->sendConfirmation($email, $data, $doctorName);
+        }
+
+        try {
+            $this->httpClient->request('POST', 'http://localhost:8082/api/admin/events', [
+                'json' => [
+                    'idRdv'       => $data->getId(),
+                    'idPatient'   => $data->getIdPatient(),
+                    'idDocteur'   => $data->getIdDocteur(),
+                    'idInfirmier' => in_array('ROLE_INFIRMIER', $roles) ? $userId : null,
+                    'dateRdv'     => $data->getDate()?->format('Y-m-d H:i'),
+                    'statut'      => 'CREATED'
+                ]
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error("Impossible de notifier admin-service de la création du RDV #" . $data->getId() . " : " . $e->getMessage());
         }
 
         return $data;

@@ -26,11 +26,7 @@ public class RdvScheduler {
 
     @Scheduled(cron = "0 0 * * * *")
     public void envoyerRappels24h() {
-        log.info("[SCHEDULER] === Rappels 24h ===");
-        String token = resolveToken();
-        if (token == null) return;
-
-        List<AppointmentDTO> rdvList = fetchAppointments(token);
+        List<AppointmentDTO> rdvList = fetchAppointments();
         if (rdvList.isEmpty()) return;
 
         LocalDateTime in24h = LocalDateTime.now(ZoneOffset.UTC).plusHours(24);
@@ -47,28 +43,17 @@ public class RdvScheduler {
 
             notificationService.createNotification(rdv.getIdPatient(), TypeNotif.RAPPEL, message);
 
-            Integer idUserPatient = apiClient.getPatientUserId(rdv.getIdPatient(), token);
+            Integer idUserPatient = apiClient.getPatientUserId(rdv.getIdPatient());
             if (idUserPatient != null) {
-                String email = apiClient.getUserEmail(idUserPatient, token);
+                String email = apiClient.getUserEmail(idUserPatient);
                 if (email != null) emailService.sendEmail(email, "Rappel de rendez-vous", message);
             }
         }
     }
 
-    private String resolveToken() {
+    private List<AppointmentDTO> fetchAppointments() {
         try {
-            String token = apiClient.fetchJwtToken();
-            if (token == null) log.error("[SCHEDULER] Token null, tâche ignorée");
-            return token;
-        } catch (ServiceUnavailableException e) {
-            log.error("[SCHEDULER] {} — tâche ignorée", e.getMessage());
-            return null;
-        }
-    }
-
-    private List<AppointmentDTO> fetchAppointments(String token) {
-        try {
-            return apiClient.fetchAllAppointments(token);
+            return apiClient.fetchAllAppointments();
         } catch (ServiceUnavailableException e) {
             log.error("[SCHEDULER] {} — tâche ignorée", e.getMessage());
             return List.of();

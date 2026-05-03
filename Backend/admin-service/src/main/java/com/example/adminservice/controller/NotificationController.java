@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/notifications")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationController {
@@ -27,19 +27,51 @@ public class NotificationController {
     private final EventService        eventService;
     private final ApiClient           apiClient;
 
+    // ── Réception des événements (Anciennement EventController) ────────────────
+
+    @PostMapping({"/notifications/events", "/admin/events"})
+    public ResponseEntity<Void> receiveEvent(@RequestBody EventRequestDTO dto) {
+        if (dto.getStatut() == null || dto.getIdRdv() == null) return ResponseEntity.badRequest().build();
+        
+        String statut  = dto.getStatut().trim().toUpperCase();
+        String dateRdv = (dto.getDateRdv() != null && !dto.getDateRdv().isBlank()) ? dto.getDateRdv().trim() : "N/A";
+
+        log.info("[NotificationController] Evénement reçu : {} pour RDV#{}", statut, dto.getIdRdv());
+
+        switch (statut) {
+            case "CONFIRME" -> eventService.handleConfirmation(dto.getIdRdv(), dto.getIdPatient(), dto.getIdDocteur(), dto.getIdInfirmier(), dateRdv);
+            case "CREATED", "EN_ATTENTE" -> eventService.handleNouveauRdv(dto.getIdRdv(), dto.getIdPatient(), dto.getIdDocteur(), dto.getIdInfirmier(), dateRdv);
+            case "MODIFIE" -> eventService.handleModification(dto.getIdRdv(), dto.getIdPatient(), dto.getIdDocteur(), dto.getIdInfirmier(), dateRdv);
+            case "ANNULE" -> eventService.handleAnnulation(dto.getIdRdv(), dto.getIdPatient(), dto.getIdDocteur(), dto.getIdInfirmier(), dateRdv);
+            default -> { return ResponseEntity.accepted().build(); }
+        }
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping({"/notifications/planning-events", "/admin/planning-events"})
+    public ResponseEntity<Void> receivePlanningEvent(@RequestBody EventRequestDTO dto) {
+        if (dto.getIdDocteur() == null) return ResponseEntity.badRequest().build();
+        String dateRdv = (dto.getDateRdv() != null && !dto.getDateRdv().isBlank()) ? dto.getDateRdv().trim() : "N/A";
+        
+        log.info("[NotificationController] Planning modifié pour docteur#{}", dto.getIdDocteur());
+        
+        eventService.handlePlanningModification(dto.getIdDocteur(), dateRdv);
+        return ResponseEntity.accepted().build();
+    }
+
     // ── Lecture des notifications ────────────────────────────────────────────
 
-    @GetMapping("/user/{idUser}")
+    @GetMapping("/notifications/user/{idUser}")
     public ResponseEntity<List<NotificationDTO>> getByUser(@PathVariable Integer idUser) {
         return ResponseEntity.ok(notificationService.getNotificationsByUser(idUser));
     }
 
-    @GetMapping("/user/{idUser}/unread")
+    @GetMapping("/notifications/user/{idUser}/unread")
     public ResponseEntity<List<NotificationDTO>> getUnreadByUser(@PathVariable Integer idUser) {
         return ResponseEntity.ok(notificationService.getUnreadByUser(idUser));
     }
 
-    @PutMapping("/user/{idUser}/mark-read")
+    @PutMapping("/notifications/user/{idUser}/mark-read")
     public ResponseEntity<Void> markAllAsRead(@PathVariable Integer idUser) {
         notificationService.markAllAsRead(idUser);
         return ResponseEntity.ok().build();
@@ -47,37 +79,10 @@ public class NotificationController {
 
     // ── Déclenchement manuel ─────────────────────────────────────────────────
 
-    @PostMapping("/trigger-scheduler")
+    @PostMapping("/notifications/trigger-scheduler")
     public ResponseEntity<String> triggerScheduler() {
         rdvScheduler.envoyerRappels24h();
         return ResponseEntity.ok("Scheduler exécuté");
-    }
-
-    /**
-     * Endpoint de test : reçoit un événement RDV et dispatche vers EventService.
-     * Retourne 200 OK + texte (contrairement à /api/admin/events qui retourne 202).
-     *
-     * Utilisé pour les tests manuels via PowerShell / Postman.
-     */
-    @PostMapping("/event")
-    public ResponseEntity<String> handleEvent(@RequestBody EventRequestDTO event) {
-        String statut = event.getStatut() != null ? event.getStatut().toUpperCase() : "ANNULE";
-        Integer idInf = event.getIdInfirmier();
-
-        log.info("[NotificationController] Event reçu — RDV#{} statut={} patient={} docteur={} infirmier={}",
-                 event.getIdRdv(), statut, event.getIdPatient(), event.getIdDocteur(), idInf);
-
-        switch (statut) {
-            case "CONFIRME"              -> eventService.handleConfirmation(
-                    event.getIdRdv(), event.getIdPatient(), event.getIdDocteur(), idInf, event.getDateRdv());
-            case "CREATED", "EN_ATTENTE" -> eventService.handleNouveauRdv(
-                    event.getIdRdv(), event.getIdPatient(), event.getIdDocteur(), idInf, event.getDateRdv());
-            case "MODIFIE"               -> eventService.handleModification(
-                    event.getIdRdv(), event.getIdPatient(), event.getIdDocteur(), idInf, event.getDateRdv());
-            default                      -> eventService.handleAnnulation(
-                    event.getIdRdv(), event.getIdPatient(), event.getIdDocteur(), idInf, event.getDateRdv());
-        }
-        return ResponseEntity.ok("Event traité : " + statut);
     }
 
     // ── Diagnostic ───────────────────────────────────────────────────────────
@@ -122,7 +127,7 @@ public class NotificationController {
         // Étape 2 — Résolution e-mail de l'utilisateur
         String email = null;
         try {
-            email = apiClient.getUserEmail(userId, token);
+            email = apiClient.getUserEmail(userId);
         } catch (Exception e) {
             result.put("email_erreur", e.getMessage());
         }

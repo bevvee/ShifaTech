@@ -1,4 +1,4 @@
-package com.example.adminservice.notification.entity;
+package com.example.adminservice.entity;
 
 import com.example.adminservice.Enum.TypeNotif;
 import jakarta.persistence.*;
@@ -21,6 +21,9 @@ public class Notification {
     @Enumerated(EnumType.STRING)
     @Column(name = "typeNotif", length = 50, nullable = false)
     private TypeNotif typeNotif;
+
+    @Column(name = "titre", length = 100)
+    private String titre;
 
     @Column(name = "message", columnDefinition = "TEXT", nullable = false)
     private String message;
