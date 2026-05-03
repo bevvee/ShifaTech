@@ -27,7 +27,6 @@ public class NotificationController {
     private final EventService        eventService;
     private final ApiClient           apiClient;
 
-    // ── Réception des événements (Anciennement EventController) ────────────────
 
     @PostMapping({"/notifications/events", "/admin/events"})
     public ResponseEntity<Void> receiveEvent(@RequestBody EventRequestDTO dto) {
@@ -59,7 +58,6 @@ public class NotificationController {
         return ResponseEntity.accepted().build();
     }
 
-    // ── Lecture des notifications ────────────────────────────────────────────
 
     @GetMapping("/notifications/user/{idUser}")
     public ResponseEntity<List<NotificationDTO>> getByUser(@PathVariable Integer idUser) {
@@ -77,7 +75,6 @@ public class NotificationController {
         return ResponseEntity.ok().build();
     }
 
-    // ── Déclenchement manuel ─────────────────────────────────────────────────
 
     @PostMapping("/notifications/trigger-scheduler")
     public ResponseEntity<String> triggerScheduler() {
@@ -85,17 +82,6 @@ public class NotificationController {
         return ResponseEntity.ok("Scheduler exécuté");
     }
 
-    // ── Diagnostic ───────────────────────────────────────────────────────────
-
-    /**
-     * GET /api/notifications/diagnostic?userId=9
-     *
-     * Teste chaque maillon de la chaîne notification sans envoyer de vrai événement :
-     *   1. Récupération du token JWT (auth-service)
-     *   2. Résolution de l'e-mail pour un userId donné
-     *
-     * Permet d'identifier rapidement quelle étape bloque.
-     */
     @GetMapping("/diagnostic")
     public ResponseEntity<Map<String, Object>> diagnostic(
             @RequestParam(defaultValue = "9") Integer userId) {
@@ -124,7 +110,6 @@ public class NotificationController {
         result.put("token_ok", true);
         result.put("token_preview", token.substring(0, Math.min(30, token.length())) + "...");
 
-        // Étape 2 — Résolution e-mail de l'utilisateur
         String email = null;
         try {
             email = apiClient.getUserEmail(userId);

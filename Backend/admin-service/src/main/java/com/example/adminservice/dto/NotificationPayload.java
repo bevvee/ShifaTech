@@ -7,20 +7,6 @@ import lombok.Value;
 
 import java.time.LocalDateTime;
 
-/**
- * Objet envoyé sur le canal WebSocket /topic/notifications/{idUser}.
- *
- * Structure JSON standardisée :
- * {
- *   "idNotif"    : 42,
- *   "typeNotif"  : "CONFIRMATION",
- *   "titre"      : "Rendez-vous confirmé",
- *   "idRessource": 123,
- *   "message"    : "Votre rendez-vous est confirmé le 2025-06-10",
- *   "dateEnvoi"  : "2025-06-09T08:30:00",
- *   "estLu"      : false
- * }
- */
 @Value
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)

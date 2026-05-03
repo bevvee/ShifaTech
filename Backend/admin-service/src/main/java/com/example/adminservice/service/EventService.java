@@ -148,10 +148,10 @@ public class EventService {
         for (Integer userId : targetUserIds) {
             if (userId.equals(idUserDocteur)) continue;
             
-            // 1. WebSocket / In-app (toujours par ID)
+            // WebSocket / In-app 
             notificationService.createNotification(userId, type, subject, notifMsg);
             
-            // 2. Email (dédupliqué par adresse)
+            // Email 
             String email = apiClient.getUserEmail(userId);
             if (email != null && processedEmails.add(email.toLowerCase())) {
                 emailService.sendEmail(email, subject, buildEmailBody(message));

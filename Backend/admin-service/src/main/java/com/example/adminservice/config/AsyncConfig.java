@@ -12,13 +12,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 
-/**
- * Configuration des pools de threads asynchrones.
- *
- * Implémente AsyncConfigurer pour brancher un AsyncUncaughtExceptionHandler :
- * sans lui, toute exception levée dans un @Async void est silencieusement
- * avalée par Spring — aucun log, aucune trace, comportement fantôme.
- */
 @Configuration
 @EnableAsync
 public class AsyncConfig implements AsyncConfigurer {
@@ -52,13 +45,6 @@ public class AsyncConfig implements AsyncConfigurer {
         executor.initialize();
         return executor;
     }
-
-    /**
-     * Intercepte toutes les exceptions non traitées dans les méthodes @Async void.
-     *
-     * Sans ce handler, Spring les avale silencieusement après les avoir loguées
-     * uniquement en DEBUG (invisible en production).
-     */
     @Override
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
         return (ex, method, params) ->

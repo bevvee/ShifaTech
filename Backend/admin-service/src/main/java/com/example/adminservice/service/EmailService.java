@@ -26,7 +26,7 @@ public class EmailService {
             return;
         }
 
-        // Anti-spam layer simple et efficace
+        // Anti-spam layer 
         String cacheKey = (to.toLowerCase() + "|" + subject).trim();
         long now = System.currentTimeMillis();
         
