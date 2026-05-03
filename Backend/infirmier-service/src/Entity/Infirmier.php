@@ -12,6 +12,15 @@ use App\Repository\InfirmierRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: InfirmierRepository::class)]
+#[ApiResource(
+    operations: [
+        new GetCollection(uriTemplate: '/infirmier'),
+        new Get(uriTemplate: '/infirmier/{id}'),
+        new Post(uriTemplate: '/infirmier'),
+        new Put(uriTemplate: '/infirmier/{id}'),
+        new Delete(uriTemplate: '/infirmier/{id}'),
+    ]
+)]
 class Infirmier
 {
     #[ORM\Id]
@@ -21,9 +30,6 @@ class Infirmier
 
     #[ORM\Column]
     private ?int $id_utilisateur = null;
-
-    #[ORM\Column]
-    private ?int $id_service = null;
 
     #[ORM\ManyToOne(targetEntity: InfirmierSpecialite::class, inversedBy: 'infirmiers')]
     #[ORM\JoinColumn(name: 'id_specialite', referencedColumnName: 'id_specialite', nullable: false)]
@@ -51,18 +57,6 @@ class Infirmier
     public function setIdUtilisateur(?int $id_utilisateur): static
     {
         $this->id_utilisateur = $id_utilisateur;
-
-        return $this;
-    }
-
-    public function getIdService(): ?int
-    {
-        return $this->id_service;
-    }
-
-    public function setIdService(?int $id_service): static
-    {
-        $this->id_service = $id_service;
 
         return $this;
     }

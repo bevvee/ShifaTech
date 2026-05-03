@@ -105,7 +105,6 @@ class AppFixtures extends Fixture
             $infirmier = new Infirmier();
             $infirmier->setIdUtilisateur($index + 9);
             $infirmier->setIdSpecialite($specialite);
-            $infirmier->setIdService($specialite->getIdService());
             $infirmier->setCreatedAt(new \DateTimeImmutable());
             $manager->persist($infirmier);
         }

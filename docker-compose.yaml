@@ -254,6 +254,8 @@ services:
     depends_on:
       admin-db:
         condition: service_healthy
+      rdv-db:
+        condition: service_healthy
       mailhog:
         condition: service_started
     env_file:
@@ -262,10 +264,19 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://admin-db:3306/admindb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: adminuser
       SPRING_DATASOURCE_PASSWORD: adminpass
-      SERVICES_DOCTOR_URL: http://doctor-service:8080
-      SERVICES_INFIRMIER_URL: http://infirmier-service:8080
-    expose:
-      - "8080"
+      APP_AUTH_SERVICE_URL: http://auth-service:8080
+      APP_DOCTOR_SERVICE_URL: http://doctor-service:8080
+      APP_INFIRMIER_SERVICE_URL: http://infirmier-service:9000
+      APP_PATIENT_SERVICE_URL: http://patient-service:8080
+      APP_RDV_SERVICE_URL: http://rdv-service:9000
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+      SPRING_MAIL_USERNAME: noreply@shifatech.local
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED: "false"
+    ports:
+      - "8089:8000"
     networks:
       - shifatech-net
   ##################################

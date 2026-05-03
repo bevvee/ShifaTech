@@ -5,6 +5,9 @@ spring:
   application:
     name: admin-service
 
+  flyway:
+    enabled: false
+
   datasource:
     url: jdbc:mysql://admin-db:3306/admindb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
     username: adminuser
@@ -21,17 +24,25 @@ spring:
         format_sql: true
 
   mail:
-    host: mailhog        # nom du container Docker
+    host: mailhog
     port: 1025
-    username: ""
-    password: ""
+    username: noreply@shifatech.local
     properties:
       mail:
         smtp:
           auth: false
           starttls:
             enable: false
+            required: false
+
+auth:
+  service:
+    email: ${AUTH_SERVICE_EMAIL:}
+    password: ${AUTH_SERVICE_PASSWORD:}
 
 app:
-  auth-service-url: http://auth-service:8080
-  rdv-service-url: http://rdv-service:9000
+  auth-service-url: ${APP_AUTH_SERVICE_URL:http://auth-service:8080}
+  rdv-service-url: ${APP_RDV_SERVICE_URL:http://rdv-service:9000}
+  doctor-service-url: ${APP_DOCTOR_SERVICE_URL:http://doctor-service:8080}
+  infirmier-service-url: ${APP_INFIRMIER_SERVICE_URL:http://infirmier-service:9000}
+  patient-service-url: ${APP_PATIENT_SERVICE_URL:http://patient-service:8080}

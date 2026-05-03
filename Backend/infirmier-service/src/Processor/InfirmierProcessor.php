@@ -59,7 +59,6 @@ class InfirmierProcessor implements ProcessorInterface
             }
             $infirmier = new Infirmier();
             $infirmier->setIdUtilisateur($data->id_utilisateur);
-            $infirmier->setIdService($data->id_service ?? 0);
 
             if ($data->id_specialite) {
                $idSpecialite = (int) basename($data->id_specialite);

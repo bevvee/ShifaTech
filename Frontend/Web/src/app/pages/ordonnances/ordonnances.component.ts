@@ -175,10 +175,23 @@ export class OrdonnancesComponent implements OnInit {
   async deleteOrdonnance(id: number) {
     const ok = await this.alerts.confirmDelete('cette ordonnance');
     if (ok) {
-      this.store.delete(id).subscribe(() => {
-        this.loadOrdonnances();
+      this.store.delete(id).subscribe({
+        next: () => this.loadOrdonnances(),
+        error: (err) => {
+          console.error('Erreur suppression ordonnance', err);
+          const msg = this.extractErrorMessage(err);
+          void this.alerts.error(msg || 'Erreur lors de la suppression de l’ordonnance');
+        }
       });
     }
+  }
+
+  private extractErrorMessage(err: any): string | null {
+    if (err.error?.data && typeof err.error.data === 'object') {
+      const errors = err.error.data;
+      return Object.values(errors).join('\n');
+    }
+    return err.error?.message || err.message || null;
   }
 
   getStatusBadgeColor(status: OrdonnanceStatut): 'success' | 'warning' | 'error' {

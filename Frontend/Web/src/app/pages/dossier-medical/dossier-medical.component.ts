@@ -102,7 +102,11 @@ export class DossierMedicalComponent implements OnInit {
 
     this.store.delete(id).subscribe({
       next: () => this.loadDossiers(),
-      error: (err) => console.error('Erreur suppression dossier', err)
+      error: (err) => {
+        console.error('Erreur suppression dossier', err);
+        const msg = this.extractErrorMessage(err);
+        void this.alerts.error(msg || 'Erreur lors de la suppression du dossier');
+      }
     });
   }
 
@@ -127,9 +131,18 @@ export class DossierMedicalComponent implements OnInit {
       },
       error: (err) => {
         console.error('Erreur archivage dossier', err);
-        this.alerts.error('Erreur lors de l\'archivage du dossier');
+        const msg = this.extractErrorMessage(err);
+        this.alerts.error(msg || 'Erreur lors de l\'archivage du dossier');
       }
     });
+  }
+
+  private extractErrorMessage(err: any): string | null {
+    if (err.error?.data && typeof err.error.data === 'object') {
+      const errors = err.error.data;
+      return Object.values(errors).join('\n');
+    }
+    return err.error?.message || err.message || null;
   }
 
   getStatusBadgeColor(status: DossierStatus): 'success' | 'warning' | 'error' {

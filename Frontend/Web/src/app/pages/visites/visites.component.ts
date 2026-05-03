@@ -117,8 +117,20 @@ export class VisitesComponent implements OnInit {
       next: () => {
         this.loadVisites();
       },
-      error: (err) => console.error('Erreur suppression visite', err)
+      error: (err) => {
+        console.error('Erreur suppression visite', err);
+        const msg = this.extractErrorMessage(err);
+        void this.alerts.error(msg || 'Erreur lors de la suppression de la visite');
+      }
     });
+  }
+
+  private extractErrorMessage(err: any): string | null {
+    if (err.error?.data && typeof err.error.data === 'object') {
+      const errors = err.error.data;
+      return Object.values(errors).join('\n');
+    }
+    return err.error?.message || err.message || null;
   }
 
   get filteredVisites(): VisiteDto[] {
