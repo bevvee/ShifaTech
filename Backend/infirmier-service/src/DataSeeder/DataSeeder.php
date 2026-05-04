@@ -91,12 +91,7 @@ class DataSeeder
         // }
 
         $specialites = [
-            ['label' => 'Cardiologie', 'id_service' => 1],
-            ['label' => 'Pédiatrie',   'id_service' => 1],
-            ['label' => 'Urgences',    'id_service' => 2],
-            ['label' => 'Chirurgie',   'id_service' => 2],
-            ['label' => 'Sage-femme',  'id_service' => 3],
-            ['label' => 'Psychiatrie', 'id_service' => 5],
+        
         ];
 
         $specialiteEntities = [];
