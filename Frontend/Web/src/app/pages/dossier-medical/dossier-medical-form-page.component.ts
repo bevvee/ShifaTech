@@ -238,6 +238,14 @@ export class DossierMedicalFormPageComponent implements OnInit {
     return this.dossier?.dateCreation;
   }
 
+  private extractErrorMessage(err: any): string | null {
+    if (err.error?.data && typeof err.error.data === 'object') {
+      const errors = err.error.data;
+      return Object.values(errors).join('\n');
+    }
+    return err.error?.message || err.message || null;
+  }
+
   getStatusPillClass(status: string): string {
     switch (status) {
       case 'ACTIVE': return 'bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400';
@@ -266,6 +274,11 @@ export class DossierMedicalFormPageComponent implements OnInit {
   }
 
   async save() {
+    // Force la perte de focus pour valider toute saisie en cours
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
     this.submitted = true;
 
     if (!this.isValid || this.isSaving) return;
@@ -281,6 +294,12 @@ export class DossierMedicalFormPageComponent implements OnInit {
       idPatient: Number(this.form.idPatient)
     };
 
+    console.log('[DEBUG] Tentative d\'enregistrement du dossier:', {
+      poids: payload.poids,
+      taille: payload.taille,
+      idPatient: payload.idPatient
+    });
+
     try {
       if (this.mode === 'create') {
         this.store.create(payload).subscribe({
@@ -291,7 +310,8 @@ export class DossierMedicalFormPageComponent implements OnInit {
           },
           error: async (err) => {
             console.error(err);
-            await this.alerts.error('Erreur lors de l’enregistrement.');
+            const msg = this.extractErrorMessage(err);
+            await this.alerts.error(msg || 'Erreur lors de l’enregistrement.');
             this.isSaving = false;
           }
         });
@@ -305,7 +325,8 @@ export class DossierMedicalFormPageComponent implements OnInit {
           },
           error: async (err) => {
             console.error(err);
-            await this.alerts.error('Erreur lors de l’enregistrement.');
+            const msg = this.extractErrorMessage(err);
+            await this.alerts.error(msg || 'Erreur lors de l’enregistrement.');
             this.isSaving = false;
           }
         });

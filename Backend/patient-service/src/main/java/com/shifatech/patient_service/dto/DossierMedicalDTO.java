@@ -27,11 +27,13 @@ public class DossierMedicalDTO {
     private String notes;
     private String diagnostic;
     private LocalDateTime dateFermeture;
+    @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private LocalDateTime dateCreation;
 
     // Infos du patient pour l'affichage
     private String nomPatient;
     private String numDossier;
+    private String sexePatient;
 
     // Infos du docteur (récupérées du service Auth)
     private String nomDocteur;

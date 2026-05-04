@@ -1,5 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Store } from '@ngrx/store';
+import { DoctorService } from '../../../../core/services/doctor.service';
+import { Doctor } from '../../../../core/models/doctor.model';
+import { selectAuthUser, selectUserProfile } from '../../../../core/store/auth/auth.selectors';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map, switchMap, take } from 'rxjs/operators';
 
 interface Patient {
   id: number;
@@ -16,6 +22,9 @@ interface Patient {
   templateUrl: './top-patients.component.html',
 })
 export class TopPatientsComponent implements OnInit {
+  private readonly store = inject(Store);
+  private readonly doctorService = inject(DoctorService);
+
   patients: Patient[] = [];
 
   ngOnInit() {
@@ -23,13 +32,68 @@ export class TopPatientsComponent implements OnInit {
   }
 
   loadTopPatients() {
-    this.patients = [
-      { id: 1, name: 'Alberto Ripley', phone: '+1 56556 54565', appointments: 20, avatar: 'AR' },
-      { id: 2, name: 'Susan Babin', phone: '+1 65658 95654', appointments: 18, avatar: 'SB' },
-      { id: 3, name: 'Carol Lam', phone: '+1 55654 56647', appointments: 16, avatar: 'CL' },
-      { id: 4, name: 'Marsha Noland', phone: '+1 65668 54558', appointments: 14, avatar: 'MN' },
-      { id: 5, name: 'Irma Armstrong', phone: '+1 45214 66568', appointments: 12, avatar: 'IA' },
-    ];
+    this.doctorService.getDoctors().pipe(
+      switchMap((doctors: Doctor[]) => {
+        return forkJoin({
+          profile: this.store.select(selectUserProfile).pipe(take(1), catchError(() => of(null))),
+          user: this.store.select(selectAuthUser).pipe(take(1), catchError(() => of(null))),
+          myPatients: this.doctorService.getMyPatients().pipe(catchError(() => of([])))
+        }).pipe(
+          map(({ profile, user, myPatients }) => {
+            const rawUserId = (profile as any)?.idUser ?? (profile as any)?.id_user ?? (profile as any)?.userId ?? (profile as any)?.id ??
+                              (user as any)?.idUser ?? (user as any)?.id_user ?? (user as any)?.userId ?? (user as any)?.id ?? null;
+            const userId = rawUserId != null ? Number(rawUserId) : null;
+            const match = doctors.find((d: Doctor) => Number(d.idUser) === Number(userId));
+            const doctorId = match?.idDocteur ?? userId;
+
+            const patientLookup = new Map<number, any>();
+            myPatients.forEach((p: any) => {
+              patientLookup.set(Number(p.idPatient ?? p.id), p);
+            });
+
+            return { doctorId, patientLookup };
+          }),
+          switchMap(({ doctorId, patientLookup }) => {
+            if (!doctorId) return of({ items: [], patientLookup });
+            // Use proxy from doctor-service
+            return this.doctorService.getMyAppointments().pipe(
+              map(res => ({ items: (res.data || res), patientLookup })),
+              catchError(() => of({ items: [], patientLookup }))
+            );
+          })
+        );
+      })
+    ).subscribe(({ items, patientLookup }: { items: any[], patientLookup: Map<number, any> }) => {
+      const patientCounts = new Map<number, { name: string; count: number; phone: string }>();
+      
+      for (const it of items) {
+        const pid = Number(it.idPatient ?? it.id_patient ?? it.patientId);
+        if (Number.isNaN(pid)) continue;
+        
+        const p = patientLookup.get(pid);
+        const name = p ? `${p.prenom ?? ''} ${p.nom ?? ''}`.trim() : (`Patient #${pid}`);
+        const phone = p ? (p.telephone ?? '') : (it.patient?.telephone ?? '');
+
+        const pInfo = patientCounts.get(pid) || { 
+          name: name, 
+          count: 0,
+          phone: phone
+        };
+        pInfo.count++;
+        patientCounts.set(pid, pInfo);
+      }
+
+      this.patients = Array.from(patientCounts.entries())
+        .map(([id, info]) => ({
+          id,
+          name: info.name,
+          phone: info.phone,
+          appointments: info.count,
+          avatar: info.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        }))
+        .sort((a, b) => b.appointments - a.appointments)
+        .slice(0, 5);
+    });
   }
 
   getAvatarColor(index: number): string {

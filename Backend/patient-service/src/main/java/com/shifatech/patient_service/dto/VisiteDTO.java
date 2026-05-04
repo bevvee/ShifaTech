@@ -22,9 +22,13 @@ public class VisiteDTO {
     private TypeVisite typeVisite;
     private TypeBlessure typeBlessure;
     private Long idBodyPart;
+    @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private LocalDateTime dateCreation;
     private String planTraitement;
     private String observations;
+    private String overlayUrl;
+    private String maskUrl;
+    private String originalImageUrl;
     private LocalDateTime dateFermeture;
 
     // Infos pour l'affichage

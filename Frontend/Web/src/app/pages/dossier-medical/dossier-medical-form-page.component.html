@@ -32,7 +32,7 @@
 						</div>
 					</div>
 
-					@if (((userRole$ | async) === Role.INFIRMIER) && form.status === 'ACTIVE') {
+					@if (((userRole$ | async) === Role.INFIRMIER || (userRole$ | async) === Role.SECRETAIRE) && form.status === 'ACTIVE') {
 						<div class="mt-4 flex items-center justify-end">
 							<app-button size="sm" variant="outline" (btnClick)="createVisite()">
 								<svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -196,7 +196,7 @@
 				</div>
 				<div>
 					<app-label for="taille">Taille (cm) <span class="font-semibold text-error-500">*</span></app-label>
-					<app-input-field id="taille" name="taille" type="number" [step]="1" [(value)]="form.taille" [error]="heightError !== ''" [hint]="heightError" [disabled]="isReadOnly" />
+					<app-input-field id="taille" name="taille" type="number" [step]="0.1" [(value)]="form.taille" [error]="heightError !== ''" [hint]="heightError" [disabled]="isReadOnly" />
 				</div>
 
 				<div>

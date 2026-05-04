@@ -227,7 +227,8 @@ export class PatientsFormPageComponent {
         }),
         catchError(err => {
           console.error('[PATIENT FORM] Erreur:', err);
-          void this.alerts.error('Une erreur est survenue : ' + (err.message || 'Erreur inconnue'));
+          const msg = this.extractErrorMessage(err);
+          void this.alerts.error(msg || 'Une erreur est survenue lors de la création');
           this.loading = false;
           return of(null);
         })
@@ -248,10 +249,25 @@ export class PatientsFormPageComponent {
         },
         error: (err) => {
           console.error(err);
-          void this.alerts.error('Erreur lors de la modification');
+          const msg = this.extractErrorMessage(err);
+          void this.alerts.error(msg || 'Erreur lors de la modification');
           this.loading = false;
         }
       });
     }
+  }
+  private extractErrorMessage(err: any): string | null {
+    // Si c'est une erreur HTTP avec un corps JSON
+    const errorBody = err.error;
+    if (errorBody) {
+      if (typeof errorBody.data === 'object' && errorBody.data !== null) {
+        const errors = errorBody.data;
+        return Object.values(errors).join('\n');
+      }
+      if (errorBody.message) {
+        return errorBody.message;
+      }
+    }
+    return err.message || null;
   }
 }

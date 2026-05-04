@@ -1,7 +1,6 @@
 package com.example.adminservice.repository;
 
-import com.example.adminservice.Enum.TypeNotif;
-import com.example.adminservice.notification.entity.Notification;
+import com.example.adminservice.entity.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
@@ -11,10 +10,12 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
 
     List<Notification> findByIdUserOrderByDateEnvoiDesc(Integer idUser);
 
-    List<Notification> findByIdUserAndTypeNotif(Integer idUser, TypeNotif typeNotif);
+    List<Notification> findByIdUserAndEstLuFalseOrderByDateEnvoiDesc(Integer idUser);
 
     boolean existsByIdUserAndMessageContaining(Integer idUser, String messageFragment);
 
     boolean existsByIdUserAndMessage(Integer idUser, String message);
+
+    boolean existsByMessageContaining(String message);
 
 }

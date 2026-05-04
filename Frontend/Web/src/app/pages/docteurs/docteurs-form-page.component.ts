@@ -157,8 +157,8 @@ export class DocteursFormPageComponent {
 
     const statut = this.form.statutValue === 'true';
     
-    // Auth-service user data
-    const authPayload = {
+    // Auth-service user data (create)
+    const authPayload: any = {
       nom: this.form.nom.trim(),
       prenom: this.form.prenom.trim(),
       cin: this.form.cin.trim(),
@@ -171,6 +171,20 @@ export class DocteursFormPageComponent {
       adresse: this.form.adresse.trim(),
       dateNaissance: this.form.dateNaissance,
       passwordConfirmation: this.form.passwordConfirmation.trim(),
+    };
+
+    // Auth-service user data (update) — backend DTO uses `motDePasse` not `password`
+    const authUpdatePayload: any = {
+      nom: this.form.nom.trim(),
+      prenom: this.form.prenom.trim(),
+      email: this.form.email.trim(),
+      role: Role.DOCTEUR,
+      sexe: this.form.sexe === Sexe.H ? 'M' : 'F',
+      statut,
+      telephone: this.form.telephone.trim(),
+      adresse: this.form.adresse.trim(),
+      dateNaissance: this.form.dateNaissance,
+      ...(this.form.password?.trim() ? { motDePasse: this.form.password.trim() } : {}),
     };
 
     if (this.mode === 'create') {
@@ -245,10 +259,7 @@ export class DocteursFormPageComponent {
     };
 
     if (this.idUser) {
-      if (!authPayload.password) {
-         delete (authPayload as any).password;
-      }
-      this.authService.updateUser(this.idUser, authPayload).subscribe({
+      this.authService.updateUser(this.idUser, authUpdatePayload).subscribe({
         next: (res: any) => {
           if (res?.error) {
              this.toastService.error('Erreur', res.message || 'Erreur lors de la mise à jour (Auth).');

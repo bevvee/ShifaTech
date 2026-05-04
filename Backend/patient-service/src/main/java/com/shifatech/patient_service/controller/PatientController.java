@@ -87,7 +87,7 @@ public class PatientController {
         return ResponseEntity.ok(ApiResponse.success(patient, "Patient mis à jour avec succès"));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SECRETAIRE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePatient(
             @PathVariable Long id,

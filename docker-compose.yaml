@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   ##################################
   # DATABASES
@@ -256,6 +254,8 @@ services:
     depends_on:
       admin-db:
         condition: service_healthy
+      rdv-db:
+        condition: service_healthy
       mailhog:
         condition: service_started
     env_file:
@@ -264,10 +264,19 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://admin-db:3306/admindb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: adminuser
       SPRING_DATASOURCE_PASSWORD: adminpass
-      SERVICES_DOCTOR_URL: http://doctor-service:8080
-      SERVICES_INFIRMIER_URL: http://infirmier-service:8080
-    expose:
-      - "8080"
+      APP_AUTH_SERVICE_URL: http://auth-service:8080
+      APP_DOCTOR_SERVICE_URL: http://doctor-service:8080
+      APP_INFIRMIER_SERVICE_URL: http://infirmier-service:9000
+      APP_PATIENT_SERVICE_URL: http://patient-service:8080
+      APP_RDV_SERVICE_URL: http://rdv-service:9000
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+      SPRING_MAIL_USERNAME: noreply@shifatech.local
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED: "false"
+    ports:
+      - "8089:8000"
     networks:
       - shifatech-net
   ##################################
@@ -289,7 +298,60 @@ services:
     command: npm start
     networks:
       - shifatech-net
-
+  ##################################
+  # MINIO STORAGE
+  ##################################
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - shifatech-net
+  ##################################
+  # MINIO STORAGE
+  ##################################
+  wound-image-service:
+    build: ./Backend/wound-image-service
+    container_name: wound-image-service
+    restart: always
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: admin123
+      MINIO_PUBLIC_URL: http://localhost:9000
+      # Prefer presigned URLs so the browser can fetch private objects.
+      MINIO_USE_PUBLIC_URL: "false"
+      # Host:port reachable from the browser to build presigned URLs.
+      MINIO_PUBLIC_ENDPOINT: localhost:9000
+      WOUND_INPUT_NORMALIZATION: imagenet
+      WOUND_CONFIDENCE_MIN_ACCEPTED: "0.35"
+      WOUND_SUPPRESS_MASK_ON_LOW_CONFIDENCE: "false"
+      WOUND_QUEUE_LOW_CONFIDENCE_FOR_RETRAINING: "true"
+    depends_on:
+      - minio
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    volumes:
+      - ./Backend/wound-image-service/app:/app/app
+      - ./Backend/wound-image-service/models:/app/models
+      - ./torch_cache:/app/torch_cache
+    networks:
+      - shifatech-net
   ##################################
   # NGINX GATEWAY
   ##################################
@@ -390,3 +452,4 @@ volumes:
   rdv-service-cache:
   body_mysql_data:
   grafana-storage:
+  minio_data:

@@ -63,3 +63,8 @@ export const selectUserRole = createSelector(
         return null;
     }
 );
+
+export const selectUserId = createSelector(
+    selectAuthUser,
+    (user) => user?.userId ?? user?.id
+);

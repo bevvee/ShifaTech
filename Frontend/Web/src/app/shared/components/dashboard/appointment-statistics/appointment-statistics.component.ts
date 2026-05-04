@@ -12,6 +12,8 @@ import { Store } from '@ngrx/store';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, take } from 'rxjs/operators';
 import { RdvService } from '../../../../core/services/rdv.service';
+import { DoctorService } from '../../../../core/services/doctor.service';
+import { Doctor } from '../../../../core/models/doctor.model';
 import { selectAuthUser, selectUserProfile } from '../../../../core/store/auth/auth.selectors';
 
 type RdvStatusKey = 'CONFIRME' | 'ANNULE' | 'TERMINE';
@@ -32,6 +34,7 @@ interface StatusStat {
 export class AppointmentStatisticsComponent implements OnInit {
   private readonly store = inject(Store);
   private readonly rdvService = inject(RdvService);
+  private readonly doctorService = inject(DoctorService);
 
   series: ApexNonAxisChartSeries = [0, 0, 0];
   labels: string[] = ['CONFIRME', 'ANNULE', 'TERMINE'];
@@ -72,34 +75,30 @@ export class AppointmentStatisticsComponent implements OnInit {
   }
 
   private loadStats(): void {
-    forkJoin({
-      profile: this.store.select(selectUserProfile).pipe(take(1), catchError(() => of(null))),
-      user: this.store.select(selectAuthUser).pipe(take(1), catchError(() => of(null))),
-    })
-      .pipe(
-        map(({ profile, user }) => {
-          const src = profile ?? user;
-          const rawUserId =
-            (src as any)?.idUser ??
-            (src as any)?.id_user ??
-            (src as any)?.userId ??
-            (src as any)?.id ??
-            null;
-          const doctorUserId = rawUserId != null ? Number(rawUserId) : null;
-          return doctorUserId && !Number.isNaN(doctorUserId) ? doctorUserId : null;
-        }),
-        switchMap((doctorUserId) => {
-          if (!doctorUserId) return of(null);
-
-          return this.rdvService
-            .getRendezVousViewList({ id_docteur: doctorUserId, pagination: false, itemsPerPage: 1000 })
-            .pipe(
-              map((res: any) => this.extractArrayFromResponse(res)),
-              catchError(() => of([] as any[])),
+    this.doctorService.getDoctors().pipe(
+      switchMap((doctors: Doctor[]) => {
+        return forkJoin({
+          profile: this.store.select(selectUserProfile).pipe(take(1), catchError(() => of(null))),
+          user: this.store.select(selectAuthUser).pipe(take(1), catchError(() => of(null)))
+        }).pipe(
+          map(({ profile, user }) => {
+            const rawUserId = (profile as any)?.idUser ?? (profile as any)?.id_user ?? (profile as any)?.userId ?? (profile as any)?.id ??
+                              (user as any)?.idUser ?? (user as any)?.id_user ?? (user as any)?.userId ?? (user as any)?.id ?? null;
+            const userId = rawUserId != null ? Number(rawUserId) : null;
+            const match = doctors.find((d: Doctor) => Number(d.idUser) === Number(userId));
+            return (match?.idDocteur ?? userId) as number | null;
+          }),
+          switchMap((doctorId) => {
+            if (!doctorId) return of([]);
+            // Use proxy from doctor-service
+            return this.doctorService.getMyAppointments().pipe(
+              map((res: any) => this.extractArrayFromResponse(res.data || res)),
+              catchError(() => of([] as any[]))
             );
-        }),
-      )
-      .subscribe((items: any[] | null) => {
+          })
+        );
+      })
+    ).subscribe((items: any[]) => {
         if (!items) return;
         const totals: Record<RdvStatusKey, number> = {
           TERMINE: 0,

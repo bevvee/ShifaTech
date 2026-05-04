@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Dto;
 
 use Lexik\Bundle\JWTAuthenticationBundle\Security\User\JWTUserInterface;
@@ -15,13 +14,9 @@ class SecurityUser implements JWTUserInterface
         $this->roles = $roles;
     }
 
-    /**
-     * Crée un utilisateur via le payload du JWT
-     */
     public static function createFromPayload($username, array $payload): self
     {
         $role = $payload['role'] ?? $payload['roles'] ?? null;
-
         if (is_string($role)) {
             $roles = ['ROLE_' . strtoupper($role)];
         } elseif (is_array($role)) {
@@ -29,7 +24,6 @@ class SecurityUser implements JWTUserInterface
         } else {
             $roles = ['ROLE_USER'];
         }
-
         return new self((string) $username, $roles);
     }
 
@@ -41,16 +35,11 @@ class SecurityUser implements JWTUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // Garantie qu'il y a toujours au moins ROLE_USER
         if (!in_array('ROLE_USER', $roles, true)) {
             $roles[] = 'ROLE_USER';
         }
-
         return array_unique($roles);
     }
 
-    public function eraseCredentials(): void
-    {
-        // Pas de credentials stockés dans ce cas car architecture sans état (stateless)
-    }
+    public function eraseCredentials(): void {}
 }

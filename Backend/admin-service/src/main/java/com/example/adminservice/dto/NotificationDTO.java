@@ -10,8 +10,10 @@ import java.time.LocalDateTime;
 public class NotificationDTO {
     private Integer idNotif;
     private TypeNotif typeNotif;
+    private String titre;
     private String message;
     private LocalDateTime dateEnvoi;
     private Integer idUser;
-    private boolean lu;
+    private boolean estLu;
+    private Integer idRessource;
 }

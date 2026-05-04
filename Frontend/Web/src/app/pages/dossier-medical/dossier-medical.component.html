@@ -28,14 +28,7 @@
 				/>
 			</div>
 
-			<button
-				type="button"
-				
-				(click)="createDossier()"
-				class="inline-flex items-center justify-center rounded-lg bg-green-400 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-600"
-			>
-				Add Dossier
-			</button>
+
 		</div>
 
 		<div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-white/3">
@@ -62,10 +55,13 @@
 
 									<td class="px-5 py-4">
 										<div class="flex items-center gap-3">
-											<img
-												src="https://i.pravatar.cc/40?u={{ d.idPatient }}"
-												class="h-10 w-10 rounded-full object-cover"
-											/>
+											<div
+												class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+												[ngClass]="d.sexePatient === 'F' ? 'bg-pink-400' : 'bg-gray-400'"
+												aria-hidden="true"
+											>
+												{{ getInitials(d) }}
+											</div>
 											<div>
 												<p class="font-medium text-gray-800 dark:text-white">{{ d.nomPatient }}</p>
 											</div>
@@ -108,20 +104,25 @@
 												</svg>
 											</button>
 
-											<button
-												type="button"
-												(click)="deleteDossier(d.id)"
-												class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-red-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-red-400 dark:hover:bg-white/6"
-												aria-label="Supprimer"
-											>
-												<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-													<path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-													<path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-													<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-													<path d="M10 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-													<path d="M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-												</svg>
-											</button>
+											@if ((userRole$ | async) === Role.INFIRMIER) {
+												<button
+													type="button"
+													[disabled]="d.status !== 'ACTIVE'"
+													(click)="archiveDossier(d.id)"
+													class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed dark:border-white/10 dark:bg-white/3 dark:hover:bg-white/6"
+													[ngClass]="d.status !== 'ACTIVE' ? 'text-gray-400' : 'text-red-600 dark:text-red-400'"
+													aria-label="Archiver"
+													title="Archiver"
+												>
+													<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+														<path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M10 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+													</svg>
+												</button>
+											}
 										</div>
 									</td>
 								</tr>

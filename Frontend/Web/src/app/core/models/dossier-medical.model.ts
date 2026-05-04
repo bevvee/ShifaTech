@@ -6,6 +6,7 @@ export interface DossierMedicalDto {
     idPatient: number;
     // Nom du patient (pour affichage — résolu via PatientsStore)
     nomPatient?: string;
+    sexePatient?: string;
     numDossier?: string;
 
     status: DossierStatus;

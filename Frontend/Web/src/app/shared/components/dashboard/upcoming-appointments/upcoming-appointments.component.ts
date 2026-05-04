@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { RdvService } from '../../../../core/services/rdv.service';
+import { DoctorService } from '../../../../core/services/doctor.service';
+import { Doctor } from '../../../../core/models/doctor.model';
 import { selectAuthUser, selectUserProfile, selectUserRole } from '../../../../core/store/auth/auth.selectors';
 import { Role } from '../../../../core/models/role.enum';
 import { Observable, Subscription, forkJoin, of } from 'rxjs';
@@ -12,8 +14,12 @@ type DateKey = string; // YYYY-MM-DD
 interface RendezVousViewItem {
   id?: number;
   idPatient?: number;
+  id_patient?: number | string;
+  patientId?: number | string;
   idDocteur?: number;
   dateRdv?: string;
+  date_rdv?: string;
+  date?: string;
   heureDebut?: string;
   heureFin?: string;
   statut?: string;
@@ -49,6 +55,7 @@ interface AppointmentDisplay {
 })
 export class UpcomingAppointmentsComponent implements OnInit, OnDestroy {
   private readonly rdvService = inject(RdvService);
+  private readonly doctorService = inject(DoctorService);
   private readonly store = inject(Store);
   private readonly subscription = new Subscription();
 
@@ -79,40 +86,63 @@ export class UpcomingAppointmentsComponent implements OnInit, OnDestroy {
       }).pipe(
         switchMap(({ role, user, profile }): Observable<{ isDoctor: boolean; displays: AppointmentDisplay[] }> => {
           const isDoctor = role === Role.DOCTEUR;
-          const rawUserId =
-            (profile as any)?.idUser ??
-            (profile as any)?.id_user ??
-            (profile as any)?.userId ??
-            (profile as any)?.id ??
-            (user as any)?.idUser ??
-            (user as any)?.id_user ??
-            (user as any)?.userId ??
-            (user as any)?.id ??
-            null;
+          const rawUserId = (profile as any)?.idUser ?? (profile as any)?.id_user ?? (profile as any)?.userId ?? (profile as any)?.id ??
+                            (user as any)?.idUser ?? (user as any)?.id_user ?? (user as any)?.userId ?? (user as any)?.id ?? null;
           const userId = rawUserId != null ? Number(rawUserId) : null;
 
-          const doctorIdForQuery = isDoctor ? userId : null;
-          if (!doctorIdForQuery) {
-            return of({ isDoctor, displays: [] as AppointmentDisplay[] });
+          if (isDoctor) {
+            return forkJoin({
+              doctors: this.doctorService.getDoctors(),
+              myPatients: this.doctorService.getMyPatients().pipe(catchError(() => of([])))
+            }).pipe(
+              switchMap(({ doctors, myPatients }) => {
+                const match = doctors.find((d: Doctor) => Number(d.idUser) === Number(userId));
+                const doctorIdForQuery = match?.idDocteur ?? userId;
+                
+                if (!doctorIdForQuery) return of({ isDoctor, displays: [] as AppointmentDisplay[] });
+
+                const patientLookup = new Map<number, any>();
+                myPatients.forEach((p: any) => {
+                  patientLookup.set(Number(p.idPatient ?? p.id), p);
+                });
+
+                // Use proxy from doctor-service
+                return this.doctorService.getMyAppointments().pipe(
+                  map((res: any) => this.extractRdvArray(res.data || res) as RendezVousViewItem[]),
+                  catchError(() => of([] as RendezVousViewItem[])),
+                  map((items: RendezVousViewItem[]) => {
+                    // Filter for today
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    
+                    const displays = items
+                      .filter(it => {
+                        const itDate = it.dateRdv ?? it.date_rdv ?? it.date;
+                        return itDate && String(itDate).startsWith(todayStr);
+                      })
+                      .map((item: RendezVousViewItem) => {
+                        const pid = Number(item.idPatient ?? item.id_patient ?? item.patientId);
+                        const p = patientLookup.get(pid);
+                        if (p) {
+                          item.patient = {
+                            nom: p.nom,
+                            prenom: p.prenom,
+                            telephone: p.telephone
+                          } as any;
+                        }
+                        return this.mapViewToAppointmentDisplay(item);
+                      })
+                      .filter(Boolean) as AppointmentDisplay[];
+
+                    displays.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+                    return { isDoctor, displays };
+                  })
+                );
+              })
+            );
           }
 
-          return this.rdvService.getRendezVousViewCurrent({ id_docteur: doctorIdForQuery }).pipe(
-            map((res: any) => this.extractRdvArray(res) as RendezVousViewItem[]),
-            catchError(() => of([] as RendezVousViewItem[])),
-            map((items: RendezVousViewItem[]) => {
-              const displays = items
-                .map((item: RendezVousViewItem) => this.mapViewToAppointmentDisplay(item))
-                .filter(Boolean) as AppointmentDisplay[];
-
-              displays.sort((a, b) => {
-                const dk = a.dateKey.localeCompare(b.dateKey);
-                if (dk !== 0) return dk;
-                return a.startTime.localeCompare(b.startTime);
-              });
-
-              return { isDoctor, displays };
-            })
-          );
+          return of({ isDoctor, displays: [] as AppointmentDisplay[] });
         })
       ).subscribe(({ isDoctor, displays }: { isDoctor: boolean; displays: AppointmentDisplay[] }) => {
         this.isDoctorView = isDoctor;
@@ -219,7 +249,7 @@ export class UpcomingAppointmentsComponent implements OnInit, OnDestroy {
     const patientNameRaw = `${String(item.patient?.prenom ?? '').trim()} ${String(item.patient?.nom ?? '').trim()}`.trim();
     const patientName = patientNameRaw || (Number.isNaN(patientIdNum) ? 'Patient' : `Patient #${patientIdNum}`);
 
-    const dateKey = this.toDateKey(item.dateRdv);
+    const dateKey = this.toDateKey(item.dateRdv ?? item.date_rdv ?? (item as any).date);
     if (!dateKey) return null;
 
     const startTime = String(item.heureDebut ?? '').slice(0, 5) || '00:00';

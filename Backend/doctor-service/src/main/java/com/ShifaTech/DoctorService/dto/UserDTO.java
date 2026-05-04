@@ -12,5 +12,7 @@ public class UserDTO {
     private String adresse;
     private String sexe;
     private String dateNaissance;
+    private String cin;
+    private Boolean statut;
     private String role;
 }
