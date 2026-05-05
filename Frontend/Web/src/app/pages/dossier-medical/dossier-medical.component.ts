@@ -3,9 +3,9 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
-import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
 import { DossierMedicalStore } from './dossier-medical.store';
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
+import { ListCardComponent } from '../../shared/components/common/list-card/list-card.component';
 import { DossierMedicalDto, DossierStatus } from '../../core/models/dossier-medical.model';
 import { AlertService } from '../../core/services/alert.service';
 import { Store as NgrxStore } from '@ngrx/store';
@@ -22,7 +22,7 @@ import { Role } from '../../core/models/role.enum';
     CommonModule,
     FormsModule,
     PageBreadcrumbComponent,
-    ComponentCardComponent,
+    ListCardComponent,
     BadgeComponent,
   ],
   templateUrl: './dossier-medical.component.html'

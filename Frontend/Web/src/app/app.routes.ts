@@ -30,6 +30,9 @@ import { DocteursViewComponent } from './pages/docteurs/docteurs-view.component'
 import { InfirmiersComponent } from './pages/infirmiers/infirmiers.component';
 import { InfirmiersFormPageComponent } from './pages/infirmiers/infirmiers-form-page.component';
 import { InfirmiersViewComponent } from './pages/infirmiers/infirmiers-view.component';
+import { SecretairesComponent } from './pages/secretaires/secretaires.component';
+import { SecretairesFormPageComponent } from './pages/secretaires/secretaires-form-page.component';
+import { SecretairesViewComponent } from './pages/secretaires/secretaires-view.component';
 import { ServicesComponent } from './pages/services/services.component';
 import { ServicesFormPageComponent } from './pages/services/services-form-page.component';
 import { ServicesViewComponent } from './pages/services/services-view.component';
@@ -102,7 +105,7 @@ export const routes: Routes = [
         path: "rendez-vous",
         component: RendezVousComponent,
         canActivate: [roleGuard],
-        data: { roles: [Role.DOCTEUR, Role.INFIRMIER] },
+        data: { roles: [Role.SECRETAIRE,Role.DOCTEUR, Role.INFIRMIER] },
       },
       {
         path: "rendez-vous/:id",
@@ -110,7 +113,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           mode: "view",
-          roles: [Role.DOCTEUR, Role.INFIRMIER],
+          roles: [Role.SECRETAIRE,Role.DOCTEUR, Role.INFIRMIER],
         },
       },
       {
@@ -119,7 +122,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           mode: "edit",
-          roles: [Role.DOCTEUR, Role.INFIRMIER],
+          roles: [Role.SECRETAIRE,Role.DOCTEUR, Role.INFIRMIER],
         },
       },
       {
@@ -128,7 +131,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           mode: "create",
-          roles: [Role.INFIRMIER],
+          roles: [Role.SECRETAIRE,Role.INFIRMIER],
         },
       },
       {
@@ -312,6 +315,34 @@ export const routes: Routes = [
         path: "infirmiers/:id/edit",
         component: InfirmiersFormPageComponent,
         title: "Modifier Infirmier | ShifaTech",
+        canActivate: [roleGuard],
+        data: { mode: 'edit', roles: [Role.ADMIN] },
+      },
+      {
+        path: "secretaires",
+        component: SecretairesComponent,
+        title: "Liste des Secretaires | ShifaTech",
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN] },
+      },
+      {
+        path: "secretaires/new",
+        component: SecretairesFormPageComponent,
+        title: "Ajouter une Secretaire | ShifaTech",
+        canActivate: [roleGuard],
+        data: { mode: 'create', roles: [Role.ADMIN] },
+      },
+      {
+        path: "secretaires/:id",
+        component: SecretairesViewComponent,
+        title: "Détails Secretaire | ShifaTech",
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN] },
+      },
+      {
+        path: "secretaires/:id/edit",
+        component: SecretairesFormPageComponent,
+        title: "Modifier Secretaire | ShifaTech",
         canActivate: [roleGuard],
         data: { mode: 'edit', roles: [Role.ADMIN] },
       },

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
+import { ListCardComponent } from '../../shared/components/common/list-card/list-card.component';
 import { VisiteStore } from './visites.store';
 import { VisiteDto } from '../../core/models/visite.model';
 import { AlertService } from '../../core/services/alert.service';
@@ -23,6 +24,7 @@ import { Role } from '../../core/models/role.enum';
     FormsModule,
     PageBreadcrumbComponent,
     ComponentCardComponent,
+    ListCardComponent,
   ],
   templateUrl: './visites.component.html'
 })

@@ -1,7 +1,39 @@
 <div class="px-2 pb-4">
 	<app-page-breadcrumb pageTitle="Spécialités" />
 
-	<app-component-card title="Liste des Spécialités">
+	<app-list-card title="Liste des Spécialités" [total]="filteredSpecialities.length">
+
+		<!-- Search and Add Buttons -->
+		<div card-actions class="flex items-center gap-2">
+			<!-- Search Bar -->
+			<div class="relative hidden sm:block">
+				<input
+					type="text"
+					placeholder="Rechercher..."
+					[(ngModel)]="searchTerm"
+					class="h-10 w-56 rounded-lg border border-gray-300 bg-white pl-10 pr-4 text-sm focus:border-primary-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+				/>
+				<div class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+					<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="2" />
+						<path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+					</svg>
+				</div>
+			</div>
+
+			<!-- Add Button Dropdown -->
+			<select
+				class="h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm focus:border-primary-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+				[(ngModel)]="createTypeValue"
+				(ngModelChange)="onCreateTypeChange($event)"
+			>
+				<option [ngValue]="''" disabled>+ Ajouter Spécialité</option>
+				@for (opt of createOptions; track opt.value) {
+					<option [ngValue]="opt.value">{{ opt.label }}</option>
+				}
+			</select>
+		</div>
+
 		@if (loading) {
 			<div class="flex flex-col items-center justify-center py-20 space-y-6">
 				<div class="relative flex items-center justify-center">
@@ -16,148 +48,111 @@
 				</div>
 			</div>
 		} @else {
-			<ng-container>
-				<div card-actions class="flex items-center gap-3">
-					<div class="relative">
-						<input
-							type="text"
-							placeholder="Rechercher..."
-							[(ngModel)]="searchTerm"
-							class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm focus:border-primary-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
-						/>
-					</div>
-					<div class="min-w-56">
-						<select
-							class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm focus:border-primary-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
-							[(ngModel)]="createTypeValue"
-							(ngModelChange)="onCreateTypeChange($event)"
-						>
-							<option [ngValue]="''" disabled>
-								+ Ajouter Spécialité
-							</option>
-							@for (opt of createOptions; track opt.value) {
-								<option [ngValue]="opt.value">{{ opt.label }}</option>
-							}
-						</select>
-					</div>
+			@if (filteredSpecialities.length === 0) {
+				<div class="mt-4 flex items-center gap-2">
+					<app-button
+						size="sm"
+						[variant]="owner === 'doctor' ? 'primary' : 'outline'"
+						(btnClick)="setOwner('doctor')"
+					>
+						Spécialités Docteur
+					</app-button>
+					<app-button
+						size="sm"
+						[variant]="owner === 'infirmier' ? 'primary' : 'outline'"
+						(btnClick)="setOwner('infirmier')"
+					>
+						Spécialités Infirmier
+					</app-button>
+				</div>
+				<div class="px-6 pb-6 pt-6 text-center text-sm text-gray-500 dark:text-gray-400">Aucune spécialité.</div>
+			} @else {
+				<!-- Owner Type Buttons -->
+				<div class="flex items-center gap-2 py-4">
+					<app-button
+						size="sm"
+						[variant]="owner === 'doctor' ? 'primary' : 'outline'"
+						(btnClick)="setOwner('doctor')"
+					>
+						Spécialités Docteur
+					</app-button>
+					<app-button
+						size="sm"
+						[variant]="owner === 'infirmier' ? 'primary' : 'outline'"
+						(btnClick)="setOwner('infirmier')"
+					>
+						Spécialités Infirmier
+					</app-button>
 				</div>
 
-				<span card-title-addon class="text-sm text-primary-600 font-medium">
-					Total Spécialités : {{ filteredSpecialities.length }}
-				</span>
+				<!-- Table -->
+				<div class="overflow-hidden">
+					<div class="max-w-full overflow-x-auto">
+						<table class="min-w-full">
+							<thead class="border-gray-100 border-y dark:border-white/5">
+								<tr>
+									<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">Id</th>
+									<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">Nom</th>
+									<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">Service</th>
+									<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">
+										<span class="sr-only">Action</span>
+									</th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-gray-100 dark:divide-white/5">
+								@for (spec of filteredSpecialities; track spec.idSpecialite) {
+									<tr>
+										<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ spec.idSpecialite }}</td>
+										<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ spec.label }}</td>
+										<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ getServiceLabel(spec.idService) || '-' }}</td>
+										<td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
+											<div class="flex items-center gap-2">
+												<button
+													type="button"
+													(click)="goToView(spec)"
+													class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-primary-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-primary-400 dark:hover:bg-white/6"
+													aria-label="Voir"
+												>
+													<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+														<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+													</svg>
+												</button>
 
-				@if (filteredSpecialities.length === 0) {
-					<div class="mt-4 flex items-center gap-2">
-						<app-button
-							size="sm"
-							[variant]="owner === 'doctor' ? 'primary' : 'outline'"
-							(btnClick)="setOwner('doctor')"
-						>
-							Spécialités Docteur
-						</app-button>
-						<app-button
-							size="sm"
-							[variant]="owner === 'infirmier' ? 'primary' : 'outline'"
-							(btnClick)="setOwner('infirmier')"
-						>
-							Spécialités Infirmier
-						</app-button>
+												<button
+													type="button"
+													(click)="goToEdit(spec)"
+													aria-label="Modifier"
+												>
+													<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+														<path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+													</svg>
+												</button>
+
+												<button
+													type="button"
+													(click)="deleteSpeciality(spec.idSpecialite)"
+													class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-red-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-red-400 dark:hover:bg-white/6"
+													aria-label="Supprimer"
+												>
+													<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+														<path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M10 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+														<path d="M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+													</svg>
+												</button>
+											</div>
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
 					</div>
-					<div class="px-6 pb-6 pt-6 text-center text-sm text-gray-500 dark:text-gray-400">Aucune spécialité.</div>
-				} @else {
-					<div class="rounded-2xl border border-gray-200 bg-white pt-4 dark:border-white/5 dark:bg-white/3">
-						<div class="flex items-center justify-between gap-3 px-5 pb-4 sm:px-6">
-							<div class="flex items-center gap-2">
-								<app-button
-									size="sm"
-									[variant]="owner === 'doctor' ? 'primary' : 'outline'"
-									(btnClick)="setOwner('doctor')"
-								>
-									Spécialités Docteur
-								</app-button>
-								<app-button
-									size="sm"
-									[variant]="owner === 'infirmier' ? 'primary' : 'outline'"
-									(btnClick)="setOwner('infirmier')"
-								>
-									Spécialités Infirmier
-								</app-button>
-							</div>
-							<span class="text-sm text-gray-500 dark:text-gray-400">
-								{{ owner === 'doctor' ? 'Liste des spécialités docteur' : 'Liste des spécialités infirmier' }}
-							</span>
-						</div>
-
-						<div class="overflow-hidden">
-							<div class="max-w-full px-5 overflow-x-auto sm:px-6">
-								<table class="min-w-full">
-									<thead class="border-gray-100 border-y dark:border-white/5">
-										<tr>
-											<th class="py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">Id</th>
-											<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">Nom</th>
-											<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">Service</th>
-											<th class="px-4 py-3 font-normal text-gray-500 text-start text-theme-sm dark:text-gray-400">
-												<span class="sr-only">Action</span>
-											</th>
-										</tr>
-									</thead>
-									<tbody class="divide-y divide-gray-100 dark:divide-white/5">
-										@for (spec of filteredSpecialities; track spec.idSpecialite) {
-											<tr>
-												<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ spec.idSpecialite }}</td>
-												<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ spec.label }}</td>
-												<td class="px-4 py-4 text-gray-700 whitespace-nowrap text-theme-sm dark:text-gray-400">{{ getServiceLabel(spec.idService) || '-' }}</td>
-												<td class="px-4 py-4 text-gray-700 text-theme-sm dark:text-gray-400">
-													<div class="flex items-center gap-2">
-														<button
-															type="button"
-															(click)="goToView(spec)"
-															class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-primary-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-primary-400 dark:hover:bg-white/6"
-															aria-label="Voir"
-														>
-															<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-																<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-																<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-															</svg>
-														</button>
-
-														<button
-															type="button"
-															(click)="goToEdit(spec)"
-															class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-green-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-green-400 dark:hover:bg-white/6"
-															aria-label="Modifier"
-														>
-															<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-																<path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-																<path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-															</svg>
-														</button>
-
-														<button
-															type="button"
-															(click)="deleteSpeciality(spec.idSpecialite)"
-															class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-red-600 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-red-400 dark:hover:bg-white/6"
-															aria-label="Supprimer"
-														>
-															<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-																<path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-																<path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-																<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-																<path d="M10 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-																<path d="M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-															</svg>
-														</button>
-													</div>
-												</td>
-											</tr>
-										}
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
-				}
-			</ng-container>
+				</div>
 			}
-	</app-component-card>
+		}
+	</app-list-card>
 </div>

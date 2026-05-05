@@ -76,15 +76,15 @@ export class UserDropdownComponent {
   private getRolePrefixClass(role: Role | null): string {
     switch (role) {
       case Role.DOCTEUR:
-        return 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400';
+        return 'border border-brand-300 text-brand-700 dark:border-brand-500/30 dark:text-brand-400';
       case Role.ADMIN:
-        return 'bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-500';
+        return 'border border-error-300 text-error-700 dark:border-error-500/30 dark:text-error-500';
       case Role.INFIRMIER:
-        return 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-500';
+        return 'border border-success-300 text-success-700 dark:border-success-500/30 dark:text-success-500';
       case Role.SECRETAIRE:
-        return 'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-500';
+        return 'border border-warning-300 text-warning-700 dark:border-warning-500/30 dark:text-warning-500';
       default:
-        return 'bg-gray-100 text-gray-700 dark:bg-white/5 dark:text-gray-300';
+        return 'border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300';
     }
   }
 

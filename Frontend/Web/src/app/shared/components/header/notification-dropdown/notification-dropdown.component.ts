@@ -6,8 +6,6 @@ import { DropdownItemComponent } from '../../ui/dropdown/dropdown-item/dropdown-
 import { NotificationService } from '../../../../core/services/notification.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Notification, TypeNotif } from '../../../../core/models/notification.model';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 
 @Component({
   selector: 'app-notification-dropdown',
@@ -24,7 +22,7 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
   loading = false;
   hasNew = false;
   private idUser?: number;
-  private stompClient?: Client;
+  private refreshTimerId?: ReturnType<typeof setInterval>;
 
   get notifying(): boolean {
     return this.hasNew;
@@ -37,32 +35,21 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
 
     // 1. Charger les notifs existantes
     this.loadNotifications();
-
-    this.connectWebSocket();
+    this.startPolling();
   }
 
   ngOnDestroy() {
-    this.stompClient?.deactivate();
+    if (this.refreshTimerId) {
+      clearInterval(this.refreshTimerId);
+    }
   }
 
-  private connectWebSocket() {
-      import('sockjs-client').then(({ default: SockJS }) => {
-      this.stompClient = new Client({
-        webSocketFactory: () => new SockJS('http://localhost:8082/ws'),
-        reconnectDelay: 5000,
-        onConnect: () => {
-          this.stompClient?.subscribe(
-            `/topic/notifications/${this.idUser}`,
-            (message) => {
-              const notif: Notification = JSON.parse(message.body);
-              this.notifications = [notif, ...this.notifications];
-              this.hasNew = true;
-            }
-          );
-        }
-      });
-      this.stompClient.activate();
-    });
+  private startPolling() {
+    this.refreshTimerId = setInterval(() => {
+      if (!this.isOpen) {
+        this.loadNotifications();
+      }
+    }, 15000);
   }
 
   loadNotifications() {

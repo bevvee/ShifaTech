@@ -8,15 +8,9 @@
     }
     <span class="block mr-1 font-medium text-theme-sm">
       @if (nameVm$ | async; as vm) {
-        @if (vm.prefix) {
-          <span
-            class="mr-1 inline-flex items-center rounded-md px-1.5 py-0.5 text-theme-xs font-semibold"
-            [ngClass]="vm.prefixClass"
-          >
-            {{ vm.prefix }}
-          </span>
-        }
-        {{ vm.displayName }}
+        <span class="inline-flex items-center rounded-md px-2 py-0.5" [ngClass]="vm.prefixClass">
+          <span>{{ vm.displayName }}</span>
+        </span>
       }
     </span>
     <svg [ngClass]="{
@@ -33,15 +27,9 @@
     <div>
       @if (nameVm$ | async; as vm) {
         <span class="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-          @if (vm.prefix) {
-            <span
-              class="mr-1 inline-flex items-center rounded-md px-1.5 py-0.5 text-theme-xs font-semibold"
-              [ngClass]="vm.prefixClass"
-            >
-              {{ vm.prefix }}
-            </span>
-          }
-          {{ vm.fullName }}
+          <span class="inline-flex items-center rounded-md px-2 py-0.5" [ngClass]="vm.prefixClass">
+            <span>{{ vm.fullName }}</span>
+          </span>
         </span>
       }
       <span class="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">

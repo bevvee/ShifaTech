@@ -2,13 +2,7 @@
 
 	<app-page-breadcrumb pageTitle="Dossiers Médicaux"></app-page-breadcrumb>
 
-	<app-component-card title="Dossiers Médicaux">
-		<span
-			card-title-addon
-			class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-white/10 dark:text-white/80"
-		>
-			<span class="text-blue-600 px-3">Total : </span> {{ filteredDossiers.length }}
-		</span>
+	<app-list-card title="Dossiers Médicaux" [total]="filteredDossiers.length">
 
 		<div card-actions class="relative inline-flex items-center gap-2">
 			<label for="dossiers-search" class="sr-only">Search</label>
@@ -132,6 +126,6 @@
 				}
 			</div>
 		</div>
-	</app-component-card>
+	</app-list-card>
 
 </div>

@@ -1,13 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertService } from '../../core/services/alert.service';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
+import { ListCardComponent } from '../../shared/components/common/list-card/list-card.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 import { ServiceRow } from '../../core/models/service.model';
-import { ServicesCatalogService } from '../../core/services/services-catalog.service';
+import { AdminServicesService } from '../../core/services/admin-services.service';
+import { ToastService } from '../../shared/services/toast.service';
 
 @Component({
   selector: 'app-services',
@@ -16,14 +18,17 @@ import { ServicesCatalogService } from '../../core/services/services-catalog.ser
     FormsModule,
     PageBreadcrumbComponent,
     ComponentCardComponent,
+    ListCardComponent,
     ButtonComponent,
   ],
   templateUrl: './services.component.html',
   styles: ``
 })
-export class ServicesComponent {
+export class ServicesComponent implements OnInit {
 
   services: ServiceRow[] = [];
+  loading = false;
+  error: string | null = null;
 
   currentPage = 1;
   itemsPerPage = 5;
@@ -31,18 +36,31 @@ export class ServicesComponent {
   constructor(
     private readonly router: Router,
     private readonly alerts: AlertService,
-    private readonly servicesCatalog: ServicesCatalogService,
+    private readonly adminServices: AdminServicesService,
+    private readonly toastService: ToastService,
   ) {}
 
   ngOnInit() {
-    this.reload();
+    this.loadServices();
   }
 
-  private reload() {
-    this.services = this.servicesCatalog.getAll();
-    if (this.currentPage > this.totalPages) {
-      this.currentPage = this.totalPages;
-    }
+  private loadServices() {
+    this.loading = true;
+    this.error = null;
+    this.adminServices.getAllServices().subscribe({
+      next: (data) => {
+        this.services = data || [];
+        this.loading = false;
+        if (this.currentPage > this.totalPages) {
+          this.currentPage = this.totalPages;
+        }
+      },
+      error: (err) => {
+        console.error('Error loading services:', err);
+        this.error = 'Erreur lors du chargement des services';
+        this.loading = false;
+      }
+    });
   }
 
   goToCreate() {
@@ -65,12 +83,16 @@ export class ServicesComponent {
     const ok = await this.alerts.confirmDelete('ce service');
     if (!ok) return;
 
-    const updated = this.services.filter((s) => s.id !== id);
-    this.services = updated;
-    this.servicesCatalog.saveAll(updated);
-    if (this.currentPage > this.totalPages) {
-      this.currentPage = this.totalPages;
-    }
+    this.adminServices.deleteService(id).subscribe({
+      next: () => {
+        this.toastService.success('Succès', 'Service supprimé avec succès.');
+        this.loadServices();
+      },
+      error: (err) => {
+        console.error('Error deleting service:', err);
+        this.toastService.error('Erreur', 'Erreur lors de la suppression du service');
+      }
+    });
   }
 
   get totalPages(): number {
@@ -87,5 +109,4 @@ export class ServicesComponent {
       this.currentPage = page;
     }
   }
-
 }

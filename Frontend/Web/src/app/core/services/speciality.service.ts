@@ -3,7 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { environment } from '../../../environments/environment';
 import { Speciality } from '../models/speciality.model';
+import { ServiceRow } from '../models/service.model';
 import { map } from 'rxjs/operators';
+import { AdminServicesService } from './admin-services.service';
 
 export type SpecialityOwner = 'doctor' | 'infirmier';
 
@@ -14,6 +16,7 @@ export class SpecialityService extends ApiService {
 
     private doctorBase = environment.api.doctor + '/speciality';
     private infirmierBase = environment.api.infirmierSpecialite;
+    private readonly adminServices = inject(AdminServicesService);
 
     constructor() {
         super(inject(HttpClient));
@@ -27,6 +30,20 @@ export class SpecialityService extends ApiService {
         return this.get<unknown>(`${this.infirmierBase}`).pipe(
             map((resp) => this.unwrapCollection(resp).map((raw) => this.mapInfirmierSpeciality(raw)))
         );
+    }
+
+    /**
+     * Get all services from admin database
+     */
+    getAllServices() {
+        return this.adminServices.getAllServices();
+    }
+
+    /**
+     * Get a specific service from admin database
+     */
+    getService(id: number) {
+        return this.adminServices.getService(id);
     }
 
     getSpeciality(id: number, owner: SpecialityOwner = 'doctor') {

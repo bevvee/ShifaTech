@@ -1,6 +1,6 @@
 /* Google Fonts blocked in this build environment; use local fallback */
-/* @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap") */
-/* layer(base); */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@layer base;
 
 @import "tailwindcss";
 @import "swiper/css/bundle";
@@ -1213,4 +1213,21 @@ pre[class*="language-"] {
 }
 pre[class*="language-"].line-numbers {
   padding-left: 2.8em !important;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-prescription, #printable-prescription * {
+    visibility: visible;
+  }
+  #printable-prescription {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    background: white;
+    color: black;
+  }
 }

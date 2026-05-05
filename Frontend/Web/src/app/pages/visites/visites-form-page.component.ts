@@ -160,7 +160,7 @@ export class VisitesFormPageComponent implements OnInit {
         this.viewOverlayUrl = (existing as any).overlayUrl || null;
         this.viewMaskUrl = (existing as any).maskUrl || null;
 
-        if (this.isReadOnly && this.viewOriginalImageUrl) {
+        if (this.viewOriginalImageUrl) {
           this.woundImagePreviewUrl =
             this.woundAnalysisService.getImageUrl(this.viewOriginalImageUrl);
 

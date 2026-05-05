@@ -24,13 +24,15 @@
           [options]="serviceOptions"
           placeholder="Choisir un service"
           [(value)]="form.serviceIdValue"
+          [disabled]="loadingServices"
         />
+        <p *ngIf="loadingServices" class="mt-2 text-xs text-gray-500">Chargement des services...</p>
       </div>
     </div>
 
     <div class="mt-8 flex items-center justify-end gap-3">
       <app-button size="sm" variant="outline" (btnClick)="cancel()">Annuler</app-button>
-      <app-button size="sm" (btnClick)="save()" [disabled]="!isValid">Enregistrer</app-button>
+      <app-button size="sm" (btnClick)="save()" [disabled]="!isValid || loadingServices">Enregistrer</app-button>
     </div>
   </app-component-card>
 </div>

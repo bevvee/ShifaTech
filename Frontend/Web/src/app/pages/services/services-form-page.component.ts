@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
@@ -9,7 +9,8 @@ import { InputFieldComponent } from '../../shared/components/form/input/input-fi
 import { TextAreaComponent } from '../../shared/components/form/input/text-area.component';
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { ServiceRow } from '../../core/models/service.model';
-import { ServicesCatalogService } from '../../core/services/services-catalog.service';
+import { AdminServicesService } from '../../core/services/admin-services.service';
+import { ToastService } from '../../shared/services/toast.service';
 
 type Mode = 'create' | 'edit';
 
@@ -29,13 +30,16 @@ type Mode = 'create' | 'edit';
   templateUrl: './services-form-page.component.html',
   styles: ``,
 })
-export class ServicesFormPageComponent {
+export class ServicesFormPageComponent implements OnInit {
   mode: Mode;
   submitted = false;
+  loading = false;
+  error: string | null = null;
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly servicesCatalog = inject(ServicesCatalogService);
+  private readonly adminServices = inject(AdminServicesService);
+  private readonly toastService = inject(ToastService);
 
   private id: number | null;
 
@@ -48,17 +52,26 @@ export class ServicesFormPageComponent {
     this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
     const idParam = this.route.snapshot.paramMap.get('id');
     this.id = idParam ? Number(idParam) : null;
+  }
 
+  ngOnInit() {
     if (this.mode === 'edit' && this.id != null) {
-      const existing = this.servicesCatalog.getAll().find((s) => s.id === this.id) ?? null;
-      if (!existing) {
-        this.router.navigate(['/services']);
-        return;
-      }
-      this.form = {
-        label: existing.label,
-        description: existing.description,
-      };
+      this.loading = true;
+      this.adminServices.getService(this.id).subscribe({
+        next: (service) => {
+          this.form = {
+            label: service.label,
+            description: service.description || '',
+          };
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading service:', err);
+          this.error = 'Impossible de charger le service';
+          this.loading = false;
+          this.router.navigate(['/services']);
+        }
+      });
     }
   }
 
@@ -78,22 +91,43 @@ export class ServicesFormPageComponent {
     this.submitted = true;
     if (!this.isValid) return;
 
-    const services = this.servicesCatalog.getAll();
+    this.loading = true;
+    this.error = null;
+
     const payload: Omit<ServiceRow, 'id'> = {
       label: this.form.label.trim(),
       description: this.form.description.trim(),
     };
 
     if (this.mode === 'create') {
-      const nextId = this.servicesCatalog.nextId(services);
-      this.servicesCatalog.saveAll([{ id: nextId, ...payload }, ...services]);
-      this.router.navigate(['/services']);
+      this.adminServices.createService(payload).subscribe({
+        next: () => {
+          this.toastService.success('Succès', 'Service créé avec succès.');
+          this.router.navigate(['/services']);
+        },
+        error: (err) => {
+          console.error('Error creating service:', err);
+          this.error = 'Erreur lors de la création du service';
+          this.loading = false;
+          this.toastService.error('Erreur', this.error);
+        }
+      });
       return;
     }
 
     if (this.id == null) return;
-    const updated = services.map((s) => (s.id === this.id ? { id: this.id as number, ...payload } : s));
-    this.servicesCatalog.saveAll(updated);
-    this.router.navigate(['/services']);
+    
+    this.adminServices.updateService(this.id, payload).subscribe({
+      next: () => {
+        this.toastService.success('Succès', 'Service modifié avec succès.');
+        this.router.navigate(['/services']);
+      },
+      error: (err) => {
+        console.error('Error updating service:', err);
+        this.error = 'Erreur lors de la modification du service';
+        this.loading = false;
+        this.toastService.error('Erreur', this.error);
+      }
+    });
   }
 }

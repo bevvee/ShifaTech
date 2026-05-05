@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
@@ -9,7 +9,7 @@ import { InputFieldComponent } from '../../shared/components/form/input/input-fi
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
 import { SpecialityOwner, SpecialityService } from '../../core/services/speciality.service';
-import { ServicesCatalogService } from '../../core/services/services-catalog.service';
+import { AdminServicesService } from '../../core/services/admin-services.service';
 import { Speciality } from '../../core/models/speciality.model';
 import { ToastService } from '../../shared/services/toast.service';
 
@@ -31,16 +31,17 @@ type Mode = 'create' | 'edit';
   templateUrl: './specialisations-form-page.component.html',
   styles: ``,
 })
-export class SpecialisationsFormPageComponent {
+export class SpecialisationsFormPageComponent implements OnInit {
   mode: Mode;
   submitted = false;
+  loadingServices = false;
 
   owner: SpecialityOwner;
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly specialityService = inject(SpecialityService);
-  private readonly servicesCatalog = inject(ServicesCatalogService);
+  private readonly adminServices = inject(AdminServicesService);
   private readonly toastService = inject(ToastService);
 
   private id: number | null;
@@ -59,12 +60,11 @@ export class SpecialisationsFormPageComponent {
 
     const fromQuery = this.route.snapshot.queryParamMap.get('type');
     this.owner = fromQuery === 'infirmier' ? 'infirmier' : 'doctor';
+  }
 
-    this.serviceOptions = this.servicesCatalog.getAll().map((s) => ({
-      value: String(s.id),
-      label: s.label,
-    }));
-
+  ngOnInit() {
+    this.loadServices();
+    
     if (this.mode === 'edit' && this.id != null) {
       this.specialityService.getSpeciality(this.id, this.owner).subscribe({
         next: (existing) => {
@@ -76,6 +76,24 @@ export class SpecialisationsFormPageComponent {
         error: () => this.router.navigate(['/specialisations'], { queryParams: { type: this.owner } }),
       });
     }
+  }
+
+  private loadServices() {
+    this.loadingServices = true;
+    this.adminServices.getAllServices().subscribe({
+      next: (services) => {
+        this.serviceOptions = (services || []).map((s) => ({
+          value: String(s.id),
+          label: s.label,
+        }));
+        this.loadingServices = false;
+      },
+      error: (err) => {
+        console.error('Error loading services:', err);
+        this.toastService.error('Erreur', 'Impossible de charger les services');
+        this.loadingServices = false;
+      }
+    });
   }
 
   get title(): string {

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
+import { ListCardComponent } from '../../shared/components/common/list-card/list-card.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 import { Speciality } from '../../core/models/speciality.model';
 import { SpecialityOwner, SpecialityService } from '../../core/services/speciality.service';
@@ -21,6 +22,7 @@ import { ToastService } from '../../shared/services/toast.service';
     FormsModule,
     PageBreadcrumbComponent,
     ComponentCardComponent,
+    ListCardComponent,
     ButtonComponent,
   ],
   templateUrl: './specialisations.component.html',
