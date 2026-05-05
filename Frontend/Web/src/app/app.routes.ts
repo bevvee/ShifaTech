@@ -102,7 +102,7 @@ export const routes: Routes = [
         path: "rendez-vous",
         component: RendezVousComponent,
         canActivate: [roleGuard],
-        data: { roles: [Role.DOCTEUR, Role.INFIRMIER] },
+        data: { roles: [Role.DOCTEUR, Role.INFIRMIER,Role.SECRETAIRE] },
       },
       {
         path: "rendez-vous/:id",
@@ -110,7 +110,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           mode: "view",
-          roles: [Role.DOCTEUR, Role.INFIRMIER],
+          roles: [Role.DOCTEUR, Role.INFIRMIER,Role.SECRETAIRE],
         },
       },
       {
@@ -119,7 +119,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           mode: "edit",
-          roles: [Role.DOCTEUR, Role.INFIRMIER],
+          roles: [Role.DOCTEUR, Role.INFIRMIER,Role.SECRETAIRE],
         },
       },
       {
@@ -128,7 +128,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: {
           mode: "create",
-          roles: [Role.INFIRMIER],
+          roles: [Role.INFIRMIER, Role.SECRETAIRE],
         },
       },
       {

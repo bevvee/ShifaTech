@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS ordonnance (
     duree_traitement VARCHAR(50) COMMENT 'Durée du traitement (ex: 7 jours)',
     instructions TEXT COMMENT 'Instructions particulières',
     date_validite DATETIME COMMENT 'Date de validité de l\'ordonnance',
-    statut BOOLEAN DEFAULT TRUE COMMENT 'Valide/Expiré',
+    statut VARCHAR(20) DEFAULT 'ACTIVE' COMMENT 'ACTIVE, EXPIRED, CANCELLED',
     created_by BIGINT,
     updated_by BIGINT,
     INDEX idx_id_patient (id_patient),
