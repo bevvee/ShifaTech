@@ -93,6 +93,16 @@ export class WoundAnalysisService {
   getImageUrl(imageUrl: string): string {
     if (!imageUrl) return '';
 
+    // Already routed through wound service signed-url endpoint.
+    if (imageUrl.includes('/signed-url?object_name=')) {
+      return imageUrl;
+    }
+
+    // Preferred persisted format: raw object key (e.g. analysis-results/...)
+    if (!imageUrl.includes('://') && !imageUrl.startsWith('/')) {
+      return `${this.API_BASE}/signed-url?object_name=${encodeURIComponent(imageUrl)}`;
+    }
+
     // Legacy records may store raw MinIO API URLs. Route those through the
     // wound service so the browser receives a presigned redirect instead.
     if (imageUrl.includes('/wound-images/') && !imageUrl.includes('X-Amz-Algorithm=')) {

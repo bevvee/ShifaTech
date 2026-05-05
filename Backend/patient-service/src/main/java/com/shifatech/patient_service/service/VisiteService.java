@@ -13,11 +13,17 @@ import com.shifatech.patient_service.repository.VisiteRepository;
 import com.shifatech.patient_service.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +37,9 @@ public class VisiteService {
     private final PatientRepository patientRepository;
     private final AuthServiceClient authServiceClient;
     private final JwtUtil jwtUtil;
+
+    @Value("${wound.service.public-base:/wound}")
+    private String woundServicePublicBase;
 
     public VisiteDTO createVisite(CreateVisiteRequest request, Long createdBy, String authHeader) {
         if (!isInfirmier() && !isAdmin() && !isSecretaire()) {
@@ -85,9 +94,9 @@ public class VisiteService {
         visite.setPlanTraitement(request.getPlanTraitement());
         visite.setObservations(request.getObservations());
         // analysis image URLs
-        visite.setOverlayUrl(request.getOverlayUrl());
-        visite.setMaskUrl(request.getMaskUrl());
-        visite.setOriginalImageUrl(request.getOriginalImageUrl());
+        visite.setOverlayUrl(normalizeImageReferenceForStorage(request.getOverlayUrl()));
+        visite.setMaskUrl(normalizeImageReferenceForStorage(request.getMaskUrl()));
+        visite.setOriginalImageUrl(normalizeImageReferenceForStorage(request.getOriginalImageUrl()));
         visite.setCreatedBy(createdBy);
         visite.setStatus(Visite.StatusVisite.OPEN);
 
@@ -157,9 +166,9 @@ public class VisiteService {
 
         visite.setPlanTraitement(request.getPlanTraitement());
         visite.setObservations(request.getObservations());
-        visite.setOverlayUrl(request.getOverlayUrl());
-        visite.setMaskUrl(request.getMaskUrl());
-        visite.setOriginalImageUrl(request.getOriginalImageUrl());
+        visite.setOverlayUrl(normalizeImageReferenceForStorage(request.getOverlayUrl()));
+        visite.setMaskUrl(normalizeImageReferenceForStorage(request.getMaskUrl()));
+        visite.setOriginalImageUrl(normalizeImageReferenceForStorage(request.getOriginalImageUrl()));
         visite.setTypeVisite(request.getTypeVisite());
         visite.setTypeBlessure(request.getTypeBlessure());
         visite.setIdBodyPart(request.getIdBodyPart());
@@ -252,9 +261,9 @@ public class VisiteService {
                 .dateCreation(visite.getDateCreation())
                 .planTraitement(visite.getPlanTraitement())
                 .observations(visite.getObservations())
-                .overlayUrl(visite.getOverlayUrl())
-                .maskUrl(visite.getMaskUrl())
-                .originalImageUrl(visite.getOriginalImageUrl())
+                .overlayUrl(toFreshAccessUrl(visite.getOverlayUrl()))
+                .maskUrl(toFreshAccessUrl(visite.getMaskUrl()))
+                .originalImageUrl(toFreshAccessUrl(visite.getOriginalImageUrl()))
                 .dateFermeture(visite.getDateFermeture())
                 .build();
 
@@ -277,5 +286,128 @@ public class VisiteService {
         });
 
         return dto;
+    }
+
+    private String toFreshAccessUrl(String storedValue) {
+        String objectName = extractObjectName(storedValue);
+        if (objectName == null) {
+            return storedValue;
+        }
+
+        String base = (woundServicePublicBase == null || woundServicePublicBase.isBlank())
+                ? "/wound"
+                : woundServicePublicBase.trim();
+        if (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+
+        return base + "/signed-url?object_name="
+                + URLEncoder.encode(objectName, StandardCharsets.UTF_8);
+    }
+
+    private String normalizeImageReferenceForStorage(String value) {
+        String objectName = extractObjectName(value);
+        if (objectName != null) {
+            return objectName;
+        }
+        return value;
+    }
+
+    private String extractObjectName(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        String cleaned = value.trim();
+
+        // Already an object key (preferred storage format).
+        if (!cleaned.contains("://") && !cleaned.startsWith("/") && !cleaned.contains("?")) {
+            return cleaned;
+        }
+
+        // Handle /wound/signed-url?object_name=... form.
+        String fromSignedEndpoint = extractObjectNameFromSignedEndpoint(cleaned);
+        if (fromSignedEndpoint != null) {
+            return fromSignedEndpoint;
+        }
+
+        try {
+            URI uri = URI.create(cleaned);
+            String path = uri.getPath() == null ? "" : decode(uri.getPath());
+
+            int bucketIndex = path.indexOf("/wound-images/");
+            if (bucketIndex >= 0) {
+                String name = path.substring(bucketIndex + "/wound-images/".length());
+                if (!name.isBlank()) {
+                    return trimSlashes(name);
+                }
+            }
+
+            String rawPath = trimSlashes(path);
+            if (rawPath.startsWith("wound-images/")) {
+                String name = rawPath.substring("wound-images/".length());
+                if (!name.isBlank()) {
+                    return trimSlashes(name);
+                }
+            }
+        } catch (Exception ignored) {
+            // Fall through to conservative checks below.
+        }
+
+        // If we only have a path-like value, keep it as key when meaningful.
+        String normalized = cleaned;
+        if (normalized.startsWith("/")) {
+            normalized = normalized.substring(1);
+        }
+        if (normalized.startsWith("wound-images/")) {
+            normalized = normalized.substring("wound-images/".length());
+            if (!normalized.isBlank()) {
+                return trimSlashes(normalized);
+            }
+        }
+
+        return null;
+    }
+
+    private String extractObjectNameFromSignedEndpoint(String value) {
+        String lower = value.toLowerCase(Locale.ROOT);
+        if (!lower.contains("signed-url") || !value.contains("object_name=")) {
+            return null;
+        }
+
+        int idx = value.indexOf("object_name=");
+        if (idx < 0) {
+            return null;
+        }
+
+        String raw = value.substring(idx + "object_name=".length());
+        int amp = raw.indexOf('&');
+        if (amp >= 0) {
+            raw = raw.substring(0, amp);
+        }
+
+        if (raw.isBlank()) {
+            return null;
+        }
+
+        String decoded = decode(raw);
+        // Recursive call allows object_name to be either a key or a full URL.
+        String nested = extractObjectName(decoded);
+        return nested != null ? nested : trimSlashes(decoded);
+    }
+
+    private String decode(String value) {
+        return URLDecoder.decode(value, StandardCharsets.UTF_8);
+    }
+
+    private String trimSlashes(String value) {
+        String v = value;
+        while (v.startsWith("/")) {
+            v = v.substring(1);
+        }
+        while (v.endsWith("/")) {
+            v = v.substring(0, v.length() - 1);
+        }
+        return v;
     }
 }
