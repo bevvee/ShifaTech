@@ -1,5 +1,6 @@
 package com.shifatech.patient_service.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.shifatech.patient_service.entity.TypeBlessure;
 import com.shifatech.patient_service.entity.TypeVisite;
 import jakarta.validation.constraints.NotNull;
@@ -16,6 +17,7 @@ public class CreateVisiteRequest {
     @NotNull(message = "Le type de visite est obligatoire")
     private TypeVisite typeVisite;
 
+    @JsonDeserialize(using = EmptyStringToNullDeserializer.class)
     private TypeBlessure typeBlessure;
 
     private Long idBodyPart;
