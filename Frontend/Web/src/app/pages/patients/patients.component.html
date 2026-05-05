@@ -1,14 +1,8 @@
 <div class="px-2 pb-4">
 	<app-page-breadcrumb pageTitle="Patients" />
 
-	<app-component-card title="Patients">
+	<app-list-card title="Patients" [total]="filteredPatients.length">
 		<ng-container>
-		<span
-			card-title-addon
-			class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-white/10 dark:text-white/80"
-		>
-			<span class="text-blue-600 px-3">Total : </span> {{ filteredPatients.length }}
-		</span>
 
 		<div card-actions class="relative inline-flex items-center gap-2">
 			<label for="patients-search" class="sr-only">Search</label>
@@ -132,5 +126,5 @@
 			</div>
 		</div>
 				</ng-container>
-	</app-component-card>
+	</app-list-card>
 </div>

@@ -7,24 +7,38 @@
     </p>
 
     <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-      <div class="sm:col-span-2 border-b border-default pb-2">
-        <h3 class="text-base font-semibold text-heading">Informations Personnelles</h3>
-      </div>
-
       <div>
         <app-label for="nom">Nom <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="nom" name="nom" placeholder="Ex: Amrani" [(value)]="form.nom" [error]="submitted && !form.nom.trim()" />
+        <app-input-field id="nom" name="nom" placeholder="Nom" [(value)]="form.nom" [error]="submitted && !form.nom.trim()" />
       </div>
-
       <div>
         <app-label for="prenom">Prénom <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="prenom" name="prenom" placeholder="Ex: Omar" [(value)]="form.prenom" [error]="submitted && !form.prenom.trim()" />
+        <app-input-field id="prenom" name="prenom" placeholder="Prénom" [(value)]="form.prenom" [error]="submitted && !form.prenom.trim()" />
       </div>
 
       <div>
         <app-label for="cin">CIN <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="cin" name="cin" placeholder="Ex: BE123456" [(value)]="form.cin" [error]="submitted && !form.cin.trim()" />
+        <app-input-field id="cin" name="cin" placeholder="CIN" [(value)]="form.cin" [error]="submitted && !form.cin.trim()" />
+      </div>
+      <div>
+        <app-label for="email">Email <span class="font-semibold text-error-500">*</span></app-label>
+        <app-input-field id="email" name="email" type="email" placeholder="email@..." [(value)]="form.email" [error]="submitted && !form.email.trim()" />
+      </div>
+
+      <div>
+        <app-label for="mot_de_passe">
+          Mot de passe
+          @if (mode === 'create') { <span class="font-semibold text-error-500">*</span> }
+        </app-label>
+        <app-input-field
+          id="mot_de_passe"
+          name="mot_de_passe"
+          type="password"
+          placeholder="Mot de passe"
+          [(value)]="form.password"
+          [error]="submitted && mode === 'create' && !form.password.trim()"
+          [hint]="mode === 'edit' ? 'Laisser vide pour ne pas changer.' : ''"
+        />
       </div>
 
       <div>
@@ -42,43 +56,14 @@
         <app-select [options]="specialiteOptions" [(value)]="form.idSpecialite" [hasSearch]="false" />
       </div>
 
-      <div class="sm:col-span-2 border-b border-default pb-2 mt-4">
-        <h3 class="text-base font-semibold text-heading">Contact</h3>
-      </div>
-
-      <div>
-        <app-label for="email">Email <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="email" name="email" type="email" placeholder="email@exemple.com" [(value)]="form.email" [error]="submitted && !form.email.trim()" />
-      </div>
-
       <div>
         <app-label for="telephone">Téléphone <span class="font-semibold text-error-500">*</span></app-label>
-        <app-input-field id="telephone" name="telephone" placeholder="06XXXXXXXX" [(value)]="form.telephone" [error]="submitted && !form.telephone.trim()" />
+        <app-input-field id="telephone" name="telephone" placeholder="Téléphone" [(value)]="form.telephone" [error]="submitted && !form.telephone.trim()" />
       </div>
 
       <div class="sm:col-span-2">
         <app-label for="adresse">Adresse</app-label>
-        <app-input-field id="adresse" name="adresse" placeholder="Adresse complète..." [(value)]="form.adresse" />
-      </div>
-
-      <div class="sm:col-span-2 border-b border-default pb-2 mt-4">
-        <h3 class="text-base font-semibold text-heading">Sécurité</h3>
-      </div>
-
-      <div>
-        <app-label for="password">
-          Mot de passe
-          @if (mode === 'create') { <span class="font-semibold text-error-500">*</span> }
-        </app-label>
-        <app-input-field
-          id="password"
-          name="password"
-          type="password"
-          placeholder="Mot de passe"
-          [(value)]="form.password"
-          [error]="submitted && mode === 'create' && !form.password.trim()"
-          [hint]="mode === 'edit' ? 'Laisser vide pour ne pas changer.' : ''"
-        />
+        <app-text-area id="adresse" name="adresse" placeholder="Adresse" [(value)]="form.adresse" [rows]="3" />
       </div>
 
       <div>

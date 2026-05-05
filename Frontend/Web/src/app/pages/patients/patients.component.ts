@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
+import { ListCardComponent } from '../../shared/components/common/list-card/list-card.component';
 import { PatientsStore } from './patients.store';
 import { DossierMedicalStore } from '../dossier-medical/dossier-medical.store';
 import { PatientDto } from '../../core/models/patient.model';
@@ -22,6 +23,7 @@ import { take } from 'rxjs/operators';
     FormsModule,
     PageBreadcrumbComponent,
     ComponentCardComponent,
+    ListCardComponent,
   ],
   templateUrl: './patients.component.html'
 })

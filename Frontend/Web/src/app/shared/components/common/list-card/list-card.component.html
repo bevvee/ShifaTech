@@ -1,0 +1,11 @@
+<app-component-card [title]="title">
+  <div card-title-addon *ngIf="total !== null" class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-white/10 dark:text-white/80">
+    <span class="text-blue-600 px-3">Total : </span>&nbsp;{{ total }}
+  </div>
+
+  <div card-actions>
+    <ng-content select="[card-actions]"></ng-content>
+  </div>
+
+  <ng-content></ng-content>
+</app-component-card>

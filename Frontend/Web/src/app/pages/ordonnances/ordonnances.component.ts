@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
+import { ListCardComponent } from '../../shared/components/common/list-card/list-card.component';
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
 import { OrdonnanceStore } from './ordonnances.store';
 import { OrdonnanceDto, OrdonnanceStatut } from '../../core/models/ordonnance.model';
@@ -26,6 +27,7 @@ import { PatientDto } from '../../core/models/patient.model';
     FormsModule,
     PageBreadcrumbComponent,
     ComponentCardComponent,
+    ListCardComponent,
     BadgeComponent,
   ],
   templateUrl: './ordonnances.component.html'

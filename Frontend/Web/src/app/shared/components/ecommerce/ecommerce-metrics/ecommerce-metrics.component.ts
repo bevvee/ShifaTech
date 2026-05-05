@@ -13,6 +13,7 @@ import { SpecialityService } from '../../../../core/services/speciality.service'
 import { PatientApiService } from '../../../../core/services/api/patient-api.service';
 import { VisiteStore } from '../../../../pages/visites/visites.store';
 import { InfirmierService } from '../../../../core/services/infirmier.service';
+import { SecretaireService } from '../../../../core/services/secretaire.service';
 
 @Component({
   selector: 'app-ecommerce-metrics',
@@ -29,6 +30,7 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
   private readonly patientApi = inject(PatientApiService);
   private readonly visiteStore = inject(VisiteStore);
   private readonly infirmierService = inject(InfirmierService);
+  private readonly secretaireService = inject(SecretaireService);
 
 
   private readonly subscription = new Subscription();
@@ -58,6 +60,7 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
         return 'bg-brand-50 text-brand-500 dark:bg-brand-500/10 dark:text-brand-500';
 
       case 'infirmiers':
+      case 'secretaires':
       case 'visites':
         return 'bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500';
 
@@ -135,10 +138,10 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
         icon: this.icons.groupIcon,
       },
       {
-        key: 'services',
-        label: 'Total Services',
+        key: 'secretaires',
+        label: 'Total Secretaire',
         value: 0,
-        icon: this.icons.boxIconLine,
+        icon: this.icons.groupIcon,
       },
       {
         key: 'specialisations',
@@ -163,6 +166,14 @@ export class EcommerceMetricsComponent implements OnInit, OnDestroy {
         catchError(() => of(0)),
       )
       .subscribe((count) => this.setMetricValue('infirmiers', count));
+
+    this.secretaireService
+      .getAll()
+      .pipe(
+        map((res) => this.countFromResponse(res)),
+        catchError(() => of(0)),
+      )
+      .subscribe((count) => this.setMetricValue('secretaires', count));
 
     this.specialityService
       .getSpecialities()

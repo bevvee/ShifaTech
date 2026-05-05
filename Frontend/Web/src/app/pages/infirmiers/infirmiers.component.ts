@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
-import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
+import { ListCardComponent } from '../../shared/components/common/list-card/list-card.component';
 import { ButtonComponent } from '../../shared/components/ui/button/button.component';
 import { BadgeComponent } from '../../shared/components/ui/badge/badge.component';
 import { Option } from '../../shared/components/form/select/select.component';
@@ -18,7 +18,7 @@ import { AlertService } from '../../core/services/alert.service';
     CommonModule,
     FormsModule,
     PageBreadcrumbComponent,
-    ComponentCardComponent,
+    ListCardComponent,
     ButtonComponent,
     BadgeComponent,
   ],

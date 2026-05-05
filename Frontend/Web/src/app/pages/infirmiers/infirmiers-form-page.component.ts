@@ -8,6 +8,7 @@ import { ButtonComponent } from '../../shared/components/ui/button/button.compon
 import { InputFieldComponent } from '../../shared/components/form/input/input-field.component';
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
+import { TextAreaComponent } from '../../shared/components/form/input/text-area.component';
 import { InfirmierService } from '../../core/services/infirmier.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { AlertService } from '../../core/services/alert.service';
@@ -27,6 +28,7 @@ type Mode = 'create' | 'edit';
     InputFieldComponent,
     LabelComponent,
     SelectComponent,
+    TextAreaComponent,
   ],
   templateUrl: './infirmiers-form-page.component.html',
   styles: ``

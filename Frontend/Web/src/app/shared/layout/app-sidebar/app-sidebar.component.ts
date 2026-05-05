@@ -59,7 +59,7 @@ export class AppSidebarComponent {
       subItems: [
         {
           name: "Liste de Rendez Vous",
-          roles: [Role.SECRETAIRE,Role.INFIRMIER,Role.DOCTEUR],
+          roles: [Role.SECRETAIRE,Role.INFIRMIER,Role.ADMIN],
           path: "/rendez-vous",
         },
         { name: "Calendar", path: "/calendar",roles: [Role.DOCTEUR]},
@@ -162,6 +162,26 @@ export class AppSidebarComponent {
         {
           name: "Ajouter Infirmier",
           path: "/infirmiers/new",
+        },
+      ],
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M16 7V6a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7 16h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`,
+      name: "Secretaires",
+      roles: [Role.ADMIN],
+      subItems: [
+        {
+          name: "Liste des Secretaires",
+          path: "/secretaires",
+        },
+        {
+          name: "Ajouter Secretaire",
+          path: "/secretaires/new",
         },
       ],
     },

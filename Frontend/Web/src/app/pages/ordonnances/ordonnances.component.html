@@ -2,14 +2,8 @@
 
 	<app-page-breadcrumb pageTitle="Ordonnances"></app-page-breadcrumb>
 
-	<app-component-card title="Ordonnances">
+	<app-list-card title="Ordonnances" [total]="filteredOrdonnances.length">
 		<ng-container>
-				<span
-					card-title-addon
-					class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-white/10 dark:text-white/80"
-				>
-					<span class="text-blue-600 px-3">Total : </span> {{ filteredOrdonnances.length }}
-				</span>
 
 				<div card-actions class="relative inline-flex items-center gap-2">
 					<label for="ordonnances-search" class="sr-only">Search</label>
@@ -128,6 +122,6 @@
 					</div>
 				</div>
 		</ng-container>
-	</app-component-card>
+	</app-list-card>
 
 </div>

@@ -11,10 +11,11 @@ import { AppointmentRequestsComponent } from '../../shared/components/dashboard/
 import { AvailabilityComponent } from '../../shared/components/dashboard/availability/availability.component';
 import { AppointmentStatisticsComponent } from '../../shared/components/dashboard/appointment-statistics/appointment-statistics.component';
 import { TopPatientsComponent } from '../../shared/components/dashboard/top-patients/top-patients.component';
+import { TopServicesComponent } from '../../shared/components/dashboard/top-services/top-services.component';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, EcommerceMetricsComponent, MonthlySalesChartComponent, UpcomingAppointmentsComponent, AppointmentRequestsComponent, AvailabilityComponent, AppointmentStatisticsComponent, TopPatientsComponent],
+  imports: [CommonModule, EcommerceMetricsComponent, MonthlySalesChartComponent, UpcomingAppointmentsComponent, AppointmentRequestsComponent, AvailabilityComponent, AppointmentStatisticsComponent, TopPatientsComponent, TopServicesComponent],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent {
