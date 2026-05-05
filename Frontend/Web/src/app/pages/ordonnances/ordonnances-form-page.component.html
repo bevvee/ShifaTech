@@ -3,18 +3,47 @@
 
 	<app-component-card [title]="title">
 		@if (mode === 'view') {
-			<div class="space-y-8">
+			<div class="flex justify-between items-center mb-6 print:hidden">
+				<h2 class="text-xl font-bold text-gray-900 dark:text-white">Détails de l'ordonnance</h2>
+				<button (click)="print()" class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600">
+					<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M6 14h12v8H6v-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+					Imprimer
+				</button>
+			</div>
+
+			<div id="printable-prescription" class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-8 print:border-none print:p-0 print:bg-white print:text-black">
+				<!-- Header Clinic -->
+				<div class="flex justify-between items-start border-b-2 border-brand-500 pb-6 mb-8 print:border-black">
+					<div class="flex items-center gap-4">
+						<img src="/images/logoST.png" alt="ShifaTech Logo" class="h-20 w-auto print:h-20" />
+						<div>
+							<h1 class="text-3xl font-bold text-brand-600 print:text-black">Clinique ShifaTech</h1>
+							<p class="text-gray-600 mt-1 print:text-black">Médecine Générale & Spécialisée</p>
+							<p class="text-sm text-gray-500 mt-2 print:text-black">123 Rue de la Santé, 10000</p>
+							<p class="text-sm text-gray-500 print:text-black">Tél: 01 23 45 67 89</p>
+						</div>
+					</div>
+					<div class="text-right">
+						<h2 class="text-2xl font-bold text-gray-800 uppercase tracking-widest print:text-black">Ordonnance</h2>
+						<p class="text-gray-600 mt-2 print:text-black">N° : {{ ordonnance?.id ?? '-' }}</p>
+						<p class="text-gray-600 print:text-black">Date : {{ (ordonnance?.dateCreation | date:'dd/MM/yyyy') ?? (today | date:'dd/MM/yyyy') }}</p>
+					</div>
+				</div>
+
 				<!-- Patient details strip -->
-				<div>
-					<div class="rounded-md bg-gray-100 px-6 py-4 dark:bg-white/5">
+				<div class="mb-8">
+					<div class="rounded-md bg-gray-50 px-6 py-4 dark:bg-white/5 print:bg-transparent print:border print:border-gray-300 print:p-4">
 						<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-							<div class="text-xl font-semibold text-gray-900 dark:text-white">Détails du Patient : {{ patientDisplayName }}</div>
-							<div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-700 dark:text-gray-300">
+							<div class="text-lg font-semibold text-gray-900 dark:text-white print:text-black">Patient : {{ patientDisplayName }}</div>
+							<div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-700 dark:text-gray-300 print:text-black">
 								<div>
-									Âge : {{ patientAgeYears ?? '-' }} ans / {{ patientSexLabel }}
+									<span class="font-medium">Âge :</span> {{ patientAgeYears ?? '-' }} ans / {{ patientSexLabel }}
 								</div>
 								<div>
-									Groupe Sanguin : {{ patientBloodGroup }}
+									<span class="font-medium">Groupe Sanguin :</span> {{ patientBloodGroup }}
 								</div>
 							</div>
 						</div>
@@ -22,33 +51,33 @@
 				</div>
 
 				<!-- Prescription title -->
-				<div class="text-center text-xl font-semibold text-gray-900 dark:text-white">
+				<div class="mb-6 text-center text-xl font-bold text-gray-900 dark:text-white print:text-black uppercase">
 					{{ prescriptionTitle }}
 				</div>
 
 				<!-- Prescription table -->
-				<div class="overflow-hidden rounded-sm border border-gray-200 dark:border-white/10">
+				<div class="overflow-hidden rounded-sm border border-gray-200 dark:border-white/10 mb-8 print:border-black">
 					<div class="max-w-full overflow-x-auto">
-						<table class="min-w-full">
-							<thead class="bg-gray-50 dark:bg-white/5">
-								<tr class="border-b border-gray-200 dark:border-white/10">
-									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">N°</th>
-									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Médicament</th>
-									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Dosage</th>
-									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Fréquence</th>
-									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Durée</th>
-									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Instructions</th>
+						<table class="min-w-full divide-y divide-gray-200 dark:divide-white/10 print:divide-black">
+							<thead class="bg-gray-50 dark:bg-white/5 print:bg-transparent">
+								<tr>
+									<th class="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-white print:text-black border-b border-gray-200 print:border-black">N°</th>
+									<th class="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-white print:text-black border-b border-gray-200 print:border-black">Médicament</th>
+									<th class="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-white print:text-black border-b border-gray-200 print:border-black">Dosage</th>
+									<th class="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-white print:text-black border-b border-gray-200 print:border-black">Fréquence</th>
+									<th class="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-white print:text-black border-b border-gray-200 print:border-black">Durée</th>
+									<th class="px-6 py-4 text-left text-sm font-bold text-gray-900 dark:text-white print:text-black border-b border-gray-200 print:border-black">Instructions</th>
 								</tr>
 							</thead>
-							<tbody>
+							<tbody class="divide-y divide-gray-200 dark:divide-white/10 print:divide-black">
 								@for (row of medicationRows; track row.sno) {
-									<tr class="border-b border-gray-200 last:border-b-0 dark:border-white/10">
-										<td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ row.sno }}</td>
-										<td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ row.medicineName }}</td>
-										<td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ row.dosage }}</td>
-										<td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ row.frequency }}</td>
-										<td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ row.duration }}</td>
-										<td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ row.timings }}</td>
+									<tr>
+										<td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-300 print:text-black">{{ row.sno }}</td>
+										<td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-gray-300 print:text-black">{{ row.medicineName }}</td>
+										<td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 print:text-black">{{ row.dosage }}</td>
+										<td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 print:text-black">{{ row.frequency }}</td>
+										<td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 print:text-black">{{ row.duration }}</td>
+										<td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 print:text-black">{{ row.timings }}</td>
 									</tr>
 								}
 							</tbody>
@@ -57,16 +86,22 @@
 				</div>
 
 				<!-- Advice -->
-				<div class="space-y-2">
-					<div class="text-lg font-semibold text-gray-900 dark:text-white">Conseils & Instructions</div>
-					<p class="text-sm leading-6 text-gray-700 dark:text-gray-300">
-						{{ form.instructions || '-' }}
-					</p>
+				<div class="mb-12">
+					<div class="text-lg font-bold text-gray-900 dark:text-white print:text-black mb-2">Conseils & Instructions</div>
+					<p class="text-sm leading-6 text-gray-700 dark:text-gray-300 print:text-black whitespace-pre-wrap">{{ form.instructions || '-' }}</p>
 				</div>
 
-				<div class="flex items-center justify-end">
-					<app-button size="sm" variant="outline" (btnClick)="cancel()">Fermer</app-button>
+				<!-- Signature block -->
+				<div class="flex justify-end mt-16 print:mt-24">
+					<div class="text-center">
+						<p class="font-bold text-gray-900 dark:text-white print:text-black">Signature & Cachet du Médecin</p>
+						<div class="mt-4 border-b-2 border-gray-400 dark:border-gray-600 print:border-black w-48 mx-auto"></div>
+					</div>
 				</div>
+			</div>
+
+			<div class="mt-8 flex items-center justify-end print:hidden">
+				<app-button size="sm" variant="outline" (btnClick)="cancel()">Fermer</app-button>
 			</div>
 		} @else {
 			<p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
