@@ -49,9 +49,9 @@ public class Ordonnance {
     private String instructions;
 
     @Column(name = "date_validite")
-    private java.time.LocalDate dateValidite;
+    private java.time.LocalDateTime dateValidite;
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     @Column(name = "statut", length = 20, nullable = false)
     private StatusOrdonnance statut = StatusOrdonnance.ACTIVE;
 

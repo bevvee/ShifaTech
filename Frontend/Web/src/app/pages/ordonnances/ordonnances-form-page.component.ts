@@ -47,6 +47,7 @@ export class OrdonnancesFormPageComponent implements OnInit {
   mode: Mode;
   submitted = false;
   isSaving = false;
+  today = new Date();
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -423,4 +424,8 @@ export class OrdonnancesFormPageComponent implements OnInit {
       this.isSaving = false;
     }
   };
+
+  print() {
+    window.print();
+  }
 }

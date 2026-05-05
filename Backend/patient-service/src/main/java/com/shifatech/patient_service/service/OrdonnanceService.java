@@ -67,7 +67,7 @@ public class OrdonnanceService {
         ordonnance.setPosologie(request.getPosologie());
         ordonnance.setDureeTraitement(request.getDureeTraitement());
         ordonnance.setInstructions(request.getInstructions());
-        ordonnance.setDateValidite(request.getDateValidite());
+        ordonnance.setDateValidite(request.getDateValidite() != null ? request.getDateValidite().atStartOfDay() : null);
         ordonnance.setCreatedBy(createdBy);
         ordonnance.setStatut(com.shifatech.patient_service.entity.StatusOrdonnance.ACTIVE);
 
@@ -159,7 +159,7 @@ public class OrdonnanceService {
         ordonnance.setPosologie(request.getPosologie());
         ordonnance.setDureeTraitement(request.getDureeTraitement());
         ordonnance.setInstructions(request.getInstructions());
-        ordonnance.setDateValidite(request.getDateValidite());
+        ordonnance.setDateValidite(request.getDateValidite() != null ? request.getDateValidite().atStartOfDay() : null);
 
         if (request.getStatut() != null) {
             ordonnance.setStatut(request.getStatut());
@@ -227,7 +227,7 @@ public class OrdonnanceService {
                 .posologie(ordonnance.getPosologie())
                 .dureeTraitement(ordonnance.getDureeTraitement())
                 .instructions(ordonnance.getInstructions())
-                .dateValidite(ordonnance.getDateValidite())
+                .dateValidite(ordonnance.getDateValidite() != null ? ordonnance.getDateValidite().toLocalDate() : null)
                 .statut(ordonnance.getStatut())
                 .build();
 
