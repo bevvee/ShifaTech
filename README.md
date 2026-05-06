@@ -76,14 +76,6 @@ All services are accessible via the **Nginx API Gateway**:
 * Angular app runs at: [http://localhost:4200/](http://localhost:4200/) (development)
 * In production, serve the built frontend using Nginx:
 
-```bash
-# Build Angular frontend
-cd Frontend/Web
-npm install
-npm run build
-
-# Copy dist files to nginx/html (optional, if not using Docker)
-```
 
 ---
 
