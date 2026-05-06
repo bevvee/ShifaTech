@@ -58,7 +58,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_BODY:$IMAGE_TAG
 
           # WEB SERVICE
-          docker build -t $ECR_REGISTRY/$ECR_WEB:$IMAGE_TAG ./Frontend/web-service
+          docker build -t $ECR_REGISTRY/$ECR_WEB:$IMAGE_TAG ./Frontend/Web
           docker push $ECR_REGISTRY/$ECR_WEB:$IMAGE_TAG
 
           echo "ADMIN_IMAGE=$ECR_REGISTRY/$ECR_ADMIN:$IMAGE_TAG" >> $GITHUB_ENV
