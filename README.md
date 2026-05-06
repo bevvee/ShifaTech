@@ -17,7 +17,9 @@ ShifaTech/
 │   ├── patient-service/      # Patient management service
 │   ├── doctor-service/       # Doctor management service
 │   ├── infirmier-service/    # Nurse management service
-│   └── rdv-service/          # Appointment service
+│   ├── rdv-service/          # Appointment service
+│   ├── admin-service/        # Admin service 
+│   └── wound-image-service/  # Wound image service     
 │
 ├── Frontend/Web/             # Angular frontend application
 │
