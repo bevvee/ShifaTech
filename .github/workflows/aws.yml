@@ -12,7 +12,7 @@ env:
   ECR_BODY: body-service
   ECR_WEB: web-service
 
-  ECS_CLUSTER: shifatech-cluster
+  ECS_CLUSTER: ShifaTech-Cluster
   ECS_SERVICE: shifatech-service
   ECS_TASK_DEFINITION: .aws/task-definition.json
 
