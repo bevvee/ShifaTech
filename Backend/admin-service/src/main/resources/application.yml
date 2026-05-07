@@ -9,9 +9,9 @@ spring:
     enabled: false
 
   datasource:
-    url: jdbc:mysql://admin-db:3306/admindb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
-    username: adminuser
-    password: adminpass
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://${ADMIN_DB_HOST:admin-db}:${ADMIN_DB_PORT:3306}/${ADMIN_DB_NAME:admindb}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8}
+    username: ${SPRING_DATASOURCE_USERNAME:${ADMIN_DB_USER:adminuser}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${ADMIN_DB_PASSWORD:adminpass}}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:

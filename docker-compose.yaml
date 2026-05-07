@@ -146,7 +146,7 @@ services:
       auth-db:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://auth-db:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://${AUTH_DB_HOST:-auth-db}:${AUTH_DB_PORT:-3306}/${AUTH_DB_NAME:-authdb}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: authuser
       SPRING_DATASOURCE_PASSWORD: authpass
       SERVER_PORT: 8080
@@ -163,7 +163,7 @@ services:
       rdv-db:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql://rdvuser:rdvpass@rdv-db:3306/rdvdb
+      DATABASE_URL: mysql://${RDV_DB_USER:-rdvuser}:${RDV_DB_PASSWORD:-rdvpass}@${RDV_DB_HOST:-rdv-db}:${RDV_DB_PORT:-3306}/${RDV_DB_NAME:-rdvdb}
     expose:
       - "9000"
     networks:
@@ -186,7 +186,7 @@ services:
       patient-db:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://patient-db:3306/patientdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://${PATIENT_DB_HOST:-patient-db}:${PATIENT_DB_PORT:-3306}/${PATIENT_DB_NAME:-patientdb}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: user123
       AUTH_SERVICE_URL: http://auth-service:8080
@@ -204,7 +204,7 @@ services:
       infirmier-db:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql://infirmieruser:infirmierpass@infirmier-db:3306/infirmierdb
+      DATABASE_URL: mysql://${INF_DB_USER:-infirmieruser}:${INF_DB_PASSWORD:-infirmierpass}@${INF_DB_HOST:-infirmier-db}:${INF_DB_PORT:-3306}/${INF_DB_NAME:-infirmierdb}
       AUTH_SERVICE_URL: http://auth-service:8080
     expose:
       - "9000"
@@ -223,7 +223,7 @@ services:
       doctor-db:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://doctor-db:3306/doctordb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://${DOCTOR_DB_HOST:-doctor-db}:${DOCTOR_DB_PORT:-3306}/${DOCTOR_DB_NAME:-doctordb}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: doctoruser
       SPRING_DATASOURCE_PASSWORD: doctorpass
       SERVER_PORT: 8080
@@ -240,7 +240,7 @@ services:
       body-db:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql://bodyuser:bodypass@body-db:3306/bodydb
+      DATABASE_URL: mysql://${BODY_DB_USER:-bodyuser}:${BODY_DB_PASSWORD:-bodypass}@${BODY_DB_HOST:-body-db}:${BODY_DB_PORT:-3306}/${BODY_DB_NAME:-bodydb}
     expose:
       - "9000"
     networks:
@@ -261,7 +261,7 @@ services:
     env_file:
       - ./Backend/admin-service/.env
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://admin-db:3306/admindb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://${ADMIN_DB_HOST:-admin-db}:${ADMIN_DB_PORT:-3306}/${ADMIN_DB_NAME:-admindb}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: adminuser
       SPRING_DATASOURCE_PASSWORD: adminpass
       APP_AUTH_SERVICE_URL: http://auth-service:8080
