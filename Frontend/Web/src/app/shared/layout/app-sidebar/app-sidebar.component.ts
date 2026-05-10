@@ -62,6 +62,11 @@ export class AppSidebarComponent {
           roles: [Role.SECRETAIRE,Role.INFIRMIER,Role.ADMIN],
           path: "/rendez-vous",
         },
+        {
+          name: "Ajouter Rendez Vous",
+          roles: [Role.SECRETAIRE],
+          path: "/rendez-vous/new",
+        },
         { name: "Calendar", path: "/calendar",roles: [Role.DOCTEUR]},
       ],
     },

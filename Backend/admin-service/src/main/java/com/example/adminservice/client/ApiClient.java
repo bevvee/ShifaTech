@@ -50,18 +50,21 @@ public class ApiClient {
     // Auth
     // ─────────────────────────────────────────────
 
-    public synchronized String fetchJwtToken() {
+    public String fetchJwtToken() {
         if (cachedToken != null && Instant.now().isBefore(tokenExpiry)) {
-            log.debug("[AUTH] Token servi depuis le cache (expire dans {}s)",
-                      tokenExpiry.getEpochSecond() - Instant.now().getEpochSecond());
             return cachedToken;
         }
-        String token = doFetchToken();
-        if (token != null) {
-            cachedToken = token;
-            tokenExpiry = Instant.now().plusSeconds(50 * 60);
+        synchronized (this) {
+            if (cachedToken != null && Instant.now().isBefore(tokenExpiry)) {
+                return cachedToken;
+            }
+            String token = doFetchToken();
+            if (token != null) {
+                cachedToken = token;
+                tokenExpiry = Instant.now().plusSeconds(50 * 60);
+            }
+            return token;
         }
-        return token;
     }
 
     private String doFetchToken() {
@@ -151,6 +154,19 @@ public class ApiClient {
     public Integer getServiceIdForDoctor(Integer idDocteur) {
         DoctorDTO doctor = fetchDoctorById(idDocteur);
         return doctor != null ? doctor.getIdService() : null;
+    }
+
+    /**
+     * Retourne le nom complet du docteur ("Dr. Prénom NOM") depuis le doctor-service.
+     * Exemple : "Dr. Jean DUPONT"
+     */
+    public String getDoctorFullName(Integer idDocteur) {
+        DoctorDTO doctor = fetchDoctorById(idDocteur);
+        if (doctor == null) return "Dr. Inconnu";
+        String prenom = (doctor.getPrenom() != null && !doctor.getPrenom().isBlank()) ? doctor.getPrenom() : "";
+        String nom    = (doctor.getNom()    != null && !doctor.getNom().isBlank())    ? doctor.getNom().toUpperCase() : "";
+        String full   = (prenom + " " + nom).trim();
+        return full.isBlank() ? "Dr. Inconnu" : "Dr. " + full;
     }
 
     private DoctorDTO fetchDoctorById(Integer idDocteur) {

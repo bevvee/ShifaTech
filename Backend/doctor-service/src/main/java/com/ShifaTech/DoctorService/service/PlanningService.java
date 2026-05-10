@@ -54,16 +54,23 @@ public class PlanningService {
         Planning planning = planningRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Planning slot not found"));
 
+        boolean isPauseModifie = false;
+
         if (planningDTO.getJour() != null)
             planning.setJour(planningDTO.getJour());
         if (planningDTO.getHeureDebut() != null)
             planning.setHeureDebut(planningDTO.getHeureDebut());
         if (planningDTO.getHeureFin() != null)
             planning.setHeureFin(planningDTO.getHeureFin());
-        if (planningDTO.getPauseDebut() != null)
+            
+        if (planningDTO.getPauseDebut() != null) {
+            if (!planningDTO.getPauseDebut().equals(planning.getPauseDebut())) isPauseModifie = true;
             planning.setPauseDebut(planningDTO.getPauseDebut());
-        if (planningDTO.getPauseFin() != null)
+        }
+        if (planningDTO.getPauseFin() != null) {
+            if (!planningDTO.getPauseFin().equals(planning.getPauseFin())) isPauseModifie = true;
             planning.setPauseFin(planningDTO.getPauseFin());
+        }
 
         Planning saved = planningRepository.save(planning);
 
@@ -71,7 +78,7 @@ public class PlanningService {
             RestTemplate restTemplate = new RestTemplate();
             Map<String, Object> payload = new HashMap<>();
             payload.put("idDocteur", saved.getDoctor().getIdDocteur());
-            payload.put("statut", "MODIFIE");
+            payload.put("statut", isPauseModifie ? "PAUSE_MODIFIE" : "MODIFIE");
             payload.put("dateRdv", saved.getJour().toString() + " " + saved.getHeureDebut());
 
             restTemplate.postForEntity(adminServiceUrl + "/api/admin/planning-events", payload, Void.class);

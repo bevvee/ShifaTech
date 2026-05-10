@@ -13,9 +13,10 @@ class InfirmierProvider implements ProviderInterface
 {
     public function __construct(
         private InfirmierRepository $infirmierRepository,
-        private \Symfony\Contracts\HttpClient\HttpClientInterface $httpClient,
-        private \Symfony\Component\HttpFoundation\RequestStack $requestStack,
-    ) {}
+        private HttpClientInterface $httpClient,
+        private RequestStack $requestStack,
+    ) {
+    }
 
     public function provide(
         Operation $operation,
@@ -34,7 +35,8 @@ class InfirmierProvider implements ProviderInterface
 
         if ($id) {
             $infirmier = $this->infirmierRepository->find($id);
-            if (!$infirmier) return null;
+            if (!$infirmier)
+                return null;
             return $this->mapToResource($infirmier);
         }
 
@@ -62,25 +64,27 @@ class InfirmierProvider implements ProviderInterface
             $authHeader = $this->requestStack->getCurrentRequest()?->headers->get('Authorization');
             $headers = $authHeader ? ['Authorization' => $authHeader] : [];
 
+            error_log("[InfirmierProvider] Appel auth-service pour id_utilisateur: " . $infirmier->getIdUtilisateur());
+
             $response = $this->httpClient->request(
                 'GET',
                 'http://auth-service:8080/user/' . $infirmier->getIdUtilisateur(),
-                ['headers' => $headers]
+                ['headers' => $headers, 'timeout' => 5]
             )->toArray();
 
             $user = $response['user'] ?? [];
-            $resource->nom          = $user['nom'] ?? null;
-            $resource->prenom       = $user['prenom'] ?? null;
-            $resource->cin          = $user['cin'] ?? null;
-            $resource->email        = $user['email'] ?? null;
-            $resource->sexe         = $user['sexe'] ?? null;
-            $resource->statut       = $user['statut'] ?? null;
+            $resource->nom = $user['nom'] ?? null;
+            $resource->prenom = $user['prenom'] ?? null;
+            $resource->cin = $user['cin'] ?? null;
+            $resource->email = $user['email'] ?? null;
+            $resource->sexe = $user['sexe'] ?? null;
+            $resource->statut = $user['statut'] ?? null;
             $resource->dateNaissance = $user['dateNaissance'] ?? null;
-            $resource->telephone    = $user['telephone'] ?? null;
-            $resource->adresse      = $user['adresse'] ?? null;
+            $resource->telephone = $user['telephone'] ?? null;
+            $resource->adresse = $user['adresse'] ?? null;
 
         } catch (\Exception $e) {
-            // Si auth-service inaccessible, on laisse les champs null
+            error_log("[InfirmierProvider] ECHEC appel auth-service pour ID " . $infirmier->getIdUtilisateur() . " : " . $e->getMessage());
         }
 
         return $resource;

@@ -155,6 +155,17 @@ public class AuthController {
         return new ResponseEntity<>(response, status);
     }
     
+    // Get users by role
+    @GetMapping("/users/role/{role}")
+    public ResponseEntity<java.util.List<com.shifatech.authservice.dto.UserDto>> getUsersByRole(@PathVariable String role) {
+        try {
+            com.shifatech.authservice.Enum.RoleEnum roleEnum = com.shifatech.authservice.Enum.RoleEnum.valueOf(role.toUpperCase());
+            return ResponseEntity.ok(authService.getUsersByRole(roleEnum));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     // Health check
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {

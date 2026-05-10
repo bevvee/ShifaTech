@@ -1,0 +1,2168 @@
+﻿diff --git a/Backend/admin-service/.env b/Backend/admin-service/.env
+index 48c6a20f..aba94b8c 100644
+--- a/Backend/admin-service/.env
++++ b/Backend/admin-service/.env
+@@ -1,2 +1,3 @@
+ AUTH_SERVICE_EMAIL=farah0@gmail.com
+ AUTH_SERVICE_PASSWORD=Ehei1234
++APP_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:4200,http://localhost:8082
+diff --git a/Backend/admin-service/src/main/java/com/example/adminservice/AdminServiceApplication.java b/Backend/admin-service/src/main/java/com/example/adminservice/AdminServiceApplication.java
+index 4235839a..84d4d191 100644
+--- a/Backend/admin-service/src/main/java/com/example/adminservice/AdminServiceApplication.java
++++ b/Backend/admin-service/src/main/java/com/example/adminservice/AdminServiceApplication.java
+@@ -3,11 +3,9 @@ package com.example.adminservice;
+ import org.springframework.boot.SpringApplication;
+ import org.springframework.boot.autoconfigure.SpringBootApplication;
+ import org.springframework.context.annotation.Bean;
+-import org.springframework.scheduling.annotation.EnableScheduling;
+ import org.springframework.web.client.RestTemplate;
+ 
+ @SpringBootApplication
+-@EnableScheduling
+ public class AdminServiceApplication {
+     public static void main(String[] args) {
+         SpringApplication.run(AdminServiceApplication.class, args);
+diff --git a/Backend/admin-service/src/main/java/com/example/adminservice/client/ApiClient.java b/Backend/admin-service/src/main/java/com/example/adminservice/client/ApiClient.java
+index 4d74b58c..b2d40b78 100644
+--- a/Backend/admin-service/src/main/java/com/example/adminservice/client/ApiClient.java
++++ b/Backend/admin-service/src/main/java/com/example/adminservice/client/ApiClient.java
+@@ -50,18 +50,21 @@ public class ApiClient {
+     // Auth
+     // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+ 
+-    public synchronized String fetchJwtToken() {
++    public String fetchJwtToken() {
+         if (cachedToken != null && Instant.now().isBefore(tokenExpiry)) {
+-            log.debug("[AUTH] Token servi depuis le cache (expire dans {}s)",
+-                      tokenExpiry.getEpochSecond() - Instant.now().getEpochSecond());
+             return cachedToken;
+         }
+-        String token = doFetchToken();
+-        if (token != null) {
+-            cachedToken = token;
+-            tokenExpiry = Instant.now().plusSeconds(50 * 60);
++        synchronized (this) {
++            if (cachedToken != null && Instant.now().isBefore(tokenExpiry)) {
++                return cachedToken;
++            }
++            String token = doFetchToken();
++            if (token != null) {
++                cachedToken = token;
++                tokenExpiry = Instant.now().plusSeconds(50 * 60);
++            }
++            return token;
+         }
+-        return token;
+     }
+ 
+     private String doFetchToken() {
+@@ -153,6 +156,19 @@ public class ApiClient {
+         return doctor != null ? doctor.getIdService() : null;
+     }
+ 
++    /**
++     * Retourne le nom complet du docteur ("Dr. Pr├®nom NOM") depuis le doctor-service.
++     * Exemple : "Dr. Jean DUPONT"
++     */
++    public String getDoctorFullName(Integer idDocteur) {
++        DoctorDTO doctor = fetchDoctorById(idDocteur);
++        if (doctor == null) return "Dr. Inconnu";
++        String prenom = (doctor.getPrenom() != null && !doctor.getPrenom().isBlank()) ? doctor.getPrenom() : "";
++        String nom    = (doctor.getNom()    != null && !doctor.getNom().isBlank())    ? doctor.getNom().toUpperCase() : "";
++        String full   = (prenom + " " + nom).trim();
++        return full.isBlank() ? "Dr. Inconnu" : "Dr. " + full;
++    }
++
+     private DoctorDTO fetchDoctorById(Integer idDocteur) {
+         try {
+             return restTemplate.exchange(
+diff --git a/Backend/admin-service/src/main/java/com/example/adminservice/controller/NotificationController.java b/Backend/admin-service/src/main/java/com/example/adminservice/controller/NotificationController.java
+index 83a847b6..e081c4a3 100644
+--- a/Backend/admin-service/src/main/java/com/example/adminservice/controller/NotificationController.java
++++ b/Backend/admin-service/src/main/java/com/example/adminservice/controller/NotificationController.java
+@@ -1,33 +1,23 @@
+ package com.example.adminservice.controller;
+ 
+-import com.example.adminservice.client.ApiClient;
+ import com.example.adminservice.dto.EventRequestDTO;
+ import com.example.adminservice.dto.NotificationDTO;
+ import com.example.adminservice.service.EventService;
+ import com.example.adminservice.service.NotificationService;
+-import com.example.adminservice.scheduler.RdvScheduler;
+ import lombok.RequiredArgsConstructor;
+ import lombok.extern.slf4j.Slf4j;
+ import org.springframework.http.ResponseEntity;
+ import org.springframework.web.bind.annotation.*;
+ 
+-import java.time.LocalDateTime;
+-import java.util.LinkedHashMap;
+ import java.util.List;
+-import java.util.Map;
+ 
+ @RestController
+ @RequestMapping("/api")
+ @RequiredArgsConstructor
+ @Slf4j
+ public class NotificationController {
+-
+     private final NotificationService notificationService;
+-    private final RdvScheduler        rdvScheduler;
+     private final EventService        eventService;
+-    private final ApiClient           apiClient;
+-
+-
+     @PostMapping({"/notifications/events", "/admin/events"})
+     public ResponseEntity<Void> receiveEvent(@RequestBody EventRequestDTO dto) {
+         if (dto.getStatut() == null || dto.getIdRdv() == null) return ResponseEntity.badRequest().build();
+@@ -39,7 +29,7 @@ public class NotificationController {
+ 
+         switch (statut) {
+             case "CONFIRME" -> eventService.handleConfirmation(dto.getIdRdv(), dto.getIdPatient(), dto.getIdDocteur(), dto.getIdInfirmier(), dateRdv);
+-            case "CREATED", "EN_ATTENTE" -> eventService.handleNouveauRdv(dto.getIdRdv(), dto.getIdPatient(), dto.getIdDocteur(), dto.getIdInfirmier(), dateRdv);
++            case "CREATED", "EN_ATTENTE" -> eventService.handleNouveauRdv(dto.getIdRdv(), dto.getIdPatient(), dto.getIdDocteur(), dto.getIdInfirmier(), dateRdv, statut);
+             case "MODIFIE" -> eventService.handleModification(dto.getIdRdv(), dto.getIdPatient(), dto.getIdDocteur(), dto.getIdInfirmier(), dateRdv);
+             case "ANNULE" -> eventService.handleAnnulation(dto.getIdRdv(), dto.getIdPatient(), dto.getIdDocteur(), dto.getIdInfirmier(), dateRdv);
+             default -> { return ResponseEntity.accepted().build(); }
+@@ -54,7 +44,7 @@ public class NotificationController {
+         
+         log.info("[NotificationController] Planning modifi├® pour docteur#{}", dto.getIdDocteur());
+         
+-        eventService.handlePlanningModification(dto.getIdDocteur(), dateRdv);
++        eventService.handlePlanningModification(dto.getIdDocteur(), dateRdv, dto.getStatut());
+         return ResponseEntity.accepted().build();
+     }
+ 
+@@ -76,61 +66,5 @@ public class NotificationController {
+     }
+ 
+ 
+-    @PostMapping("/notifications/trigger-scheduler")
+-    public ResponseEntity<String> triggerScheduler() {
+-        rdvScheduler.envoyerRappels24h();
+-        return ResponseEntity.ok("Scheduler ex├®cut├®");
+-    }
+-
+-    @GetMapping("/diagnostic")
+-    public ResponseEntity<Map<String, Object>> diagnostic(
+-            @RequestParam(defaultValue = "9") Integer userId) {
+ 
+-        Map<String, Object> result = new LinkedHashMap<>();
+-        result.put("timestamp", LocalDateTime.now().toString());
+-        result.put("userId_teste", userId);
+-
+-        // ├ëtape 1 ÔÇö Token JWT
+-        String token = null;
+-        try {
+-            token = apiClient.fetchJwtToken();
+-        } catch (Exception e) {
+-            result.put("token_erreur", e.getMessage());
+-        }
+-
+-        if (token == null) {
+-            result.put("token_ok", false);
+-            result.put("token_detail", "null ÔÇö v├®rifier AUTH_SERVICE_EMAIL / AUTH_SERVICE_PASSWORD dans docker-compose");
+-            result.put("email_ok", false);
+-            result.put("email_detail", "non test├® (token absent)");
+-            log.error("[DIAGNOSTIC] Token null ÔÇö cha├«ne de notification bloqu├®e");
+-            return ResponseEntity.ok(result);
+-        }
+-
+-        result.put("token_ok", true);
+-        result.put("token_preview", token.substring(0, Math.min(30, token.length())) + "...");
+-
+-        String email = null;
+-        try {
+-            email = apiClient.getUserEmail(userId);
+-        } catch (Exception e) {
+-            result.put("email_erreur", e.getMessage());
+-        }
+-
+-        if (email == null) {
+-            result.put("email_ok", false);
+-            result.put("email_detail", "null ÔÇö userId=" + userId + " introuvable dans auth-service ou champ email vide");
+-            log.warn("[DIAGNOSTIC] Email null pour userId={}", userId);
+-        } else {
+-            result.put("email_ok", true);
+-            result.put("email_valeur", email);
+-            log.info("[DIAGNOSTIC] OK ÔÇö token valide, email r├®solu : {}", email);
+-        }
+-
+-        result.put("conclusion", result.get("email_ok").equals(true)
+-            ? "Cha├«ne OK ÔÇö si l'e-mail n'arrive pas, v├®rifier les logs [ASYNCÔ£ù] dans docker logs admin-service"
+-            : "Cha├«ne BLOQU├ëE ÔÇö corriger le probl├¿me indiqu├® ci-dessus");
+-
+-        return ResponseEntity.ok(result);
+-    }
+ }
+diff --git a/Backend/admin-service/src/main/java/com/example/adminservice/controller/ServiceController.java b/Backend/admin-service/src/main/java/com/example/adminservice/controller/ServiceController.java
+index 49019213..2529ba05 100644
+--- a/Backend/admin-service/src/main/java/com/example/adminservice/controller/ServiceController.java
++++ b/Backend/admin-service/src/main/java/com/example/adminservice/controller/ServiceController.java
+@@ -3,7 +3,7 @@ package com.example.adminservice.controller;
+ import com.example.adminservice.dto.CreateServiceSFRequest;
+ import com.example.adminservice.dto.UpdateServiceSFRequest;
+ import com.example.adminservice.entity.ServiceSF;
+-import com.example.adminservice.service.ServiceSFEntity;
++import com.example.adminservice.service.ServiceSFService;
+ import jakarta.validation.Valid;
+ import lombok.RequiredArgsConstructor;
+ import org.springframework.http.HttpStatus;
+@@ -16,32 +16,32 @@ import java.util.List;
+ @RequiredArgsConstructor
+ public class ServiceController {
+ 
+-    private final ServiceSFEntity serviceSFEntity;
++    private final ServiceSFService serviceSFService;
+ 
+     @PostMapping
+     @ResponseStatus(HttpStatus.CREATED)
+     public ServiceSF create(@Valid @RequestBody CreateServiceSFRequest request) {
+-        return serviceSFEntity.create(request);
++        return serviceSFService.create(request);
+     }
+ 
+     @GetMapping
+     public List<ServiceSF> getAll() {
+-        return serviceSFEntity.getAll();
++        return serviceSFService.getAll();
+     }
+ 
+     @GetMapping("/{id}")
+     public ServiceSF getById(@PathVariable Integer id) {
+-        return serviceSFEntity.getById(id);
++        return serviceSFService.getById(id);
+     }
+ 
+     @PutMapping("/{id}")
+     public ServiceSF update(@PathVariable Integer id, @RequestBody UpdateServiceSFRequest request) {
+-        return serviceSFEntity.update(id, request);
++        return serviceSFService.update(id, request);
+     }
+ 
+     @DeleteMapping("/{id}")
+     @ResponseStatus(HttpStatus.NO_CONTENT)
+     public void delete(@PathVariable Integer id) {
+-        serviceSFEntity.delete(id);
++        serviceSFService.delete(id);
+     }
+ }
+\ No newline at end of file
+diff --git a/Backend/admin-service/src/main/java/com/example/adminservice/dto/external/DoctorDTO.java b/Backend/admin-service/src/main/java/com/example/adminservice/dto/external/DoctorDTO.java
+index 40063bd0..7896316f 100644
+--- a/Backend/admin-service/src/main/java/com/example/adminservice/dto/external/DoctorDTO.java
++++ b/Backend/admin-service/src/main/java/com/example/adminservice/dto/external/DoctorDTO.java
+@@ -16,4 +16,10 @@ public class DoctorDTO {
+     @JsonProperty("idService")
+     @JsonAlias("id_service")
+     private Integer idService;
++
++    @JsonProperty("nom")
++    private String nom;
++
++    @JsonProperty("prenom")
++    private String prenom;
+ }
+diff --git a/Backend/admin-service/src/main/java/com/example/adminservice/scheduler/RdvScheduler.java b/Backend/admin-service/src/main/java/com/example/adminservice/scheduler/RdvScheduler.java
+deleted file mode 100644
+index 4d7c6ec0..00000000
+--- a/Backend/admin-service/src/main/java/com/example/adminservice/scheduler/RdvScheduler.java
++++ /dev/null
+@@ -1,62 +0,0 @@
+-package com.example.adminservice.scheduler;
+-
+-import com.example.adminservice.Enum.TypeNotif;
+-import com.example.adminservice.client.ApiClient;
+-import com.example.adminservice.dto.external.AppointmentDTO;
+-import com.example.adminservice.exception.ServiceUnavailableException;
+-import com.example.adminservice.service.EmailService;
+-import com.example.adminservice.service.NotificationService;
+-import lombok.RequiredArgsConstructor;
+-import lombok.extern.slf4j.Slf4j;
+-import org.springframework.scheduling.annotation.Scheduled;
+-import org.springframework.stereotype.Component;
+-
+-import java.time.LocalDateTime;
+-import java.time.ZoneOffset;
+-import java.util.List;
+-
+-@Component
+-@RequiredArgsConstructor
+-@Slf4j
+-public class RdvScheduler {
+-
+-    private final ApiClient apiClient;
+-    private final NotificationService notificationService;
+-    private final EmailService emailService;
+-
+-    @Scheduled(cron = "0 0 * * * *")
+-    public void envoyerRappels24h() {
+-        List<AppointmentDTO> rdvList = fetchAppointments();
+-        if (rdvList.isEmpty()) return;
+-
+-        LocalDateTime in24h = LocalDateTime.now(ZoneOffset.UTC).plusHours(24);
+-        LocalDateTime in25h = LocalDateTime.now(ZoneOffset.UTC).plusHours(25);
+-
+-        for (AppointmentDTO rdv : rdvList) {
+-            if (rdv.hasStatut("ANNULE") || rdv.getDateRdv() == null || rdv.getIdPatient() == null) continue;
+-
+-            LocalDateTime dateRdv = rdv.getDateRdv().toLocalDateTime();
+-            if (!dateRdv.isAfter(in24h) || !dateRdv.isBefore(in25h)) continue;
+-
+-            String message = "Rappel : vous avez un rendez-vous le "
+-                    + dateRdv.toLocalDate() + " ├á " + dateRdv.toLocalTime();
+-
+-            notificationService.createNotification(rdv.getIdPatient(), TypeNotif.RAPPEL, message);
+-
+-            Integer idUserPatient = apiClient.getPatientUserId(rdv.getIdPatient());
+-            if (idUserPatient != null) {
+-                String email = apiClient.getUserEmail(idUserPatient);
+-                if (email != null) emailService.sendEmail(email, "Rappel de rendez-vous", message);
+-            }
+-        }
+-    }
+-
+-    private List<AppointmentDTO> fetchAppointments() {
+-        try {
+-            return apiClient.fetchAllAppointments();
+-        } catch (ServiceUnavailableException e) {
+-            log.error("[SCHEDULER] {} ÔÇö t├óche ignor├®e", e.getMessage());
+-            return List.of();
+-        }
+-    }
+-}
+diff --git a/Backend/admin-service/src/main/java/com/example/adminservice/service/EmailService.java b/Backend/admin-service/src/main/java/com/example/adminservice/service/EmailService.java
+index a39f54db..a15e7a15 100644
+--- a/Backend/admin-service/src/main/java/com/example/adminservice/service/EmailService.java
++++ b/Backend/admin-service/src/main/java/com/example/adminservice/service/EmailService.java
+@@ -31,7 +31,7 @@ public class EmailService {
+         long now = System.currentTimeMillis();
+         
+         Long lastSent = sentEmailsCache.get(cacheKey);
+-        if (lastSent != null && (now - lastSent) < 5000) {
++        if (lastSent != null && (now - lastSent) < 2000) {
+             log.warn("[EMAIL-FILTER] Doublon ignor├® pour : {}", to);
+             return;
+         }
+diff --git a/Backend/admin-service/src/main/java/com/example/adminservice/service/EventService.java b/Backend/admin-service/src/main/java/com/example/adminservice/service/EventService.java
+index ee34beaa..dd05d5f4 100644
+--- a/Backend/admin-service/src/main/java/com/example/adminservice/service/EventService.java
++++ b/Backend/admin-service/src/main/java/com/example/adminservice/service/EventService.java
+@@ -2,6 +2,7 @@ package com.example.adminservice.service;
+ 
+ import com.example.adminservice.Enum.TypeNotif;
+ import com.example.adminservice.client.ApiClient;
++import com.example.adminservice.entity.ServiceSF;
+ import lombok.RequiredArgsConstructor;
+ import lombok.extern.slf4j.Slf4j;
+ import org.springframework.scheduling.annotation.Async;
+@@ -19,9 +20,10 @@ public class EventService {
+     private final NotificationService notificationService;
+     private final EmailService emailService;
+     private final ApiClient apiClient;
++    private final ServiceSFService serviceSFService;
+     
+     // Cache statique partag├® pour le d├®doublonnement global (JVM)
+-    private static final java.util.Set<String> processedEvents = java.util.concurrent.ConcurrentHashMap.newKeySet();
++    private static final java.util.Map<String, Long> processedEvents = new java.util.concurrent.ConcurrentHashMap<>();
+ 
+     // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+     // Annulation
+@@ -30,30 +32,41 @@ public class EventService {
+     @Async("notificationTaskExecutor")
+     public void handleAnnulation(Integer idRdv, Integer idPatient,
+                                  Integer idDocteur, Integer idInfirmier, String dateRdv) {
++        if (isEventDuplicate("ANNUL_" + idRdv, 3000)) return;
++
++        String subject = "Annulation de rendez-vous";
+         String msg = "Votre rendez-vous du " + dateRdv + " a ├®t├® annul├®.";
+-        processRdvEvent("ANNUL", idRdv, idPatient, idDocteur, TypeNotif.INFO, msg, "Annulation de rendez-vous", false, dateRdv);
++
++        log.info("[EVENT] ANNUL RDV#{} - dispatching notifications", idRdv);
++
++        // 1. Patient (uniquement email)
++        notifyPatient(idRdv, idPatient, TypeNotif.INFO, msg, subject);
++
++        // 2. Docteur
++        if (idDocteur != null) {
++            Integer idUserDocteur = apiClient.getUserIdForDoctor(idDocteur);
++            if (idUserDocteur != null) {
++                String msgDoctor = "Le rendez-vous du " + dateRdv + " a ├®t├® annul├®.";
++                notificationService.createNotification(idUserDocteur, TypeNotif.INFO, subject, "[RDV#" + idRdv + "] " + msgDoctor);
++                sendEmailSafe(idUserDocteur, subject, msgDoctor);
++            }
++        }
+     }
+ 
+-    private static synchronized boolean isDuplicate(String eventKey) {
+-        if (!processedEvents.add(eventKey)) return true;
+-        new java.util.Timer().schedule(new java.util.TimerTask() {
+-            @Override
+-            public void run() { processedEvents.remove(eventKey); }
+-        }, 10000); // 10s
++    private static boolean isEventDuplicate(String eventKey, long timeoutMs) {
++        long now = System.currentTimeMillis();
++        Long lastSeen = processedEvents.get(eventKey);
++        if (lastSeen != null && (now - lastSeen) < timeoutMs) {
++            return true;
++        }
++        processedEvents.put(eventKey, now);
+         return false;
+     }
+ 
+-    // Cl├® partag├®e entre handleModification et handlePlanningModification.
+-    private static synchronized boolean isStaffNotifDuplicate(Integer idDocteur, String date) {
++    private static boolean isStaffNotifDuplicate(Integer idDocteur, String date) {
+         String day = (date != null && date.length() >= 10) ? date.substring(0, 10) : String.valueOf(date);
+         String key = "STAFF_NOTIF_" + idDocteur + "_" + day;
+-        if (!processedEvents.add(key)) return true;
+-        
+-        new java.util.Timer().schedule(new java.util.TimerTask() {
+-            @Override
+-            public void run() { processedEvents.remove(key); }
+-        }, 10000); // 10s
+-        return false;
++        return isEventDuplicate(key, 3000); // 3s
+     }
+ 
+     // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+@@ -63,8 +76,25 @@ public class EventService {
+     @Async("notificationTaskExecutor")
+     public void handleConfirmation(Integer idRdv, Integer idPatient,
+                                    Integer idDocteur, Integer idInfirmier, String dateRdv) {
+-        String msg = "Votre rendez-vous du " + dateRdv + " est confirm├®.";
+-        processRdvEvent("CONFIRM", idRdv, idPatient, idDocteur, TypeNotif.CONFIRMATION, msg, "Rendez-vous confirm├®", false, dateRdv);
++        if (isEventDuplicate("CONFIRM_" + idRdv, 3000)) return;
++
++        String subject = "Rendez-vous confirm├®";
++        String msgPatient = "Votre rendez-vous du " + dateRdv + " est en statut : CONFIRM├ë.";
++        String msgDoctor = "Vous avez un rendez-vous ├á l'horaire " + dateRdv + ".";
++
++        log.info("[EVENT] CONFIRM RDV#{} - dispatching notifications", idRdv);
++
++        // 1. Patient
++        notifyPatient(idRdv, idPatient, TypeNotif.CONFIRMATION, msgPatient, subject);
++
++        // 2. Docteur
++        Integer idUserDocteur = (idDocteur != null) ? apiClient.getUserIdForDoctor(idDocteur) : null;
++        if (idUserDocteur != null) {
++            notificationService.createNotification(idUserDocteur, TypeNotif.CONFIRMATION, subject, "[RDV#" + idRdv + "] " + msgDoctor);
++            sendEmailSafe(idUserDocteur, subject, msgDoctor);
++        }
++
++        // 3. Pas de notification pour les infirmiers
+     }
+ 
+     // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+@@ -84,30 +114,109 @@ public class EventService {
+ 
+     @Async("notificationTaskExecutor")
+     public void handleNouveauRdv(Integer idRdv, Integer idPatient,
+-                                 Integer idDocteur, Integer idInfirmier, String dateRdv) {
+-        if (isDuplicate("NEW_RDV_" + idRdv)) return;
+-        String msg = "Un nouveau rendez-vous est en attente de confirmation pour le " + dateRdv + ".";
+-        notifyStaff(idRdv, idDocteur, TypeNotif.RDV, "Nouveau rendez-vous", msg);
++                                 Integer idDocteur, Integer idInfirmier, String dateRdv, String statut) {
++        String msg = "Votre rendez-vous du " + dateRdv + " est en statut : " + statut + ".";
++        
++        if (statut != null && statut.toUpperCase().contains("ATTENTE")) {
++            if (isEventDuplicate("NEW_RDV_" + idRdv, 3000)) return;
++            log.info("[EVENT] NEW_RDV RDV#{} - dispatching notifications (Patient only for EN_ATTENTE)", idRdv);
++            notifyPatient(idRdv, idPatient, TypeNotif.RDV, msg, "Statut de votre rendez-vous");
++        } else {
++            processRdvEvent("NEW_RDV", idRdv, idPatient, idDocteur, TypeNotif.RDV, msg, "Statut de votre rendez-vous", false, dateRdv);
++        }
+     }
+ 
+     // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+     // Modification de Planning
+     // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+ 
++    // Buffer pour regrouper les ├®v├®nements de planning rapproch├®s
++    private static final java.util.Map<Integer, PendingPlanningEvent> pendingPlanningEvents = new java.util.concurrent.ConcurrentHashMap<>();
++
++    private static class PendingPlanningEvent {
++        String date;
++        String statut;
++        boolean hasPauseModifie;
++    }
++
+     @Async("notificationTaskExecutor")
+-    public void handlePlanningModification(Integer idDocteur, String date) {
+-        String eventKey = "PLANNING_" + idDocteur + "_" + date;
+-        if (!processedEvents.add(eventKey)) return;
+-        
+-        new java.util.Timer().schedule(new java.util.TimerTask() {
+-            @Override
+-            public void run() { processedEvents.remove(eventKey); }
+-        }, 5000);
++    public void handlePlanningModification(Integer idDocteur, String date, String statut) {
++        boolean isPause = statut != null && statut.toUpperCase().contains("PAUSE");
++
++        pendingPlanningEvents.compute(idDocteur, (id, current) -> {
++            if (current == null) {
++                PendingPlanningEvent event = new PendingPlanningEvent();
++                event.date = date; // On garde la date du premier ├®v├®nement re├ºu (ou celui de la pause)
++                event.statut = statut;
++                event.hasPauseModifie = isPause;
++                return event;
++            } else {
++                // Si on a d├®j├á un ├®v├®nement en attente, on donne la priorit├® ├á la pause
++                if (isPause) {
++                    current.date = date;
++                    current.statut = statut;
++                    current.hasPauseModifie = true;
++                }
++                return current;
++            }
++        });
+ 
+-        if (isStaffNotifDuplicate(idDocteur, date)) return;
++        // On lance un d├®lai de 2 secondes pour attendre d'autres potentiels ├®v├®nements du m├¬me batch
++        try {
++            Thread.sleep(2000);
++        } catch (InterruptedException e) {
++            Thread.currentThread().interrupt();
++        }
++
++        // On retire l'├®v├®nement du buffer (seul un thread r├®ussira ├á le retirer et ├á notifier)
++        PendingPlanningEvent finalEvent = pendingPlanningEvents.remove(idDocteur);
++        if (finalEvent == null) {
++            return; // Un autre thread a d├®j├á trait├® ce batch
++        }
+ 
+-        String msg = "Le planning a ├®t├® mis ├á jour pour le " + date + ".";
+-        notifyStaff(null, idDocteur, TypeNotif.MODIFICATION, "Planning modifi├®", msg);
++        String finalStatut = finalEvent.statut;
++        String finalDate = finalEvent.date;
++        boolean finalIsPause = finalEvent.hasPauseModifie;
++
++        String nomDocteur = apiClient.getDoctorFullName(idDocteur);
++        Integer idService = apiClient.getServiceIdForDoctor(idDocteur);
++        String labelService = resolveServiceLabel(idService);
++
++        log.info("[EVENT] PLANNING BATCH trait├® par {} (service: {}) pour le {} avec statut prioritaire {}", nomDocteur, labelService, finalDate, finalStatut);
++
++        String typeModif = finalIsPause ? "les horaires de sa pause" : "son planning";
++        String jourAffiche = formatDay(finalDate);
++
++        // Message pour les infirmiers du service : pr├®cis avec nom docteur
++        String msgInfirmiers = String.format("%s a modifi├® %s pour la journ├®e du %s.", nomDocteur, typeModif, jourAffiche);
++
++        // Message pour les secr├®taires : nom docteur + nom du service
++        String msgSecretaires = String.format("[%s] %s a modifi├® %s pour la journ├®e du %s.", labelService, nomDocteur, typeModif, jourAffiche);
++
++        String titre = finalIsPause ? "Modification de pause" : "Modification de planning";
++
++        // 1. Notifier les infirmiers du service du docteur (in-app uniquement)
++        notifyInfirmiersPlanningChange(idDocteur, idService, titre, msgInfirmiers);
++
++        // 2. Notifier toutes les secr├®taires (in-app uniquement, avec pr├®cision du service)
++        notifySecretairesPlanningChange(titre, msgSecretaires);
++    }
++
++    private String formatDay(String dateStr) {
++        if (dateStr == null || dateStr.isBlank()) return "inconnue";
++        String upper = dateStr.toUpperCase();
++        if (upper.startsWith("MONDAY")) return "Lundi";
++        if (upper.startsWith("TUESDAY")) return "Mardi";
++        if (upper.startsWith("WEDNESDAY")) return "Mercredi";
++        if (upper.startsWith("THURSDAY")) return "Jeudi";
++        if (upper.startsWith("FRIDAY")) return "Vendredi";
++        if (upper.startsWith("SATURDAY")) return "Samedi";
++        if (upper.startsWith("SUNDAY")) return "Dimanche";
++        
++        if (dateStr.contains(" ")) {
++            return dateStr.split(" ")[0]; // Extraire la date s'il y a une heure
++        }
++        return dateStr;
+     }
+ 
+     // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+@@ -116,7 +225,7 @@ public class EventService {
+ 
+     private void processRdvEvent(String prefix, Integer idRdv, Integer idPatient, Integer idDocteur,
+                                 TypeNotif type, String msg, String subject, boolean checkStaffDupe, String date) {
+-        if (isDuplicate(prefix + "_" + idRdv)) return;
++        if (isEventDuplicate(prefix + "_" + idRdv, 3000)) return;
+ 
+         log.info("[EVENT] {} RDV#{} - dispatching notifications", prefix, idRdv);
+ 
+@@ -127,7 +236,9 @@ public class EventService {
+         Integer idUserDocteur = (idDocteur != null) ? apiClient.getUserIdForDoctor(idDocteur) : null;
+         if (idUserDocteur != null) {
+             notificationService.createNotification(idUserDocteur, type, subject, "[RDV#" + idRdv + "] " + msg);
+-            sendEmailSafe(idUserDocteur, subject, msg);
++            if (type == TypeNotif.CONFIRMATION) {
++                sendEmailSafe(idUserDocteur, subject, msg);
++            }
+         }
+ 
+         // 3. Personnel (Infirmiers + Secr├®taires)
+@@ -136,25 +247,120 @@ public class EventService {
+         }
+     }
+ 
+-    private void notifyStaff(Integer idRdv, Integer idDocteur, TypeNotif type, String subject, String message) {
+-        String notifMsg = (idRdv != null) ? "[RDV#" + idRdv + "] " + message : message;
++    // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
++    // Planning-specific Helpers
++    // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
++
++    /**
++     * Notifie les infirmiers du service du docteur (in-app + email MailHog).
++     * Si le service est inconnu, tous les infirmiers sont notifi├®s.
++     */
++    private void notifyInfirmiersPlanningChange(Integer idDocteur, Integer idService, String titre, String message) {
++        List<Integer> infirmierIds = resolveInfirmierIds(idDocteur);
+         Integer idUserDocteur = (idDocteur != null) ? apiClient.getUserIdForDoctor(idDocteur) : null;
+ 
+-        Set<Integer> targetUserIds = new HashSet<>();
+-        targetUserIds.addAll(resolveInfirmierIds(idDocteur));
+-        targetUserIds.addAll(apiClient.getSecretairesUserIds());
++        Set<Integer> seen = new HashSet<>();
++        Set<String> processedEmails = new HashSet<>();
++        for (Integer userId : infirmierIds) {
++            if (!seen.add(userId)) continue;
++            if (userId.equals(idUserDocteur)) continue; // ne pas notifier le docteur lui-m├¬me
++
++            // Notification in-app (WebSocket)
++            notificationService.createNotification(userId, TypeNotif.MODIFICATION, titre, message);
++            log.debug("[PLANNING] Infirmier userId={} notifi├® in-app : {}", userId, message);
+ 
++            // Email via MailHog
++            String email = apiClient.getUserEmail(userId);
++            if (email != null && processedEmails.add(email.toLowerCase())) {
++                emailService.sendEmail(email, titre, buildEmailBody(message));
++                log.debug("[PLANNING] Email envoy├® ├á l'infirmier {} : {}", email, message);
++            }
++        }
++    }
++
++    /**
++     * Notifie toutes les secr├®taires (in-app + email MailHog).
++     * Le message inclut d├®j├á le nom du service pour combler l'absence d'ID service c├┤t├® secr├®taire.
++     */
++    private void notifySecretairesPlanningChange(String titre, String message) {
++        List<Integer> secretaireIds = apiClient.getSecretairesUserIds();
++        Set<Integer> seen = new HashSet<>();
+         Set<String> processedEmails = new HashSet<>();
+-        for (Integer userId : targetUserIds) {
+-            if (userId.equals(idUserDocteur)) continue;
+-            
+-            // WebSocket / In-app 
+-            notificationService.createNotification(userId, type, subject, notifMsg);
+-            
+-            // Email 
++        for (Integer userId : secretaireIds) {
++            if (!seen.add(userId)) continue;
++
++            // Notification in-app (WebSocket)
++            notificationService.createNotification(userId, TypeNotif.MODIFICATION, titre, message);
++            log.debug("[PLANNING] Secr├®taire userId={} notifi├®e in-app : {}", userId, message);
++
++            // Email via MailHog
+             String email = apiClient.getUserEmail(userId);
+             if (email != null && processedEmails.add(email.toLowerCase())) {
+-                emailService.sendEmail(email, subject, buildEmailBody(message));
++                emailService.sendEmail(email, titre, buildEmailBody(message));
++                log.debug("[PLANNING] Email envoy├® ├á la secr├®taire {} : {}", email, message);
++            }
++        }
++    }
++
++    /**
++     * R├®sout le label du service m├®dical ├á partir de son ID.
++     * Retourne "Service inconnu" si l'ID est null ou introuvable.
++     */
++    private String resolveServiceLabel(Integer idService) {
++        if (idService == null) return "Service inconnu";
++        try {
++            ServiceSF service = serviceSFService.getById(idService);
++            return (service.getLabel() != null && !service.getLabel().isBlank())
++                    ? service.getLabel()
++                    : "Service #" + idService;
++        } catch (Exception e) {
++            log.warn("[PLANNING] Service #{} introuvable : {}", idService, e.getMessage());
++            return "Service #" + idService;
++        }
++    }
++
++    // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
++    // Generic RDV Helpers
++    // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
++
++    private void notifyStaff(Integer idRdv, Integer idDocteur, TypeNotif type, String subject, String message) {
++        String rdvPrefix = (idRdv != null) ? "[RDV#" + idRdv + "] " : "";
++
++        // Nom dynamique du docteur et de son service (aucun hard-coding)
++        String nomDocteur     = (idDocteur != null) ? apiClient.getDoctorFullName(idDocteur) : "Un medecin";
++        Integer idService     = (idDocteur != null) ? apiClient.getServiceIdForDoctor(idDocteur) : null;
++        String labelService   = resolveServiceLabel(idService);
++        Integer idUserDocteur = (idDocteur != null) ? apiClient.getUserIdForDoctor(idDocteur) : null;
++
++        // ÔöÇÔöÇ 1. Infirmiers du service : message avec nom du docteur ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
++        String msgInfirmiers = rdvPrefix + nomDocteur + " - " + message;
++        Set<Integer> seenInf  = new HashSet<>();
++        Set<String>  emailsInf = new HashSet<>();
++        for (Integer userId : resolveInfirmierIds(idDocteur)) {
++            if (!seenInf.add(userId)) continue;
++            if (userId.equals(idUserDocteur)) continue;
++
++            notificationService.createNotification(userId, type, subject, msgInfirmiers);
++
++            String email = apiClient.getUserEmail(userId);
++            if (email != null && emailsInf.add(email.toLowerCase())) {
++                emailService.sendEmail(email, subject, buildEmailBody(msgInfirmiers));
++            }
++        }
++
++        // ÔöÇÔöÇ 2. Secretaires (toutes) : nom docteur + nom du service ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
++        String msgSecretaires = rdvPrefix + nomDocteur + " - Service : " + labelService + " - " + message;
++        Set<Integer> seenSec   = new HashSet<>();
++        Set<String>  emailsSec = new HashSet<>();
++        for (Integer userId : apiClient.getSecretairesUserIds()) {
++            if (!seenSec.add(userId)) continue;
++            if (userId.equals(idUserDocteur)) continue;
++
++            notificationService.createNotification(userId, type, subject, msgSecretaires);
++
++            String email = apiClient.getUserEmail(userId);
++            if (email != null && emailsSec.add(email.toLowerCase())) {
++                emailService.sendEmail(email, subject, buildEmailBody(msgSecretaires));
+             }
+         }
+     }
+@@ -164,7 +370,7 @@ public class EventService {
+         Integer idUserPatient = apiClient.getPatientUserId(idPatient);
+         if (idUserPatient == null) return;
+ 
+-        notificationService.createNotification(idUserPatient, type, emailSubject, "[RDV#" + idRdv + "] " + message);
++        // Uniquement par email (MailHog), plus de notification in-app pour le patient
+         sendEmailSafe(idUserPatient, emailSubject, message);
+     }
+ 
+diff --git a/Backend/admin-service/src/main/java/com/example/adminservice/service/NotificationService.java b/Backend/admin-service/src/main/java/com/example/adminservice/service/NotificationService.java
+index 78194884..7c716ef0 100644
+--- a/Backend/admin-service/src/main/java/com/example/adminservice/service/NotificationService.java
++++ b/Backend/admin-service/src/main/java/com/example/adminservice/service/NotificationService.java
+@@ -46,10 +46,6 @@ public class NotificationService {
+ 
+     @Transactional
+     public void createNotification(Integer idUser, TypeNotif type, String titre, String message, Integer idRessource) {
+-        if (notificationRepository.existsByIdUserAndMessage(idUser, message)) {
+-            return;
+-        }
+-
+         Notification notif = Notification.builder()
+                 .idUser(idUser)
+                 .typeNotif(type)
+diff --git a/Backend/admin-service/src/main/java/com/example/adminservice/service/ServiceSFEntity.java b/Backend/admin-service/src/main/java/com/example/adminservice/service/ServiceSFEntity.java
+deleted file mode 100644
+index 19875879..00000000
+--- a/Backend/admin-service/src/main/java/com/example/adminservice/service/ServiceSFEntity.java
++++ /dev/null
+@@ -1,55 +0,0 @@
+-package com.example.adminservice.service;
+-
+-import com.example.adminservice.dto.CreateServiceSFRequest;
+-import com.example.adminservice.dto.UpdateServiceSFRequest;
+-import com.example.adminservice.entity.ServiceSF;
+-import com.example.adminservice.exception.ResourceNotFoundException;
+-import com.example.adminservice.repository.ServiceSFRepository;
+-import lombok.RequiredArgsConstructor;
+-import org.springframework.stereotype.Service;
+-
+-import java.util.List;
+-
+-@Service
+-@RequiredArgsConstructor
+-public class ServiceSFEntity {
+-
+-    private final ServiceSFRepository serviceSFRepository;
+-
+-    public ServiceSF create(CreateServiceSFRequest request) {
+-        ServiceSF serviceEntity = ServiceSF.builder()
+-                .label(request.getLabel())
+-                .description(request.getDescription())
+-                .build();
+-
+-        return serviceSFRepository.save(serviceEntity);
+-    }
+-
+-    public List<ServiceSF> getAll() {
+-        return serviceSFRepository.findAll();
+-    }
+-
+-    public ServiceSF getById(Integer id) {
+-        return serviceSFRepository.findById(id)
+-                .orElseThrow(() -> new ResourceNotFoundException("Service non trouv├® avec id: " + id));
+-    }
+-
+-    public ServiceSF update(Integer id, UpdateServiceSFRequest request) {
+-        ServiceSF serviceEntity = getById(id);
+-
+-        if (request.getLabel() != null && !request.getLabel().isBlank()) {
+-            serviceEntity.setLabel(request.getLabel());
+-        }
+-
+-        if (request.getDescription() != null) {
+-            serviceEntity.setDescription(request.getDescription());
+-        }
+-
+-        return serviceSFRepository.save(serviceEntity);
+-    }
+-
+-    public void delete(Integer id) {
+-        ServiceSF serviceEntity = getById(id);
+-        serviceSFRepository.delete(serviceEntity);
+-    }
+-}
+\ No newline at end of file
+diff --git a/Backend/auth-service/pom.xml b/Backend/auth-service/pom.xml
+index 95ce6ae7..e97aae54 100644
+--- a/Backend/auth-service/pom.xml
++++ b/Backend/auth-service/pom.xml
+@@ -116,6 +116,30 @@
+ 			<plugin>
+ 				<groupId>org.springframework.boot</groupId>
+ 				<artifactId>spring-boot-maven-plugin</artifactId>
++				<configuration>
++					<excludes>
++						<exclude>
++							<groupId>org.projectlombok</groupId>
++							<artifactId>lombok</artifactId>
++						</exclude>
++					</excludes>
++				</configuration>
++			</plugin>
++			<plugin>
++				<groupId>org.apache.maven.plugins</groupId>
++				<artifactId>maven-compiler-plugin</artifactId>
++				<version>3.11.0</version>
++				<configuration>
++					<source>17</source>
++					<target>17</target>
++					<annotationProcessorPaths>
++						<path>
++							<groupId>org.projectlombok</groupId>
++							<artifactId>lombok</artifactId>
++							<version>1.18.30</version>
++						</path>
++					</annotationProcessorPaths>
++				</configuration>
+ 			</plugin>
+ 		</plugins>
+ 	</build>
+diff --git a/Backend/auth-service/src/main/java/com/shifatech/authservice/controller/AuthController.java b/Backend/auth-service/src/main/java/com/shifatech/authservice/controller/AuthController.java
+index 69c8864e..c68b057f 100644
+--- a/Backend/auth-service/src/main/java/com/shifatech/authservice/controller/AuthController.java
++++ b/Backend/auth-service/src/main/java/com/shifatech/authservice/controller/AuthController.java
+@@ -155,6 +155,17 @@ public class AuthController {
+         return new ResponseEntity<>(response, status);
+     }
+     
++    // Get users by role
++    @GetMapping("/users/role/{role}")
++    public ResponseEntity<java.util.List<com.shifatech.authservice.dto.UserDto>> getUsersByRole(@PathVariable String role) {
++        try {
++            com.shifatech.authservice.Enum.RoleEnum roleEnum = com.shifatech.authservice.Enum.RoleEnum.valueOf(role.toUpperCase());
++            return ResponseEntity.ok(authService.getUsersByRole(roleEnum));
++        } catch (IllegalArgumentException e) {
++            return ResponseEntity.badRequest().build();
++        }
++    }
++
+     // Health check
+     @GetMapping("/health")
+     public ResponseEntity<String> healthCheck() {
+diff --git a/Backend/auth-service/src/main/java/com/shifatech/authservice/dto/UserDto.java b/Backend/auth-service/src/main/java/com/shifatech/authservice/dto/UserDto.java
+index 86fe2dcf..fb5f927a 100644
+--- a/Backend/auth-service/src/main/java/com/shifatech/authservice/dto/UserDto.java
++++ b/Backend/auth-service/src/main/java/com/shifatech/authservice/dto/UserDto.java
+@@ -1,9 +1,11 @@
+ package com.shifatech.authservice.dto;
+ import com.shifatech.authservice.entity.User;
++import com.fasterxml.jackson.annotation.JsonProperty;
+ import lombok.Data;
+ 
+ @Data
+ public class UserDto {
++    @JsonProperty("id")
+     private Integer idUser;
+     private String nom;
+     private String prenom;
+diff --git a/Backend/auth-service/src/main/java/com/shifatech/authservice/repository/UserRepository.java b/Backend/auth-service/src/main/java/com/shifatech/authservice/repository/UserRepository.java
+index 03d9ddef..06e136b9 100644
+--- a/Backend/auth-service/src/main/java/com/shifatech/authservice/repository/UserRepository.java
++++ b/Backend/auth-service/src/main/java/com/shifatech/authservice/repository/UserRepository.java
+@@ -1,9 +1,13 @@
+ package com.shifatech.authservice.repository;
+ 
+ import com.shifatech.authservice.entity.User;
++import com.shifatech.authservice.Enum.RoleEnum;
+ import org.springframework.data.jpa.repository.JpaRepository;
++
++import java.util.List;
+ import java.util.Optional;
+ 
+ public interface UserRepository extends JpaRepository<User, Integer> {
+     Optional<User> findByEmail(String email);
++    List<User> findByRole(RoleEnum role);
+ }
+\ No newline at end of file
+diff --git a/Backend/auth-service/src/main/java/com/shifatech/authservice/service/AuthService.java b/Backend/auth-service/src/main/java/com/shifatech/authservice/service/AuthService.java
+index 3e1ef5e4..a6376e74 100644
+--- a/Backend/auth-service/src/main/java/com/shifatech/authservice/service/AuthService.java
++++ b/Backend/auth-service/src/main/java/com/shifatech/authservice/service/AuthService.java
+@@ -3,6 +3,7 @@ package com.shifatech.authservice.service;
+ import java.sql.SQLException;
+ import java.time.Instant;
+ import java.time.LocalDateTime;
++import java.util.List;
+ 
+ import org.hibernate.exception.ConstraintViolationException;
+ import org.springframework.dao.DataIntegrityViolationException;
+@@ -276,5 +277,11 @@ public class AuthService {
+         }
+     }
+ 
+-
++    // Get users by role
++    public List<UserDto> getUsersByRole(com.shifatech.authservice.Enum.RoleEnum role) {
++        return userRepository.findByRole(role).stream()
++                .filter(u -> u.getDeletedAt() == null)
++                .map(u -> new UserDto().toUserDto(u))
++                .collect(java.util.stream.Collectors.toList());
++    }
+ }
+\ No newline at end of file
+diff --git a/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/controller/DoctorController.java b/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/controller/DoctorController.java
+index 1ae2ec8b..821fb77a 100644
+--- a/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/controller/DoctorController.java
++++ b/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/controller/DoctorController.java
+@@ -44,7 +44,7 @@ public class DoctorController {
+     // --- Profile Management ---
+ 
+     @GetMapping("/{id:[0-9]+}")
+-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT','INFIRMIER')")
++    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT', 'INFIRMIER', 'SECRETAIRE')")
+     public ResponseEntity<DoctorDTO> getDoctorProfile(@PathVariable Long id) {
+         DoctorDTO doctor = doctorService.getDoctorProfile(id);
+ 
+@@ -115,7 +115,7 @@ public class DoctorController {
+     }
+ 
+     @GetMapping("/user/{idUser:[0-9]+}")
+-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT','INFIRMIER')")
++    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT', 'INFIRMIER', 'SECRETAIRE')")
+     public ResponseEntity<DoctorDTO> getDoctorByUserId(@PathVariable Long idUser) {
+         return ResponseEntity.ok(doctorService.getDoctorProfileByUserId(idUser));
+     }
+diff --git a/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/service/DoctorService.java b/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/service/DoctorService.java
+index 48269d14..f64dd959 100644
+--- a/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/service/DoctorService.java
++++ b/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/service/DoctorService.java
+@@ -167,7 +167,6 @@ public class DoctorService {
+ 		return List.of();
+ 	}
+ 
+-	@SuppressWarnings("unchecked")
+ 	public List<PatientDTO> getMyPatients(Long idDoctor, String authHeader) {
+ 		log.info("Fetching patients for doctor ID: {}", idDoctor);
+ 		
+@@ -192,8 +191,16 @@ public class DoctorService {
+ 
+ 		// 2. Extract distinct patient IDs
+ 		List<Long> patientIds = appointments.stream()
+-				.filter(obj -> obj instanceof java.util.Map)
+-				.map(obj -> (java.util.Map<String, Object>) obj)
++				.filter(obj -> obj instanceof java.util.Map<?, ?>)
++				.map(obj -> {
++					java.util.Map<String, Object> safeMap = new java.util.HashMap<>();
++					for (java.util.Map.Entry<?, ?> entry : ((java.util.Map<?, ?>) obj).entrySet()) {
++						if (entry.getKey() instanceof String) {
++							safeMap.put((String) entry.getKey(), entry.getValue());
++						}
++					}
++					return safeMap;
++				})
+ 				.map(map -> {
+ 					Object pid = map.get("id_patient");
+ 					if (pid == null) pid = map.get("idPatient");
+@@ -260,8 +267,16 @@ public class DoctorService {
+ 		}
+ 
+ 		return response.getData().stream()
+-				.filter(obj -> obj instanceof java.util.Map)
+-				.map(obj -> (java.util.Map<String, Object>) obj)
++				.filter(obj -> obj instanceof java.util.Map<?, ?>)
++				.map(obj -> {
++					java.util.Map<String, Object> safeMap = new java.util.HashMap<>();
++					for (java.util.Map.Entry<?, ?> entry : ((java.util.Map<?, ?>) obj).entrySet()) {
++						if (entry.getKey() instanceof String) {
++							safeMap.put((String) entry.getKey(), entry.getValue());
++						}
++					}
++					return safeMap;
++				})
+ 				.filter(map -> {
+ 					Object visitDocId = map.get("idDoctor");
+ 					if (visitDocId == null)
+@@ -309,8 +324,16 @@ public class DoctorService {
+ 		}
+ 
+ 		return response.getData().stream()
+-				.filter(obj -> obj instanceof java.util.Map)
+-				.map(obj -> (java.util.Map<String, Object>) obj)
++				.filter(obj -> obj instanceof java.util.Map<?, ?>)
++				.map(obj -> {
++					java.util.Map<String, Object> safeMap = new java.util.HashMap<>();
++					for (java.util.Map.Entry<?, ?> entry : ((java.util.Map<?, ?>) obj).entrySet()) {
++						if (entry.getKey() instanceof String) {
++							safeMap.put((String) entry.getKey(), entry.getValue());
++						}
++					}
++					return safeMap;
++				})
+ 				.filter(map -> {
+ 					Object dossierPatId = map.get("idPatient");
+ 					if (dossierPatId == null)
+@@ -322,7 +345,6 @@ public class DoctorService {
+ 	}
+ 
+ 	// Helper mapper
+-	@SuppressWarnings("unchecked")
+ 	private DoctorDTO mapToDTO(Doctor doctor) {
+ 		DoctorDTO dto = new DoctorDTO();
+ 		// Local
+@@ -342,8 +364,13 @@ public class DoctorService {
+ 		// Fetch from Auth (Enrichment)
+ 		try {
+ 			java.util.Map<String, Object> response = authClient.getUserById(doctor.getIdUser());
+-			if (response != null && response.get("user") != null) {
+-				java.util.Map<String, Object> user = (java.util.Map<String, Object>) response.get("user");
++			if (response != null && response.get("user") instanceof java.util.Map<?, ?> rawUser) {
++				java.util.Map<String, Object> user = new java.util.HashMap<>();
++				for (java.util.Map.Entry<?, ?> entry : rawUser.entrySet()) {
++					if (entry.getKey() instanceof String) {
++						user.put((String) entry.getKey(), entry.getValue());
++					}
++				}
+ 				dto.setNom((String) user.get("nom"));
+ 				dto.setPrenom((String) user.get("prenom"));
+ 				dto.setEmail((String) user.get("email"));
+diff --git a/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/service/PlanningService.java b/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/service/PlanningService.java
+index 30a1e309..0de51dd3 100644
+--- a/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/service/PlanningService.java
++++ b/Backend/doctor-service/src/main/java/com/ShifaTech/DoctorService/service/PlanningService.java
+@@ -54,16 +54,23 @@ public class PlanningService {
+         Planning planning = planningRepository.findById(id)
+                 .orElseThrow(() -> new RuntimeException("Planning slot not found"));
+ 
++        boolean isPauseModifie = false;
++
+         if (planningDTO.getJour() != null)
+             planning.setJour(planningDTO.getJour());
+         if (planningDTO.getHeureDebut() != null)
+             planning.setHeureDebut(planningDTO.getHeureDebut());
+         if (planningDTO.getHeureFin() != null)
+             planning.setHeureFin(planningDTO.getHeureFin());
+-        if (planningDTO.getPauseDebut() != null)
++            
++        if (planningDTO.getPauseDebut() != null) {
++            if (!planningDTO.getPauseDebut().equals(planning.getPauseDebut())) isPauseModifie = true;
+             planning.setPauseDebut(planningDTO.getPauseDebut());
+-        if (planningDTO.getPauseFin() != null)
++        }
++        if (planningDTO.getPauseFin() != null) {
++            if (!planningDTO.getPauseFin().equals(planning.getPauseFin())) isPauseModifie = true;
+             planning.setPauseFin(planningDTO.getPauseFin());
++        }
+ 
+         Planning saved = planningRepository.save(planning);
+ 
+@@ -71,7 +78,7 @@ public class PlanningService {
+             RestTemplate restTemplate = new RestTemplate();
+             Map<String, Object> payload = new HashMap<>();
+             payload.put("idDocteur", saved.getDoctor().getIdDocteur());
+-            payload.put("statut", "MODIFIE");
++            payload.put("statut", isPauseModifie ? "PAUSE_MODIFIE" : "MODIFIE");
+             payload.put("dateRdv", saved.getJour().toString() + " " + saved.getHeureDebut());
+ 
+             restTemplate.postForEntity(adminServiceUrl + "/api/admin/planning-events", payload, Void.class);
+diff --git a/Backend/infirmier-service/src/ApiResource/InfirmierResource.php b/Backend/infirmier-service/src/ApiResource/InfirmierResource.php
+index 304f23e5..f746d90b 100644
+--- a/Backend/infirmier-service/src/ApiResource/InfirmierResource.php
++++ b/Backend/infirmier-service/src/ApiResource/InfirmierResource.php
+@@ -30,8 +30,8 @@ class InfirmierResource
+     public ?int $id = null;
+ 
+     public ?int $id_utilisateur = null;
+-    public ?int $id_specialite = null;
+-    public ?int $id_service = null;
++    public int|string|null $id_specialite = null;
++    public int|string|null $id_service = null;
+     public ?string $nom = null;
+     public ?string $prenom = null;
+     public ?string $cin = null;
+diff --git a/Backend/infirmier-service/src/DataFixtures/AppFixtures.php b/Backend/infirmier-service/src/DataFixtures/AppFixtures.php
+index 8001ebaa..ec019f47 100644
+--- a/Backend/infirmier-service/src/DataFixtures/AppFixtures.php
++++ b/Backend/infirmier-service/src/DataFixtures/AppFixtures.php
+@@ -5,78 +5,13 @@ namespace App\DataFixtures;
+ use App\Entity\Infirmier;
+ use App\Entity\InfirmierSpecialite;
+ use Doctrine\Bundle\FixturesBundle\Fixture;
+-use Doctrine\DBAL\Connection;
+ use Doctrine\Persistence\ObjectManager;
+-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+ 
+ class AppFixtures extends Fixture
+ {
+-    public function __construct(
+-        #[Autowire(service: 'doctrine.dbal.auth_connection')]
+-        private Connection $authConnection
+-    ) {}
+-
+     public function load(ObjectManager $manager): void
+     {
+-        $users = [
+-            ['nom' => 'Alaoui',   'prenom' => 'Youssef', 'sexe' => 'M', 'dob' => '1990-03-15'],
+-            ['nom' => 'Bennani',  'prenom' => 'Fatima',  'sexe' => 'F', 'dob' => '1988-07-22'],
+-            ['nom' => 'Chraibi',  'prenom' => 'Omar',    'sexe' => 'M', 'dob' => '1992-11-05'],
+-            ['nom' => 'Douiri',   'prenom' => 'Amina',   'sexe' => 'F', 'dob' => '1985-01-30'],
+-            ['nom' => 'El Fassi', 'prenom' => 'Karim',   'sexe' => 'M', 'dob' => '1993-06-18'],
+-            ['nom' => 'Filali',   'prenom' => 'Nadia',   'sexe' => 'F', 'dob' => '1991-09-25'],
+-            ['nom' => 'Gharbi',   'prenom' => 'Hassan',  'sexe' => 'M', 'dob' => '1987-04-12'],
+-            ['nom' => 'Hajji',    'prenom' => 'Samira',  'sexe' => 'F', 'dob' => '1994-02-08'],
+-            ['nom' => 'Idrissi',  'prenom' => 'Rachid',  'sexe' => 'M', 'dob' => '1989-12-20'],
+-            ['nom' => 'Jalil',    'prenom' => 'Houda',   'sexe' => 'F', 'dob' => '1996-05-14'],
+-            ['nom' => 'Karimi',   'prenom' => 'Amine',   'sexe' => 'M', 'dob' => '1990-08-03'],
+-            ['nom' => 'Lahlou',   'prenom' => 'Zineb',   'sexe' => 'F', 'dob' => '1986-10-27'],
+-            ['nom' => 'Mansouri', 'prenom' => 'Tariq',   'sexe' => 'M', 'dob' => '1993-03-09'],
+-            ['nom' => 'Naciri',   'prenom' => 'Leila',   'sexe' => 'F', 'dob' => '1991-07-16'],
+-            ['nom' => 'Ouali',    'prenom' => 'Mehdi',   'sexe' => 'M', 'dob' => '1988-01-23'],
+-            ['nom' => 'Qadiri',   'prenom' => 'Salma',   'sexe' => 'F', 'dob' => '1995-11-11'],
+-            ['nom' => 'Rahimi',   'prenom' => 'Bilal',   'sexe' => 'M', 'dob' => '1992-04-07'],
+-            ['nom' => 'Saidi',    'prenom' => 'Meryem',  'sexe' => 'F', 'dob' => '1987-06-30'],
+-            ['nom' => 'Tazi',     'prenom' => 'Hamza',   'sexe' => 'M', 'dob' => '1994-09-19'],
+-            ['nom' => 'Ziani',    'prenom' => 'Hajar',   'sexe' => 'F', 'dob' => '1990-12-04'],
+-        ];
+-
+-        $phones = [
+-            '0661234567', '0672345678', '0683456789', '0694567890',
+-            '0651234567', '0662345678', '0673456789', '0684567890',
+-            '0695678901', '0656789012', '0667890123', '0678901234',
+-            '0689012345', '0690123456', '0651234568', '0662345679',
+-            '0673456780', '0684567891', '0695678902', '0656789013',
+-        ];
+-
+-        // 1. Ins├®rer les users dans authdb
+-        // foreach ($users as $index => $data) {
+-        //     $id       = $index + 9;
+-        //     $cin      = 'F' . rand(100000, 999999);
+-        //     $email    = strtolower($data['prenom'] . '.' . str_replace(' ', '', $data['nom'])) . $id . '@hopital.ma';
+-        //     $password = password_hash('password123', PASSWORD_BCRYPT);
+-
+-        //     $this->authConnection->executeStatement("
+-        //         INSERT INTO users
+-        //             (id_user, cin, nom, prenom, email, mot_de_passe, role, telephone, adresse, date_naissance, sexe, statut, created_at)
+-        //         VALUES
+-        //             (:id, :cin, :nom, :prenom, :email, :password, 'INFIRMIER', :tel, :adresse, :dob, :sexe, 1, NOW())
+-        //         ON DUPLICATE KEY UPDATE id_user = id_user
+-        //     ", [
+-        //         'id'       => $id,
+-        //         'cin'      => $cin,
+-        //         'nom'      => $data['nom'],
+-        //         'prenom'   => $data['prenom'],
+-        //         'email'    => $email,
+-        //         'password' => $password,
+-        //         'tel'      => $phones[$index],
+-        //         'adresse'  => 'Casablanca, Maroc',
+-        //         'dob'      => $data['dob'],
+-        //         'sexe'     => $data['sexe'],
+-        //     ]);
+-        // }
+-
+-        // 2. Cr├®er les sp├®cialit├®s dans infirmierdb
++        // 1. Cr├®er les sp├®cialit├®s
+         $specialites = [
+             ['label' => 'Cardiologie', 'id_service' => 1],
+             ['label' => 'P├®diatrie',   'id_service' => 1],
+@@ -96,19 +31,24 @@ class AppFixtures extends Fixture
+             $specialiteEntities[] = $specialite;
+         }
+ 
+-        $manager->flush();
++        $manager->flush(); // flush sp├®cialit├®s d'abord
++
++        // 2. V├®rifier que les sp├®cialit├®s ont bien ├®t├® ins├®r├®es
++        if (empty($specialiteEntities)) {
++            throw new \RuntimeException('Aucune sp├®cialit├® cr├®├®e, impossible de cr├®er les infirmiers.');
++        }
+ 
+-        // 3. Cr├®er les infirmiers dans infirmierdb
+-        foreach ($users as $index => $data) {
+-            $specialite = $specialiteEntities[array_rand($specialiteEntities)];
++        // 3. Cr├®er les infirmiers avec id_utilisateur 9 ├á 13
++        for ($i = 0; $i < 20; $i++) {
++            $specialite = $specialiteEntities[$i % count($specialiteEntities)];
+ 
+             $infirmier = new Infirmier();
+-            $infirmier->setIdUtilisateur($index + 9);
++            $infirmier->setIdUtilisateur($i + 9);
+             $infirmier->setIdSpecialite($specialite);
+             $infirmier->setCreatedAt(new \DateTimeImmutable());
+             $manager->persist($infirmier);
+         }
+ 
+-        $manager->flush();
++        $manager->flush(); // flush infirmiers
+     }
+ }
+diff --git a/Backend/infirmier-service/src/Entity/Infirmier.php b/Backend/infirmier-service/src/Entity/Infirmier.php
+index f845ff36..4c2f942b 100644
+--- a/Backend/infirmier-service/src/Entity/Infirmier.php
++++ b/Backend/infirmier-service/src/Entity/Infirmier.php
+@@ -12,15 +12,7 @@ use App\Repository\InfirmierRepository;
+ use Doctrine\ORM\Mapping as ORM;
+ 
+ #[ORM\Entity(repositoryClass: InfirmierRepository::class)]
+-#[ApiResource(
+-    operations: [
+-        new GetCollection(uriTemplate: '/infirmier'),
+-        new Get(uriTemplate: '/infirmier/{id}'),
+-        new Post(uriTemplate: '/infirmier'),
+-        new Put(uriTemplate: '/infirmier/{id}'),
+-        new Delete(uriTemplate: '/infirmier/{id}'),
+-    ]
+-)]
++
+ class Infirmier
+ {
+     #[ORM\Id]
+diff --git a/Backend/infirmier-service/src/Processor/InfirmierProcessor.php b/Backend/infirmier-service/src/Processor/InfirmierProcessor.php
+index 23c38bee..945f53fd 100644
+--- a/Backend/infirmier-service/src/Processor/InfirmierProcessor.php
++++ b/Backend/infirmier-service/src/Processor/InfirmierProcessor.php
+@@ -6,18 +6,19 @@ use ApiPlatform\Metadata\Operation;
+ use ApiPlatform\State\ProcessorInterface;
+ use App\Entity\Infirmier;
+ use App\Entity\InfirmierSpecialite;
++use Doctrine\DBAL\Connection;
+ use Doctrine\ORM\EntityManagerInterface;
+ use Symfony\Component\HttpFoundation\RequestStack;
+ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+-use Symfony\Contracts\HttpClient\HttpClientInterface;
+ 
+ class InfirmierProcessor implements ProcessorInterface
+ {
+     public function __construct(
+-        private HttpClientInterface $httpClient,
++        private Connection $authConnection,
+         private RequestStack $requestStack,
+         private EntityManagerInterface $entityManager
+-    ) {}
++    ) {
++    }
+ 
+     public function process(
+         mixed $data,
+@@ -26,46 +27,40 @@ class InfirmierProcessor implements ProcessorInterface
+         array $context = []
+     ) {
+         $method = $operation->getMethod();
+-        $authHeader = $this->requestStack->getCurrentRequest()?->headers->get('Authorization');
+-        $headers = $authHeader ? ['Authorization' => $authHeader] : [];
+ 
++        // ÔöÇÔöÇÔöÇ POST : Cr├®ation d'un infirmier ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+         if ($method === 'POST') {
+-            // V├®rifier id_utilisateur dans auth-service
+-            try {
+-                $response = $this->httpClient->request(
+-                    'GET',
+-                    'http://auth-service:8080/user/' . $data->id_utilisateur,
+-                    ['headers' => $headers]
+-                )->toArray();
+-
+-                if ($response['error'] ?? true) {
+-                    throw new BadRequestHttpException('Utilisateur introuvable');
+-                }
+ 
+-                $role = $response['user']['role'] ?? null;
+-                if ($role !== 'INFIRMIER') {
+-                    throw new BadRequestHttpException('Cet utilisateur n\'a pas le r├┤le INFIRMIER, r├┤le actuel : ' . $role);
+-                }
+-            } catch (BadRequestHttpException $e) {
+-                throw $e;
+-            } catch (\Exception $e) {
++            // 1. V├®rifier que l'utilisateur existe dans auth-db et a le r├┤le INFIRMIER
++            $user = $this->fetchUserFromAuthDb($data->id_utilisateur);
++
++            if ($user === null) {
+                 throw new BadRequestHttpException('Utilisateur introuvable : ' . $data->id_utilisateur);
+             }
++
++            if (strtoupper((string) ($user['role'] ?? '')) !== 'INFIRMIER') {
++                throw new BadRequestHttpException(
++                    'Cet utilisateur n\'a pas le r├┤le INFIRMIER, r├┤le actuel : ' . ($user['role'] ?? 'inconnu')
++                );
++            }
++
++            // 2. V├®rifier doublon (la colonne PHP s'appelle id_utilisateur)
+             $existingInfirmier = $this->entityManager->getRepository(Infirmier::class)
+                 ->findOneBy(['id_utilisateur' => $data->id_utilisateur]);
+ 
+             if ($existingInfirmier) {
+-                throw new BadRequestHttpException('Un infirmier existe d├®j├á avec cet id_utilisateur : ' . $data->id_utilisateur);
++                throw new BadRequestHttpException(
++                    'Un infirmier existe d├®j├á avec cet id_utilisateur : ' . $data->id_utilisateur
++                );
+             }
++
++            // 3. Cr├®er l'entit├® infirmier
+             $infirmier = new Infirmier();
+             $infirmier->setIdUtilisateur($data->id_utilisateur);
+ 
+             if ($data->id_specialite) {
+-               $idSpecialite = (int) basename($data->id_specialite);
+-                $specialite = $this->entityManager->getReference(
+-                    InfirmierSpecialite::class,
+-                    $idSpecialite
+-                );
++                $idSpecialite = (int) basename($data->id_specialite);
++                $specialite = $this->entityManager->getReference(InfirmierSpecialite::class, $idSpecialite);
+                 $infirmier->setIdSpecialite($specialite);
+             }
+             $infirmier->setCreatedAt(new \DateTimeImmutable());
+@@ -73,74 +68,88 @@ class InfirmierProcessor implements ProcessorInterface
+             $this->entityManager->persist($infirmier);
+             $this->entityManager->flush();
+ 
++            // 4. Enrichir la ressource retourn├®e avec les donn├®es auth-db
+             $data->id = $infirmier->getId();
++            if ($user) {
++                $data->nom = $user['nom'] ?? null;
++                $data->prenom = $user['prenom'] ?? null;
++                $data->cin = $user['cin'] ?? null;
++                $data->email = $user['email'] ?? null;
++                $data->sexe = $user['sexe'] ?? null;
++                $data->statut = (bool) ($user['statut'] ?? false);
++                $data->dateNaissance = $user['date_naissance'] ?? null;
++                $data->telephone = $user['telephone'] ?? null;
++                $data->adresse = $user['adresse'] ?? null;
++            }
++
+             return $data;
+         }
+ 
++        // ÔöÇÔöÇÔöÇ PUT : Mise ├á jour ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+         if ($method === 'PUT') {
+             $infirmier = $this->entityManager->find(Infirmier::class, $uriVariables['id']);
+-            if (!$infirmier) throw new BadRequestHttpException('Infirmier introuvable');
++            if (!$infirmier)
++                throw new BadRequestHttpException('Infirmier introuvable');
+ 
+-            // Lire le body brut ÔÇö $data->nom etc. sont null en PUT !
+             $request = $this->requestStack->getCurrentRequest();
+             $rawData = json_decode($request->getContent(), true) ?? [];
+-            error_log('RAW DATA PUT: ' . json_encode($rawData));
+ 
++            // Mise ├á jour directe dans auth-db
+             try {
+-                $updateData = array_filter([
+-                    'nom'           => $rawData['nom'] ?? null,
+-                    'prenom'        => $rawData['prenom'] ?? null,
+-                    'cin'           => $rawData['cin'] ?? null,
+-                    'email'         => $rawData['email'] ?? null,
+-                    'sexe'          => $rawData['sexe'] ?? null,
+-                    'statut'        => $rawData['statut'] ?? null,
+-                    'dateNaissance' => $rawData['dateNaissance'] ?? null,
+-                    'telephone'     => $rawData['telephone'] ?? null,
+-                    'adresse'       => $rawData['adresse'] ?? null,
+-                    'motDePasse'    => $rawData['motDePasse'] ?? null,
++                $updateFields = array_filter([
++                    'nom' => $rawData['nom'] ?? null,
++                    'prenom' => $rawData['prenom'] ?? null,
++                    'cin' => $rawData['cin'] ?? null,
++                    'email' => $rawData['email'] ?? null,
++                    'sexe' => $rawData['sexe'] ?? null,
++                    'statut' => isset($rawData['statut']) ? (int) $rawData['statut'] : null,
++                    'date_naissance' => $rawData['dateNaissance'] ?? null,
++                    'telephone' => $rawData['telephone'] ?? null,
++                    'adresse' => $rawData['adresse'] ?? null,
+                 ], fn($v) => $v !== null);
+ 
+-                error_log('UPDATE DATA vers auth-service: ' . json_encode($updateData));
+-
+-                if (!empty($updateData)) {
+-                    $statusCode = $this->httpClient->request(
+-                        'PUT',
+-                        'http://auth-service:8080/update/' . $infirmier->getIdUtilisateur(),
+-                        [
+-                            'headers' => array_merge($headers, ['Content-Type' => 'application/json']),
+-                            'json' => $updateData
+-                        ]
+-                    )->getStatusCode();
+-                    error_log('AUTH SERVICE STATUS: ' . $statusCode);
++                if (!empty($rawData['motDePasse'])) {
++                    // Hachage bcrypt compatible avec Spring Security
++                    $updateFields['mot_de_passe'] = password_hash($rawData['motDePasse'], PASSWORD_BCRYPT);
++                }
++
++                if (!empty($updateFields)) {
++                    $setClauses = implode(', ', array_map(fn($col) => "$col = :$col", array_keys($updateFields)));
++                    $updateFields['id'] = $infirmier->getIdUtilisateur();
++                    $this->authConnection->executeStatement(
++                        "UPDATE users SET $setClauses WHERE id_user = :id AND deleted_at IS NULL",
++                        $updateFields
++                    );
+                 }
+             } catch (\Exception $e) {
+-                error_log('Auth-service error: ' . $e->getMessage());
++                // L'update auth-db a ├®chou├® ÔÇö on continue quand m├¬me pour mettre ├á jour la sp├®cialit├®
+             }
+ 
++            // Mise ├á jour de la sp├®cialit├® dans infirmier-db
+             if (!empty($rawData['id_specialite'])) {
+-                $id_specialite = (int) basename($rawData['id_specialite']);
+-                $specialite = $this->entityManager->getReference(InfirmierSpecialite::class, $id_specialite);
++                $idSpecialite = (int) basename($rawData['id_specialite']);
++                $specialite = $this->entityManager->getReference(InfirmierSpecialite::class, $idSpecialite);
+                 $infirmier->setIdSpecialite($specialite);
+             }
+-            $infirmier->setUpdatedAt(new \DateTimeImmutable());
+ 
++            $infirmier->setUpdatedAt(new \DateTimeImmutable());
+             $this->entityManager->flush();
++
+             $data->id = $infirmier->getId();
+             return $data;
+         }
+ 
++        // ÔöÇÔöÇÔöÇ DELETE : Soft-delete dans auth-db ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+         if ($method === 'DELETE') {
+             $infirmier = $this->entityManager->find(Infirmier::class, $uriVariables['id']);
+             if ($infirmier) {
+-                // Supprimer l'utilisateur dans auth-service
+                 try {
+-                    $this->httpClient->request(
+-                        'DELETE',
+-                        'http://auth-service:8080/delete/' . $infirmier->getIdUtilisateur(),
+-                        ['headers' => $headers]
+-                    )->getStatusCode();
++                    $this->authConnection->executeStatement(
++                        'UPDATE users SET deleted_at = NOW() WHERE id_user = :id AND deleted_at IS NULL',
++                        ['id' => $infirmier->getIdUtilisateur()]
++                    );
+                 } catch (\Exception $e) {
+-                    // Continue m├¬me si auth-service ├®choue
++                    // Soft-delete auth-db ├®chou├® ÔÇö on continue
+                 }
+ 
+                 $infirmier->setDeletedAt(new \DateTimeImmutable());
+@@ -151,4 +160,22 @@ class InfirmierProcessor implements ProcessorInterface
+ 
+         return null;
+     }
++
++    /**
++     * R├®cup├¿re un utilisateur depuis auth-db par son ID.
++     */
++    private function fetchUserFromAuthDb(int $userId): ?array
++    {
++        try {
++            $row = $this->authConnection->fetchAssociative(
++                'SELECT id_user, nom, prenom, cin, email, role, sexe, statut, date_naissance, telephone, adresse
++                 FROM users
++                 WHERE id_user = :id AND deleted_at IS NULL',
++                ['id' => $userId]
++            );
++            return $row ?: null;
++        } catch (\Exception $e) {
++            return null;
++        }
++    }
+ }
+diff --git a/Backend/infirmier-service/src/Provider/InfirmierProvider.php b/Backend/infirmier-service/src/Provider/InfirmierProvider.php
+index 6e1a7dcf..a6259255 100644
+--- a/Backend/infirmier-service/src/Provider/InfirmierProvider.php
++++ b/Backend/infirmier-service/src/Provider/InfirmierProvider.php
+@@ -13,9 +13,10 @@ class InfirmierProvider implements ProviderInterface
+ {
+     public function __construct(
+         private InfirmierRepository $infirmierRepository,
+-        private \Symfony\Contracts\HttpClient\HttpClientInterface $httpClient,
+-        private \Symfony\Component\HttpFoundation\RequestStack $requestStack,
+-    ) {}
++        private HttpClientInterface $httpClient,
++        private RequestStack $requestStack,
++    ) {
++    }
+ 
+     public function provide(
+         Operation $operation,
+@@ -34,7 +35,8 @@ class InfirmierProvider implements ProviderInterface
+ 
+         if ($id) {
+             $infirmier = $this->infirmierRepository->find($id);
+-            if (!$infirmier) return null;
++            if (!$infirmier)
++                return null;
+             return $this->mapToResource($infirmier);
+         }
+ 
+@@ -62,25 +64,27 @@ class InfirmierProvider implements ProviderInterface
+             $authHeader = $this->requestStack->getCurrentRequest()?->headers->get('Authorization');
+             $headers = $authHeader ? ['Authorization' => $authHeader] : [];
+ 
++            error_log("[InfirmierProvider] Appel auth-service pour id_utilisateur: " . $infirmier->getIdUtilisateur());
++
+             $response = $this->httpClient->request(
+                 'GET',
+                 'http://auth-service:8080/user/' . $infirmier->getIdUtilisateur(),
+-                ['headers' => $headers]
++                ['headers' => $headers, 'timeout' => 5]
+             )->toArray();
+ 
+             $user = $response['user'] ?? [];
+-            $resource->nom          = $user['nom'] ?? null;
+-            $resource->prenom       = $user['prenom'] ?? null;
+-            $resource->cin          = $user['cin'] ?? null;
+-            $resource->email        = $user['email'] ?? null;
+-            $resource->sexe         = $user['sexe'] ?? null;
+-            $resource->statut       = $user['statut'] ?? null;
++            $resource->nom = $user['nom'] ?? null;
++            $resource->prenom = $user['prenom'] ?? null;
++            $resource->cin = $user['cin'] ?? null;
++            $resource->email = $user['email'] ?? null;
++            $resource->sexe = $user['sexe'] ?? null;
++            $resource->statut = $user['statut'] ?? null;
+             $resource->dateNaissance = $user['dateNaissance'] ?? null;
+-            $resource->telephone    = $user['telephone'] ?? null;
+-            $resource->adresse      = $user['adresse'] ?? null;
++            $resource->telephone = $user['telephone'] ?? null;
++            $resource->adresse = $user['adresse'] ?? null;
+ 
+         } catch (\Exception $e) {
+-            // Si auth-service inaccessible, on laisse les champs null
++            error_log("[InfirmierProvider] ECHEC appel auth-service pour ID " . $infirmier->getIdUtilisateur() . " : " . $e->getMessage());
+         }
+ 
+         return $resource;
+diff --git a/Backend/rdv-service/src/Entity/RendezVous.php b/Backend/rdv-service/src/Entity/RendezVous.php
+index 6659213c..3363ffea 100644
+--- a/Backend/rdv-service/src/Entity/RendezVous.php
++++ b/Backend/rdv-service/src/Entity/RendezVous.php
+@@ -13,6 +13,7 @@ use ApiPlatform\Metadata\Delete;
+ use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+ use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+ use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
++use ApiPlatform\Doctrine\Orm\Filter\ExistsFilter;
+ use ApiPlatform\Metadata\ApiFilter;
+ use App\State\CancelRendezVousProcessor;
+ use App\State\RendezVousProcessor;
+@@ -77,6 +78,8 @@ use Doctrine\ORM\Mapping as ORM;
+     'created_at'
+ ])]
+ 
++#[ApiFilter(ExistsFilter::class, properties: ['deleted_at'])]
++
+ #[ORM\Entity(repositoryClass: RendezVousRepository::class)]
+ class RendezVous
+ {
+diff --git a/Backend/rdv-service/src/Service/DoctorServiceClient.php b/Backend/rdv-service/src/Service/DoctorServiceClient.php
+index 63e66ec2..ca089f97 100644
+--- a/Backend/rdv-service/src/Service/DoctorServiceClient.php
++++ b/Backend/rdv-service/src/Service/DoctorServiceClient.php
+@@ -13,7 +13,8 @@ class DoctorServiceClient
+         private HttpClientInterface $httpClient,
+         private RequestStack $requestStack,
+         private string $doctorServiceUrl = 'http://doctor-service:8080'
+-    ) {}
++    ) {
++    }
+ 
+     public function verifyDoctorExists(int $idDocteur): void
+     {
+@@ -33,7 +34,7 @@ class DoctorServiceClient
+     {
+         $response = $this->httpClient->request(
+             'GET',
+-            sprintf('%s/user/%d', $this->doctorServiceUrl, $idDocteur),
++            sprintf('%s/%d', $this->doctorServiceUrl, $idDocteur),
+             [
+                 'headers' => $this->getAuthHeaders(),
+                 'timeout' => 5,
+@@ -48,7 +49,7 @@ class DoctorServiceClient
+ 
+         if ($status !== 200) {
+             throw new \RuntimeException(
+-                'doctor-service error '.$status.' : '.$response->getContent(false)
++                'doctor-service error ' . $status . ' : ' . $response->getContent(false)
+             );
+         }
+ 
+diff --git a/Backend/rdv-service/src/State/RendezVousProcessor.php b/Backend/rdv-service/src/State/RendezVousProcessor.php
+index 18985ab5..ee639971 100644
+--- a/Backend/rdv-service/src/State/RendezVousProcessor.php
++++ b/Backend/rdv-service/src/State/RendezVousProcessor.php
+@@ -28,7 +28,8 @@ class RendezVousProcessor implements ProcessorInterface
+         private AppointmentMailer $mailer,
+         private HttpClientInterface $httpClient,
+         private LoggerInterface $logger
+-    ) {}
++    ) {
++    }
+ 
+     public function process($data, Operation $operation, array $uriVariables = [], array $context = [])
+     {
+@@ -103,27 +104,16 @@ class RendezVousProcessor implements ProcessorInterface
+         $this->em->flush();
+ 
+         $doctorName = $this->doctorClient->getDoctorFullName($data->getIdDocteur());
+-        /*
+-        |-------------------------------------------------
+-        | 6´©ÅÔâú Send Email Confirmation
+-        |-------------------------------------------------
+-        */
+-
+-        $email = $this->authClient->getUserEmail($patientUserId);
+-
+-        if ($email) {
+-            $this->mailer->sendConfirmation($email, $data, $doctorName);
+-        }
+ 
+         try {
+-            $this->httpClient->request('POST', 'http://localhost:8082/api/admin/events', [
++            $this->httpClient->request('POST', 'http://admin-service:8080/api/admin/events', [
+                 'json' => [
+-                    'idRdv'       => $data->getId(),
+-                    'idPatient'   => $data->getIdPatient(),
+-                    'idDocteur'   => $data->getIdDocteur(),
++                    'idRdv' => $data->getId(),
++                    'idPatient' => $data->getIdPatient(),
++                    'idDocteur' => $data->getIdDocteur(),
+                     'idInfirmier' => in_array('ROLE_INFIRMIER', $roles) ? $userId : null,
+-                    'dateRdv'     => $data->getDate()?->format('Y-m-d H:i'),
+-                    'statut'      => 'CREATED'
++                    'dateRdv' => $data->getDateRdv()?->format('Y-m-d H:i'),
++                    'statut' => $data->getStatut()->value
+                 ]
+             ]);
+         } catch (\Exception $e) {
+diff --git a/Backend/rdv-service/src/State/RendezVousUpdateProcessor.php b/Backend/rdv-service/src/State/RendezVousUpdateProcessor.php
+index 7e583e66..090988a4 100644
+--- a/Backend/rdv-service/src/State/RendezVousUpdateProcessor.php
++++ b/Backend/rdv-service/src/State/RendezVousUpdateProcessor.php
+@@ -36,14 +36,14 @@ class RendezVousUpdateProcessor implements ProcessorInterface
+ 
+         try {
+             $roles = $user?->getRoles() ?? [];
+-            $this->httpClient->request('POST', 'http://localhost:8082/api/admin/events', [
++            $this->httpClient->request('POST', 'http://admin-service:8080/api/admin/events', [
+                 'json' => [
+                     'idRdv'       => $data->getId(),
+                     'idPatient'   => $data->getIdPatient(),
+                     'idDocteur'   => $data->getIdDocteur(),
+                     'idInfirmier' => in_array('ROLE_INFIRMIER', $roles) ? (int) $userId : null,
+-                    'dateRdv'     => $data->getDate()?->format('Y-m-d H:i'),
+-                    'statut'      => 'MODIFIE'
++                    'dateRdv'     => $data->getDateRdv()?->format('Y-m-d') . ' ├á ' . $data->getHeureDebut()?->format('H:i'),
++                    'statut'      => $data->getStatut()->value
+                 ]
+             ]);
+         } catch (\Exception $e) {
+diff --git a/Frontend/Web/src/app/app.routes.ts b/Frontend/Web/src/app/app.routes.ts
+index e2612cb5..05e8fd2f 100644
+--- a/Frontend/Web/src/app/app.routes.ts
++++ b/Frontend/Web/src/app/app.routes.ts
+@@ -102,33 +102,33 @@ export const routes: Routes = [
+         path: "rendez-vous",
+         component: RendezVousComponent,
+         canActivate: [roleGuard],
+-        data: { roles: [Role.DOCTEUR, Role.INFIRMIER] },
++        data: { roles: [Role.DOCTEUR, Role.INFIRMIER, Role.SECRETAIRE] },
+       },
+       {
+-        path: "rendez-vous/:id",
+-        component: RdvViewComponent,
++        path: "rendez-vous/new",
++        component: RdvEditComponent,
+         canActivate: [roleGuard],
+         data: {
+-          mode: "view",
+-          roles: [Role.DOCTEUR, Role.INFIRMIER],
++          mode: "create",
++          roles: [Role.INFIRMIER, Role.SECRETAIRE],
+         },
+       },
+       {
+-        path: "rendez-vous/:id/edit",
+-        component: RdvEditComponent,
++        path: "rendez-vous/:id",
++        component: RdvViewComponent,
+         canActivate: [roleGuard],
+         data: {
+-          mode: "edit",
+-          roles: [Role.DOCTEUR, Role.INFIRMIER],
++          mode: "view",
++          roles: [Role.DOCTEUR, Role.INFIRMIER, Role.SECRETAIRE],
+         },
+       },
+       {
+-        path: "rendez-vous/new",
++        path: "rendez-vous/:id/edit",
+         component: RdvEditComponent,
+         canActivate: [roleGuard],
+         data: {
+-          mode: "create",
+-          roles: [Role.INFIRMIER],
++          mode: "edit",
++          roles: [Role.DOCTEUR, Role.INFIRMIER, Role.SECRETAIRE],
+         },
+       },
+       {
+diff --git a/Frontend/Web/src/app/core/services/api.service.ts b/Frontend/Web/src/app/core/services/api.service.ts
+index f01f5536..c6568919 100644
+--- a/Frontend/Web/src/app/core/services/api.service.ts
++++ b/Frontend/Web/src/app/core/services/api.service.ts
+@@ -20,6 +20,10 @@ export class ApiService {
+     return this.http.put<T>(url, body);
+   }
+ 
++  protected patch<T>(url: string, body: any, options?: any) {
++    return this.http.patch<T>(url, body, options);
++  }
++
+   protected delete<T>(url: string) {
+     return this.http.delete<T>(url);
+   }
+diff --git a/Frontend/Web/src/app/core/services/rdv.service.ts b/Frontend/Web/src/app/core/services/rdv.service.ts
+index 029648f5..5b86ae31 100644
+--- a/Frontend/Web/src/app/core/services/rdv.service.ts
++++ b/Frontend/Web/src/app/core/services/rdv.service.ts
+@@ -39,7 +39,9 @@ export class RdvService extends ApiService {
+   }
+ 
+   update(id: number, data: RdvCreateDto) {
+-    return this.put<RdvCreateDto>(`${this.base}/${id}`, data);
++    return this.patch<RdvCreateDto>(`${this.base}/${id}`, data, {
++      headers: { 'Content-Type': 'application/merge-patch+json' }
++    });
+   }
+ 
+   deleteById(id: number) {
+diff --git a/Frontend/Web/src/app/pages/RendezVous/RendezVous.component.ts b/Frontend/Web/src/app/pages/RendezVous/RendezVous.component.ts
+index 44881423..82c422fe 100644
+--- a/Frontend/Web/src/app/pages/RendezVous/RendezVous.component.ts
++++ b/Frontend/Web/src/app/pages/RendezVous/RendezVous.component.ts
+@@ -200,6 +200,7 @@ export class RendezVousComponent implements OnInit {
+         const baseParams: Record<string, string | number> = {
+           page: this.page,
+           itemsPerPage: this.itemsPerPage,
++          'deleted_at[exists]': 'false',
+         };
+ 
+         // Backend-supported filters (from your routes)
+diff --git a/Frontend/Web/src/app/pages/RendezVous/rdv-edit.component.html b/Frontend/Web/src/app/pages/RendezVous/rdv-edit.component.html
+index 33de153e..49773c53 100644
+--- a/Frontend/Web/src/app/pages/RendezVous/rdv-edit.component.html
++++ b/Frontend/Web/src/app/pages/RendezVous/rdv-edit.component.html
+@@ -1,55 +1,59 @@
+-<app-page-breadcrumb pageTitle="Modifier Rendez Vous" />
++<app-page-breadcrumb [pageTitle]="mode === 'create' ? 'Ajouter un Rendez Vous' : 'Modifier le Rendez Vous'" />
+ 
+ <div>
+-  <app-component-card title="Modifier Rendez Vous">
++  <app-component-card [title]="mode === 'create' ? 'Nouveau Rendez Vous' : 'D├®tails du Rendez Vous'">
+     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+       <div>
+         <app-label>Patient</app-label>
+-        <app-input-field
+-          type="number"
+-          placeholder="ID patient"
+-          [value]="rdv.id_patient"
+-          (valueChange)="rdv.id_patient = $event"
+-        />
++        <app-select
++          [options]="patientOptions"
++          placeholder="S├®lectionnez un patient"
++          [value]="form.id_patient?.toString() ?? ''"
++          (valueChange)="form.id_patient = +$event"
++          className="dark:bg-dark-900"
++        ></app-select>
+       </div>
+ 
+       <div>
+         <app-label>Docteur</app-label>
+-        <app-input-field
+-          type="number"
+-          placeholder="ID docteur"
+-          [value]="rdv.id_docteur"
+-          (valueChange)="rdv.id_docteur = $event"
+-        />
++        <app-select
++          [options]="doctorOptions"
++          placeholder="S├®lectionnez un docteur"
++          [value]="form.id_docteur?.toString() ?? ''"
++          (valueChange)="form.id_docteur = +$event"
++          className="dark:bg-dark-900"
++        ></app-select>
+       </div>
+ 
+       <div class="sm:col-span-2">
+         <app-date-picker
+           id="rdv-edit-date"
+           label="Date"
+-          placeholder="Select date"
+-          [defaultDate]="rdv.date_rdv"
++          placeholder="S├®lectionnez une date"
++          [defaultDate]="form.date_rdv"
+           (dateChange)="onDateChange($event)"
+         />
+       </div>
+ 
+       <div>
+-        <app-time-picker
++        <app-label>Heure d├®but</app-label>
++        <input
++          type="time"
+           id="rdv-edit-time-start"
+-          label="Heure d├®but"
+-          placeholder="Select start time"
+-          [defaultTime]="rdv.heure_debut"
+-          (timeChange)="onStartTimeChange($event)"
++          name="heure_debut"
++          [(ngModel)]="form.heure_debut"
++          class="flex h-11 w-full items-center rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-none transition-colors placeholder:text-gray-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-white/10 dark:text-white/90 dark:focus:border-brand-500"
+         />
+       </div>
+ 
+       <div>
+-        <app-time-picker
++        <app-label>Heure fin</app-label>
++        <input
++          type="time"
+           id="rdv-edit-time-end"
+-          label="Heure fin"
+-          placeholder="Select end time"
+-          [defaultTime]="rdv.heure_fin"
+-          (timeChange)="onEndTimeChange($event)"
++          name="heure_fin"
++          [(ngModel)]="form.heure_fin"
++          class="flex h-11 w-full items-center rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-none transition-colors placeholder:text-gray-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-white/10 dark:text-white/90 dark:focus:border-brand-500"
+         />
+       </div>
+ 
+@@ -57,21 +61,28 @@
+         <app-label>Statut</app-label>
+         <app-select
+           [options]="statusOptions"
+-          placeholder="Select status"
+-          [value]="rdv.status || ''"
++          placeholder="S├®lectionnez un statut"
++          [value]="form.statut"
+           (valueChange)="onStatusChange($event)"
+           className="dark:bg-dark-900"
+         ></app-select>
+       </div>
+     </div>
+ 
+-    <div class="flex items-center justify-end gap-3">
++    <div class="mt-8 flex items-center justify-end gap-3 border-t border-gray-100 pt-6 dark:border-white/10">
++      <button
++        (click)="cancel()"
++        type="button"
++        class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-gray-200 dark:hover:bg-white/6"
++      >
++        Annuler
++      </button>
+       <button
+         (click)="save()"
+         type="button"
+-        class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
++        class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-6 py-2 text-sm font-medium text-white hover:bg-brand-600 shadow-sm"
+       >
+-        Save
++        {{ mode === 'create' ? 'Cr├®er' : 'Enregistrer' }}
+       </button>
+     </div>
+   </app-component-card>
+diff --git a/Frontend/Web/src/app/pages/RendezVous/rdv-edit.component.ts b/Frontend/Web/src/app/pages/RendezVous/rdv-edit.component.ts
+index 64548be6..30fabf6c 100644
+--- a/Frontend/Web/src/app/pages/RendezVous/rdv-edit.component.ts
++++ b/Frontend/Web/src/app/pages/RendezVous/rdv-edit.component.ts
+@@ -1,85 +1,154 @@
+ import { CommonModule } from '@angular/common';
+-import { Component, OnInit } from '@angular/core';
++import { Component, OnInit, inject } from '@angular/core';
++import { FormsModule } from '@angular/forms';
+ import { ActivatedRoute, Router } from '@angular/router';
+-
+ import { RdvService } from '../../core/services/rdv.service';
+-import { PageBreadcrumbComponent } from "../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
++import { DoctorService } from '../../core/services/doctor.service';
++import { PatientApiService } from '../../core/services/api/patient-api.service';
++import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
+ import { ComponentCardComponent } from '../../shared/components/common/component-card/component-card.component';
+-import { DatePickerComponent } from '../../shared/components/form/date-picker/date-picker.component';
+-import { InputFieldComponent } from '../../shared/components/form/input/input-field.component';
+ import { LabelComponent } from '../../shared/components/form/label/label.component';
+-import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
++import { DatePickerComponent } from '../../shared/components/form/date-picker/date-picker.component';
+ import { TimePickerComponent } from '../../shared/components/form/time-picker/time-picker.component';
++import { Option, SelectComponent } from '../../shared/components/form/select/select.component';
++
++type Mode = 'create' | 'edit' | 'view';
+ 
+ @Component({
+   selector: 'app-rdv-edit',
+   standalone: true,
+-  templateUrl: './rdv-edit.component.html',
+   imports: [
+     CommonModule,
++    FormsModule,
+     PageBreadcrumbComponent,
+     ComponentCardComponent,
+-    DatePickerComponent,
+     LabelComponent,
+-    InputFieldComponent,
+-    SelectComponent,
++    DatePickerComponent,
+     TimePickerComponent,
++    SelectComponent,
+   ],
++  templateUrl: './rdv-edit.component.html',
+ })
+ export class RdvEditComponent implements OnInit {
++  mode: Mode = 'create';
++  loading = false;
+ 
+-  rdv: any = {};
++  private readonly route = inject(ActivatedRoute);
++  private readonly router = inject(Router);
++  private readonly rdvService = inject(RdvService);
++  private readonly doctorService = inject(DoctorService);
++  private readonly patientService = inject(PatientApiService);
++
++  private id: number | null = null;
+ 
+   statusOptions: Option[] = [
+-    { value: 'Confirm├®', label: 'Confirm├®' },
+-    { value: 'En attente', label: 'En attente' },
+-    { value: 'Annul├®', label: 'Annul├®' },
++    { value: 'CONFIRME', label: 'Confirm├®' },
++    { value: 'EN_ATTENTE', label: 'En attente' },
++    { value: 'ANNULE', label: 'Annul├®' },
+   ];
+ 
+-  constructor(
+-    private route: ActivatedRoute,
+-    private router: Router,
+-    private rdvService: RdvService
+-  ) {}
++  patientOptions: Option[] = [];
++  doctorOptions: Option[] = [];
+ 
+-  ngOnInit() {
++  form = {
++    id_patient: '' as string | number,
++    id_docteur: '' as string | number,
++    date_rdv: '',
++    heure_debut: '',
++    heure_fin: '',
++    statut: 'EN_ATTENTE',
++  };
+ 
+-    const idParam = this.route.snapshot.params['id'];
+-    const id = Number(idParam);
++  ngOnInit() {
++    this.mode = (this.route.snapshot.data['mode'] ?? 'create') as Mode;
++    const idParam = this.route.snapshot.paramMap.get('id');
++    this.id = idParam ? Number(idParam) : null;
++
++    this.loadOptions();
++
++    if (this.mode !== 'create' && this.id != null) {
++      this.rdvService.getById(this.id).subscribe({
++        next: (existing: any) => {
++          this.form = {
++            id_patient: existing.id_patient,
++            id_docteur: existing.id_docteur,
++            date_rdv: existing.date_rdv,
++            heure_debut: existing.heure_debut,
++            heure_fin: existing.heure_fin,
++            statut: existing.statut || existing.status || 'EN_ATTENTE',
++          };
++        },
++        error: () => this.router.navigate(['/rendez-vous'])
++      });
++    }
++  }
+ 
+-    this.rdvService.getById(id).subscribe({
+-      next: data => this.rdv = data,
+-      error: err => console.error(err)
++  loadOptions() {
++    this.doctorService.getDoctors().subscribe({
++      next: (doctors) => {
++        this.doctorOptions = doctors.map(d => ({
++          value: d.idDocteur.toString(),
++          label: `Dr. ${d.nom || ''} ${d.prenom || ''}`.trim() || `Docteur ${d.idDocteur}`
++        }));
++      },
++      error: (err) => console.error('Erreur chargement docteurs', err)
+     });
+ 
++    this.patientService.getAll().subscribe({
++      next: (patients) => {
++        this.patientOptions = patients.map(p => ({
++          value: p.id.toString(),
++          label: `${p.nom || ''} ${p.prenom || ''}`.trim() || `Patient ${p.id}`
++        }));
++      },
++      error: (err) => console.error('Erreur chargement patients', err)
++    });
+   }
+ 
+   onDateChange(event: any) {
+-    this.rdv.date_rdv = event?.dateStr ?? this.rdv.date_rdv;
++    this.form.date_rdv = event?.dateStr ?? this.form.date_rdv;
+   }
+ 
+   onStartTimeChange(time: string) {
+-    this.rdv.heure_debut = time;
++    this.form.heure_debut = time;
+   }
+ 
+   onEndTimeChange(time: string) {
+-    this.rdv.heure_fin = time;
++    this.form.heure_fin = time;
+   }
+ 
+   onStatusChange(value: string) {
+-    this.rdv.status = value;
++    this.form.statut = value;
+   }
+ 
+-  save() {
+-    const rawId = this.rdv?.id_rdv ?? this.rdv?.id;
+-    const id = Number(rawId);
+-    if (!Number.isFinite(id)) return;
+-
+-    this.rdvService.update(id, this.rdv).subscribe({
+-      next: () => this.router.navigate(['/rendez-vous']),
+-      error: err => console.error(err)
+-    });
+-
++  cancel() {
++    this.router.navigate(['/rendez-vous']);
+   }
+ 
++  save() {
++    this.loading = true;
++    if (this.mode === 'create') {
++      this.rdvService.create(this.form as any).subscribe({
++        next: () => {
++          this.loading = false;
++          this.router.navigate(['/rendez-vous']);
++        },
++        error: (err) => {
++          console.error(err);
++          this.loading = false;
++        }
++      });
++    } else if (this.id != null) {
++      this.rdvService.update(this.id, this.form as any).subscribe({
++        next: () => {
++          this.loading = false;
++          this.router.navigate(['/rendez-vous']);
++        },
++        error: (err) => {
++          console.error(err);
++          this.loading = false;
++        }
++      });
++    }
++  }
+ }
+\ No newline at end of file
+diff --git a/Frontend/Web/src/app/pages/infirmiers/infirmiers-form-page.component.ts b/Frontend/Web/src/app/pages/infirmiers/infirmiers-form-page.component.ts
+index e56c2b23..9f5ce382 100644
+--- a/Frontend/Web/src/app/pages/infirmiers/infirmiers-form-page.component.ts
++++ b/Frontend/Web/src/app/pages/infirmiers/infirmiers-form-page.component.ts
+@@ -75,11 +75,18 @@ export class InfirmiersFormPageComponent implements OnInit {
+       ? (() => { try { return JSON.parse(err.error); } catch { return {}; } })()
+       : err?.error ?? {};
+ 
+-    return body?.message
+-      || body?.detail
+-      || body?.['hydra:description']
+-      || err?.message
+-      || 'Une erreur est survenue.';
++    const rawMessage = body?.['hydra:description'] || body?.detail || body?.message || err?.message || '';
++
++    // Nettoyage des messages techniques pour la soutenance
++    if (rawMessage.includes('id_specialite') && rawMessage.includes('IRI')) {
++      return "La sp├®cialit├® choisie est invalide ou le lien avec le service est rompu.";
++    }
++
++    if (rawMessage.includes('Duplicate entry')) {
++      return "Cet infirmier (Email ou CIN) existe d├®j├á dans le syst├¿me.";
++    }
++
++    return rawMessage || 'Une erreur est survenue lors de l\'enregistrement.';
+   }
+ 
+   ngOnInit() {
+@@ -168,7 +175,7 @@ export class InfirmiersFormPageComponent implements OnInit {
+         dateNaissance: this.form.dateNaissance,
+         telephone: this.form.telephone.trim(),
+         adresse: this.form.adresse.trim(),
+-        idSpecialite: Number(this.form.idSpecialite),
++        idSpecialite: `/api/infirmier_specialites/${this.form.idSpecialite}`,
+       }).subscribe({
+         next: () => {
+           this.loading = false;
+diff --git a/Frontend/Web/src/app/shared/layout/app-sidebar/app-sidebar.component.ts b/Frontend/Web/src/app/shared/layout/app-sidebar/app-sidebar.component.ts
+index ef60eca5..2e79a9d6 100644
+--- a/Frontend/Web/src/app/shared/layout/app-sidebar/app-sidebar.component.ts
++++ b/Frontend/Web/src/app/shared/layout/app-sidebar/app-sidebar.component.ts
+@@ -62,6 +62,11 @@ export class AppSidebarComponent {
+           roles: [Role.SECRETAIRE,Role.INFIRMIER,Role.DOCTEUR],
+           path: "/rendez-vous",
+         },
++        {
++          name: "Ajouter Rendez Vous",
++          roles: [Role.SECRETAIRE],
++          path: "/rendez-vous/new",
++        },
+         { name: "Calendar", path: "/calendar",roles: [Role.DOCTEUR]},
+       ],
+     },
+diff --git a/Frontend/Web/src/index.html b/Frontend/Web/src/index.html
+index 7b64986e..48d5b1d6 100644
+--- a/Frontend/Web/src/index.html
++++ b/Frontend/Web/src/index.html
+@@ -6,6 +6,8 @@
+   <base href="/">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="icon" type="image/x-icon" href="images/logoST.png">
++  <!-- Polyfill: SockJS/STOMP require 'global' which exists in Node.js but not in browsers -->
++  <script>var global = window;</script>
+ </head>
+ <body>
+   <app-root></app-root>
+diff --git a/docker-compose.yaml b/docker-compose.yaml
+index 7e9524d3..895cd78d 100644
+--- a/docker-compose.yaml
++++ b/docker-compose.yaml
+@@ -269,6 +269,7 @@ services:
+       APP_INFIRMIER_SERVICE_URL: http://infirmier-service:9000
+       APP_PATIENT_SERVICE_URL: http://patient-service:8080
+       APP_RDV_SERVICE_URL: http://rdv-service:9000
++      APP_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:4200,http://localhost:8082
+       SPRING_MAIL_HOST: mailhog
+       SPRING_MAIL_PORT: 1025
+       SPRING_MAIL_USERNAME: noreply@shifatech.local

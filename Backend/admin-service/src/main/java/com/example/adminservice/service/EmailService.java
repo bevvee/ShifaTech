@@ -31,7 +31,7 @@ public class EmailService {
         long now = System.currentTimeMillis();
         
         Long lastSent = sentEmailsCache.get(cacheKey);
-        if (lastSent != null && (now - lastSent) < 5000) {
+        if (lastSent != null && (now - lastSent) < 2000) {
             log.warn("[EMAIL-FILTER] Doublon ignoré pour : {}", to);
             return;
         }

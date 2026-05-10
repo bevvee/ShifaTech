@@ -46,10 +46,6 @@ public class NotificationService {
 
     @Transactional
     public void createNotification(Integer idUser, TypeNotif type, String titre, String message, Integer idRessource) {
-        if (notificationRepository.existsByIdUserAndMessage(idUser, message)) {
-            return;
-        }
-
         Notification notif = Notification.builder()
                 .idUser(idUser)
                 .typeNotif(type)

@@ -30,8 +30,8 @@ class InfirmierResource
     public ?int $id = null;
 
     public ?int $id_utilisateur = null;
-    public ?int $id_specialite = null;
-    public ?int $id_service = null;
+    public int|string|null $id_specialite = null;
+    public int|string|null $id_service = null;
     public ?string $nom = null;
     public ?string $prenom = null;
     public ?string $cin = null;

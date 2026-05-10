@@ -36,14 +36,14 @@ class RendezVousUpdateProcessor implements ProcessorInterface
 
         try {
             $roles = $user?->getRoles() ?? [];
-            $this->httpClient->request('POST', 'http://localhost:8082/api/admin/events', [
+            $this->httpClient->request('POST', 'http://admin-service:8080/api/admin/events', [
                 'json' => [
                     'idRdv'       => $data->getId(),
                     'idPatient'   => $data->getIdPatient(),
                     'idDocteur'   => $data->getIdDocteur(),
                     'idInfirmier' => in_array('ROLE_INFIRMIER', $roles) ? (int) $userId : null,
-                    'dateRdv'     => $data->getDate()?->format('Y-m-d H:i'),
-                    'statut'      => 'MODIFIE'
+                    'dateRdv'     => $data->getDateRdv()?->format('Y-m-d') . ' à ' . $data->getHeureDebut()?->format('H:i'),
+                    'statut'      => $data->getStatut()->value
                 ]
             ]);
         } catch (\Exception $e) {

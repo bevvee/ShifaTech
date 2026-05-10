@@ -3,6 +3,7 @@ package com.shifatech.authservice.service;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -276,5 +277,11 @@ public class AuthService {
         }
     }
 
-
+    // Get users by role
+    public List<UserDto> getUsersByRole(com.shifatech.authservice.Enum.RoleEnum role) {
+        return userRepository.findByRole(role).stream()
+                .filter(u -> u.getDeletedAt() == null)
+                .map(u -> new UserDto().toUserDto(u))
+                .collect(java.util.stream.Collectors.toList());
+    }
 }

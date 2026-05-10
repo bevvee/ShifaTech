@@ -167,7 +167,6 @@ public class DoctorService {
 		return List.of();
 	}
 
-	@SuppressWarnings("unchecked")
 	public List<PatientDTO> getMyPatients(Long idDoctor, String authHeader) {
 		log.info("Fetching patients for doctor ID: {}", idDoctor);
 		
@@ -192,8 +191,16 @@ public class DoctorService {
 
 		// 2. Extract distinct patient IDs
 		List<Long> patientIds = appointments.stream()
-				.filter(obj -> obj instanceof java.util.Map)
-				.map(obj -> (java.util.Map<String, Object>) obj)
+				.filter(obj -> obj instanceof java.util.Map<?, ?>)
+				.map(obj -> {
+					java.util.Map<String, Object> safeMap = new java.util.HashMap<>();
+					for (java.util.Map.Entry<?, ?> entry : ((java.util.Map<?, ?>) obj).entrySet()) {
+						if (entry.getKey() instanceof String) {
+							safeMap.put((String) entry.getKey(), entry.getValue());
+						}
+					}
+					return safeMap;
+				})
 				.map(map -> {
 					Object pid = map.get("id_patient");
 					if (pid == null) pid = map.get("idPatient");
@@ -260,8 +267,16 @@ public class DoctorService {
 		}
 
 		return response.getData().stream()
-				.filter(obj -> obj instanceof java.util.Map)
-				.map(obj -> (java.util.Map<String, Object>) obj)
+				.filter(obj -> obj instanceof java.util.Map<?, ?>)
+				.map(obj -> {
+					java.util.Map<String, Object> safeMap = new java.util.HashMap<>();
+					for (java.util.Map.Entry<?, ?> entry : ((java.util.Map<?, ?>) obj).entrySet()) {
+						if (entry.getKey() instanceof String) {
+							safeMap.put((String) entry.getKey(), entry.getValue());
+						}
+					}
+					return safeMap;
+				})
 				.filter(map -> {
 					Object visitDocId = map.get("idDoctor");
 					if (visitDocId == null)
@@ -309,8 +324,16 @@ public class DoctorService {
 		}
 
 		return response.getData().stream()
-				.filter(obj -> obj instanceof java.util.Map)
-				.map(obj -> (java.util.Map<String, Object>) obj)
+				.filter(obj -> obj instanceof java.util.Map<?, ?>)
+				.map(obj -> {
+					java.util.Map<String, Object> safeMap = new java.util.HashMap<>();
+					for (java.util.Map.Entry<?, ?> entry : ((java.util.Map<?, ?>) obj).entrySet()) {
+						if (entry.getKey() instanceof String) {
+							safeMap.put((String) entry.getKey(), entry.getValue());
+						}
+					}
+					return safeMap;
+				})
 				.filter(map -> {
 					Object dossierPatId = map.get("idPatient");
 					if (dossierPatId == null)
@@ -322,7 +345,6 @@ public class DoctorService {
 	}
 
 	// Helper mapper
-	@SuppressWarnings("unchecked")
 	private DoctorDTO mapToDTO(Doctor doctor) {
 		DoctorDTO dto = new DoctorDTO();
 		// Local
@@ -342,8 +364,13 @@ public class DoctorService {
 		// Fetch from Auth (Enrichment)
 		try {
 			java.util.Map<String, Object> response = authClient.getUserById(doctor.getIdUser());
-			if (response != null && response.get("user") != null) {
-				java.util.Map<String, Object> user = (java.util.Map<String, Object>) response.get("user");
+			if (response != null && response.get("user") instanceof java.util.Map<?, ?> rawUser) {
+				java.util.Map<String, Object> user = new java.util.HashMap<>();
+				for (java.util.Map.Entry<?, ?> entry : rawUser.entrySet()) {
+					if (entry.getKey() instanceof String) {
+						user.put((String) entry.getKey(), entry.getValue());
+					}
+				}
 				dto.setNom((String) user.get("nom"));
 				dto.setPrenom((String) user.get("prenom"));
 				dto.setEmail((String) user.get("email"));

@@ -1,9 +1,11 @@
 package com.shifatech.authservice.dto;
 import com.shifatech.authservice.entity.User;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 public class UserDto {
+    @JsonProperty("id")
     private Integer idUser;
     private String nom;
     private String prenom;

@@ -13,6 +13,7 @@ use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\ExistsFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use App\State\CancelRendezVousProcessor;
 use App\State\RendezVousProcessor;
@@ -76,6 +77,8 @@ use Doctrine\ORM\Mapping as ORM;
     'date_rdv',
     'created_at'
 ])]
+
+#[ApiFilter(ExistsFilter::class, properties: ['deleted_at'])]
 
 #[ORM\Entity(repositoryClass: RendezVousRepository::class)]
 class RendezVous

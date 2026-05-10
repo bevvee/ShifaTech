@@ -44,7 +44,7 @@ public class DoctorController {
     // --- Profile Management ---
 
     @GetMapping("/{id:[0-9]+}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT','INFIRMIER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT', 'INFIRMIER', 'SECRETAIRE')")
     public ResponseEntity<DoctorDTO> getDoctorProfile(@PathVariable Long id) {
         DoctorDTO doctor = doctorService.getDoctorProfile(id);
 
@@ -115,7 +115,7 @@ public class DoctorController {
     }
 
     @GetMapping("/user/{idUser:[0-9]+}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT','INFIRMIER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTEUR', 'PATIENT', 'INFIRMIER', 'SECRETAIRE')")
     public ResponseEntity<DoctorDTO> getDoctorByUserId(@PathVariable Long idUser) {
         return ResponseEntity.ok(doctorService.getDoctorProfileByUserId(idUser));
     }

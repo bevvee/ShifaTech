@@ -77,11 +77,18 @@ export class InfirmiersFormPageComponent implements OnInit {
       ? (() => { try { return JSON.parse(err.error); } catch { return {}; } })()
       : err?.error ?? {};
 
-    return body?.message
-      || body?.detail
-      || body?.['hydra:description']
-      || err?.message
-      || 'Une erreur est survenue.';
+    const rawMessage = body?.['hydra:description'] || body?.detail || body?.message || err?.message || '';
+
+    // Nettoyage des messages techniques pour la soutenance
+    if (rawMessage.includes('id_specialite') && rawMessage.includes('IRI')) {
+      return "La spécialité choisie est invalide ou le lien avec le service est rompu.";
+    }
+
+    if (rawMessage.includes('Duplicate entry')) {
+      return "Cet infirmier (Email ou CIN) existe déjà dans le système.";
+    }
+
+    return rawMessage || 'Une erreur est survenue lors de l\'enregistrement.';
   }
 
   ngOnInit() {
@@ -170,7 +177,7 @@ export class InfirmiersFormPageComponent implements OnInit {
         dateNaissance: this.form.dateNaissance,
         telephone: this.form.telephone.trim(),
         adresse: this.form.adresse.trim(),
-        idSpecialite: Number(this.form.idSpecialite),
+        idSpecialite: `/api/infirmier_specialites/${this.form.idSpecialite}`,
       }).subscribe({
         next: () => {
           this.loading = false;

@@ -269,6 +269,7 @@ services:
       APP_INFIRMIER_SERVICE_URL: http://infirmier-service:9000
       APP_PATIENT_SERVICE_URL: http://patient-service:8080
       APP_RDV_SERVICE_URL: http://rdv-service:9000
+      APP_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:4200,http://localhost:8082
       SPRING_MAIL_HOST: mailhog
       SPRING_MAIL_PORT: 1025
       SPRING_MAIL_USERNAME: noreply@shifatech.local

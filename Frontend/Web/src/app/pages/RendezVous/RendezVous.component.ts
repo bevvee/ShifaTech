@@ -200,6 +200,7 @@ export class RendezVousComponent implements OnInit {
         const baseParams: Record<string, string | number> = {
           page: this.page,
           itemsPerPage: this.itemsPerPage,
+          'deleted_at[exists]': 'false',
         };
 
         // Backend-supported filters (from your routes)

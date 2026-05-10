@@ -1,55 +1,59 @@
-<app-page-breadcrumb pageTitle="Modifier Rendez Vous" />
+<app-page-breadcrumb [pageTitle]="mode === 'create' ? 'Ajouter un Rendez Vous' : 'Modifier le Rendez Vous'" />
 
 <div>
-  <app-component-card title="Modifier Rendez Vous">
+  <app-component-card [title]="mode === 'create' ? 'Nouveau Rendez Vous' : 'Détails du Rendez Vous'">
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
       <div>
         <app-label>Patient</app-label>
-        <app-input-field
-          type="number"
-          placeholder="ID patient"
-          [value]="rdv.id_patient"
-          (valueChange)="rdv.id_patient = $event"
-        />
+        <app-select
+          [options]="patientOptions"
+          placeholder="Sélectionnez un patient"
+          [value]="form.id_patient?.toString() ?? ''"
+          (valueChange)="form.id_patient = +$event"
+          className="dark:bg-dark-900"
+        ></app-select>
       </div>
 
       <div>
         <app-label>Docteur</app-label>
-        <app-input-field
-          type="number"
-          placeholder="ID docteur"
-          [value]="rdv.id_docteur"
-          (valueChange)="rdv.id_docteur = $event"
-        />
+        <app-select
+          [options]="doctorOptions"
+          placeholder="Sélectionnez un docteur"
+          [value]="form.id_docteur?.toString() ?? ''"
+          (valueChange)="form.id_docteur = +$event"
+          className="dark:bg-dark-900"
+        ></app-select>
       </div>
 
       <div class="sm:col-span-2">
         <app-date-picker
           id="rdv-edit-date"
           label="Date"
-          placeholder="Select date"
-          [defaultDate]="rdv.date_rdv"
+          placeholder="Sélectionnez une date"
+          [defaultDate]="form.date_rdv"
           (dateChange)="onDateChange($event)"
         />
       </div>
 
       <div>
-        <app-time-picker
+        <app-label>Heure début</app-label>
+        <input
+          type="time"
           id="rdv-edit-time-start"
-          label="Heure début"
-          placeholder="Select start time"
-          [defaultTime]="rdv.heure_debut"
-          (timeChange)="onStartTimeChange($event)"
+          name="heure_debut"
+          [(ngModel)]="form.heure_debut"
+          class="flex h-11 w-full items-center rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-none transition-colors placeholder:text-gray-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-white/10 dark:text-white/90 dark:focus:border-brand-500"
         />
       </div>
 
       <div>
-        <app-time-picker
+        <app-label>Heure fin</app-label>
+        <input
+          type="time"
           id="rdv-edit-time-end"
-          label="Heure fin"
-          placeholder="Select end time"
-          [defaultTime]="rdv.heure_fin"
-          (timeChange)="onEndTimeChange($event)"
+          name="heure_fin"
+          [(ngModel)]="form.heure_fin"
+          class="flex h-11 w-full items-center rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-none transition-colors placeholder:text-gray-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-white/10 dark:text-white/90 dark:focus:border-brand-500"
         />
       </div>
 
@@ -57,21 +61,28 @@
         <app-label>Statut</app-label>
         <app-select
           [options]="statusOptions"
-          placeholder="Select status"
-          [value]="rdv.status || ''"
+          placeholder="Sélectionnez un statut"
+          [value]="form.statut"
           (valueChange)="onStatusChange($event)"
           className="dark:bg-dark-900"
         ></app-select>
       </div>
     </div>
 
-    <div class="flex items-center justify-end gap-3">
+    <div class="mt-8 flex items-center justify-end gap-3 border-t border-gray-100 pt-6 dark:border-white/10">
+      <button
+        (click)="cancel()"
+        type="button"
+        class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:bg-white/3 dark:text-gray-200 dark:hover:bg-white/6"
+      >
+        Annuler
+      </button>
       <button
         (click)="save()"
         type="button"
-        class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
+        class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-6 py-2 text-sm font-medium text-white hover:bg-brand-600 shadow-sm"
       >
-        Save
+        {{ mode === 'create' ? 'Créer' : 'Enregistrer' }}
       </button>
     </div>
   </app-component-card>

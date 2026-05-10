@@ -39,7 +39,9 @@ export class RdvService extends ApiService {
   }
 
   update(id: number, data: RdvCreateDto) {
-    return this.put<RdvCreateDto>(`${this.base}/${id}`, data);
+    return this.patch<RdvCreateDto>(`${this.base}/${id}`, data, {
+      headers: { 'Content-Type': 'application/merge-patch+json' }
+    });
   }
 
   deleteById(id: number) {

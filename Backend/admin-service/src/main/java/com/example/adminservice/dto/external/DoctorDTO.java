@@ -16,4 +16,10 @@ public class DoctorDTO {
     @JsonProperty("idService")
     @JsonAlias("id_service")
     private Integer idService;
+
+    @JsonProperty("nom")
+    private String nom;
+
+    @JsonProperty("prenom")
+    private String prenom;
 }

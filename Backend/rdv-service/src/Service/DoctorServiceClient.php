@@ -13,7 +13,8 @@ class DoctorServiceClient
         private HttpClientInterface $httpClient,
         private RequestStack $requestStack,
         private string $doctorServiceUrl = 'http://doctor-service:8080'
-    ) {}
+    ) {
+    }
 
     public function verifyDoctorExists(int $idDocteur): void
     {
@@ -33,7 +34,7 @@ class DoctorServiceClient
     {
         $response = $this->httpClient->request(
             'GET',
-            sprintf('%s/user/%d', $this->doctorServiceUrl, $idDocteur),
+            sprintf('%s/%d', $this->doctorServiceUrl, $idDocteur),
             [
                 'headers' => $this->getAuthHeaders(),
                 'timeout' => 5,
@@ -48,7 +49,7 @@ class DoctorServiceClient
 
         if ($status !== 200) {
             throw new \RuntimeException(
-                'doctor-service error '.$status.' : '.$response->getContent(false)
+                'doctor-service error ' . $status . ' : ' . $response->getContent(false)
             );
         }
 

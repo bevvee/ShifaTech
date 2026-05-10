@@ -28,7 +28,8 @@ class RendezVousProcessor implements ProcessorInterface
         private AppointmentMailer $mailer,
         private HttpClientInterface $httpClient,
         private LoggerInterface $logger
-    ) {}
+    ) {
+    }
 
     public function process($data, Operation $operation, array $uriVariables = [], array $context = [])
     {
@@ -103,27 +104,16 @@ class RendezVousProcessor implements ProcessorInterface
         $this->em->flush();
 
         $doctorName = $this->doctorClient->getDoctorFullName($data->getIdDocteur());
-        /*
-        |-------------------------------------------------
-        | 6️⃣ Send Email Confirmation
-        |-------------------------------------------------
-        */
-
-        $email = $this->authClient->getUserEmail($patientUserId);
-
-        if ($email) {
-            $this->mailer->sendConfirmation($email, $data, $doctorName);
-        }
 
         try {
-            $this->httpClient->request('POST', 'http://localhost:8082/api/admin/events', [
+            $this->httpClient->request('POST', 'http://admin-service:8080/api/admin/events', [
                 'json' => [
-                    'idRdv'       => $data->getId(),
-                    'idPatient'   => $data->getIdPatient(),
-                    'idDocteur'   => $data->getIdDocteur(),
+                    'idRdv' => $data->getId(),
+                    'idPatient' => $data->getIdPatient(),
+                    'idDocteur' => $data->getIdDocteur(),
                     'idInfirmier' => in_array('ROLE_INFIRMIER', $roles) ? $userId : null,
-                    'dateRdv'     => $data->getDate()?->format('Y-m-d H:i'),
-                    'statut'      => 'CREATED'
+                    'dateRdv' => $data->getDateRdv()?->format('Y-m-d H:i'),
+                    'statut' => $data->getStatut()->value
                 ]
             ]);
         } catch (\Exception $e) {

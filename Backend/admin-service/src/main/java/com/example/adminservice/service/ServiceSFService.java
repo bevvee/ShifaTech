@@ -12,7 +12,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ServiceSFEntity {
+public class ServiceSFService {
 
     private final ServiceSFRepository serviceSFRepository;
 

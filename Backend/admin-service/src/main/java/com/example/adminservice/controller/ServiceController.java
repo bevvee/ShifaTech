@@ -3,7 +3,7 @@ package com.example.adminservice.controller;
 import com.example.adminservice.dto.CreateServiceSFRequest;
 import com.example.adminservice.dto.UpdateServiceSFRequest;
 import com.example.adminservice.entity.ServiceSF;
-import com.example.adminservice.service.ServiceSFEntity;
+import com.example.adminservice.service.ServiceSFService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,32 +16,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ServiceController {
 
-    private final ServiceSFEntity serviceSFEntity;
+    private final ServiceSFService serviceSFService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ServiceSF create(@Valid @RequestBody CreateServiceSFRequest request) {
-        return serviceSFEntity.create(request);
+        return serviceSFService.create(request);
     }
 
     @GetMapping
     public List<ServiceSF> getAll() {
-        return serviceSFEntity.getAll();
+        return serviceSFService.getAll();
     }
 
     @GetMapping("/{id}")
     public ServiceSF getById(@PathVariable Integer id) {
-        return serviceSFEntity.getById(id);
+        return serviceSFService.getById(id);
     }
 
     @PutMapping("/{id}")
     public ServiceSF update(@PathVariable Integer id, @RequestBody UpdateServiceSFRequest request) {
-        return serviceSFEntity.update(id, request);
+        return serviceSFService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Integer id) {
-        serviceSFEntity.delete(id);
+        serviceSFService.delete(id);
     }
 }
