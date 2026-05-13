@@ -65,11 +65,6 @@ export class PatientsFormPageComponent {
     { value: 'Aucune', label: 'Aucune' },
   ];
 
-  statutOptions: Option[] = [
-    { value: 'true', label: 'Actif' },
-    { value: 'false', label: 'Inactif' },
-  ];
-
   form = {
     nom: '',
     prenom: '',
@@ -81,7 +76,6 @@ export class PatientsFormPageComponent {
     adresse: '',
     assurance: 'CNSS' as AssuranceType,
     numeroAssurance: '',
-    statutValue: 'true' as 'true' | 'false',
   };
 
   constructor() {
@@ -103,7 +97,6 @@ export class PatientsFormPageComponent {
             adresse: existing.adresse,
             assurance: existing.assurance,
             numeroAssurance: existing.numeroAssurance,
-            statutValue: existing.statut ? 'true' : 'false',
           };
         },
         error: () => this.router.navigate(['/patients'])
@@ -190,7 +183,6 @@ export class PatientsFormPageComponent {
       adresse: this.form.adresse,
       assurance: this.form.assurance,
       numeroAssurance: this.form.numeroAssurance,
-      statut: this.form.statutValue === 'true',
     };
 
     this.loading = true;
@@ -216,14 +208,20 @@ export class PatientsFormPageComponent {
           if (authRes.error) {
             throw new Error(authRes.message || 'Erreur lors de la création du compte');
           }
-          
-          const idUser = authRes.user?.idUser;
-          if (!idUser) {
-            throw new Error('ID Utilisateur non reçu après inscription');
+
+          // Accept several possible response shapes from auth-service
+          const rawId = authRes?.user?.idUser ?? authRes?.user?.id ?? authRes?.idUser ?? authRes?.id;
+          const extractedId = Number(rawId);
+          const hasId = Number.isFinite(extractedId);
+
+          if (!hasId) {
+            console.warn('[PATIENT FORM] idUser not found in auth response, proceeding without explicit idUser');
+            // Proceed to create patient with the available payload; backend may associate by email
+            return this.patientApi.create({ ...payload } as any);
           }
-          
-          // 2. Create Patient in Patient Service
-          return this.patientApi.create({ ...payload, idUser } as any);
+
+          // 2. Create Patient in Patient Service with extracted idUser
+          return this.patientApi.create({ ...payload, idUser: extractedId } as any);
         }),
         catchError(err => {
           console.error('[PATIENT FORM] Erreur:', err);

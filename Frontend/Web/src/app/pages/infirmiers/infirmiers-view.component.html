@@ -29,6 +29,14 @@
           <app-input-field [disabled]="true" [value]="infirmier.statut ? 'Actif' : 'Inactif'" />
         </div>
         <div>
+          <app-label>Spécialité</app-label>
+          <app-input-field [disabled]="true" [value]="infirmier.id_specialite ?? '-'" />
+        </div>
+        <div>
+          <app-label>Service</app-label>
+          <app-input-field [disabled]="true" [value]="infirmier.id_service ?? '-'" />
+        </div>
+        <div>
           <app-label>Date de naissance</app-label>
           <app-input-field [disabled]="true" [(value)]="infirmier.dateNaissance" />
         </div>

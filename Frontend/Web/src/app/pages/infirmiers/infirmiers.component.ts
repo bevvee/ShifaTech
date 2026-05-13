@@ -209,6 +209,6 @@ export class InfirmiersComponent implements OnInit, OnDestroy {
   }
 
   goToView(row: any) {
-    this.router.navigate(['/infirmiers', row.id, 'view']);
+    this.router.navigate(['/infirmiers', row.id]);
   }
 }

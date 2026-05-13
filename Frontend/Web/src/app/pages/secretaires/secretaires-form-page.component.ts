@@ -51,11 +51,6 @@ export class SecretairesFormPageComponent implements OnInit {
     { value: 'F', label: 'Féminin' },
   ];
 
-  statutOptions: Option[] = [
-    { value: 'true', label: 'Actif' },
-    { value: 'false', label: 'Inactif' },
-  ];
-
   form = {
     nom: '',
     prenom: '',
@@ -63,7 +58,6 @@ export class SecretairesFormPageComponent implements OnInit {
     email: '',
     password: '',
     sexe: 'M' as Sexe,
-    statutValue: 'true' as 'true' | 'false',
     dateNaissance: '',
     telephone: '',
     adresse: '',
@@ -96,7 +90,6 @@ export class SecretairesFormPageComponent implements OnInit {
             email: existing.email ?? '',
             password: '',
             sexe: existing.sexe ?? 'M',
-            statutValue: existing.statut ? 'true' : 'false',
             dateNaissance: existing.dateNaissance ?? '',
             telephone: existing.telephone ?? '',
             adresse: existing.adresse ?? '',
@@ -134,7 +127,6 @@ export class SecretairesFormPageComponent implements OnInit {
     if (!this.isValid) return;
 
     this.loading = true;
-    const statut = this.form.statutValue === 'true';
 
     if (this.mode === 'create') {
       this.secretaireService.create({
@@ -144,7 +136,6 @@ export class SecretairesFormPageComponent implements OnInit {
         email: this.form.email.trim(),
         password: this.form.password.trim(),
         sexe: this.form.sexe,
-        statut,
         dateNaissance: this.form.dateNaissance,
         telephone: this.form.telephone.trim(),
         adresse: this.form.adresse.trim(),
@@ -171,7 +162,6 @@ export class SecretairesFormPageComponent implements OnInit {
       cin: this.form.cin.trim(),
       email: this.form.email.trim(),
       sexe: this.form.sexe,
-      statut,
       dateNaissance: this.form.dateNaissance,
       telephone: this.form.telephone.trim(),
       adresse: this.form.adresse.trim(),

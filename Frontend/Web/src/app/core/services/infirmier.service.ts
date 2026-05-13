@@ -44,15 +44,14 @@ export class InfirmierService extends ApiService {
 
     return this.post<any>(`${this.authBase}/register`, registerPayload).pipe(
       tap((authResponse: any) => {
-        createdUserId = authResponse?.user?.idUser ?? null;
+        createdUserId = this.extractUserId(authResponse);
       }),
       switchMap((authResponse: any) => {
-        const userId = authResponse?.user?.idUser;
+        const userId = this.extractUserId(authResponse);
         return this.post<any>(`${this.base}`, {
           id_utilisateur: userId,
           id_specialite: dto.idSpecialite,
           id_service: dto.id_service ?? 1,
-          statut: dto.statut ?? true,
         });
       }),
       catchError((err) => {
@@ -79,5 +78,11 @@ export class InfirmierService extends ApiService {
 
   getSpecialites() {
     return this.get<any>(`${this.specialiteBase}`);
+  }
+
+  private extractUserId(authResponse: any): number | null {
+    const rawId = authResponse?.user?.idUser ?? authResponse?.user?.id ?? authResponse?.idUser ?? authResponse?.id;
+    const userId = Number(rawId);
+    return Number.isFinite(userId) ? userId : null;
   }
 }

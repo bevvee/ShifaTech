@@ -55,11 +55,6 @@ export class DocteursFormPageComponent {
     { value: Sexe.F, label: 'Féminin' },
   ];
 
-  statutOptions: Option[] = [
-    { value: 'true', label: 'Actif' },
-    { value: 'false', label: 'Inactif' },
-  ];
-
   specialiteOptions: Option[] = [];
 
   form: {
@@ -70,7 +65,6 @@ export class DocteursFormPageComponent {
     password: string;
     passwordConfirmation: string;
     sexe: Sexe;
-    statutValue: 'true' | 'false';
     dateNaissance: string;
     telephone: string;
     adresse: string;
@@ -100,7 +94,6 @@ export class DocteursFormPageComponent {
               existing?.sexe === 'F' || existing?.sexe === 'f' || existing?.sexe === Sexe.F
                 ? Sexe.F
                 : Sexe.H,
-            statutValue: existing?.statut ? 'true' : 'false',
             dateNaissance: existing?.dateNaissance ?? '',
             telephone: existing?.telephone ?? '',
             adresse: existing?.adresse ?? '',
@@ -155,8 +148,6 @@ export class DocteursFormPageComponent {
     this.submitted = true;
     if (!this.isValid) return;
 
-    const statut = this.form.statutValue === 'true';
-    
     // Auth-service user data (create)
     const authPayload: any = {
       nom: this.form.nom.trim(),
@@ -166,7 +157,6 @@ export class DocteursFormPageComponent {
       password: this.form.password.trim(),
       role: Role.DOCTEUR,
       sexe: this.form.sexe === Sexe.H ? 'M' : 'F',
-      statut,
       telephone: this.form.telephone.trim(),
       adresse: this.form.adresse.trim(),
       dateNaissance: this.form.dateNaissance,
@@ -180,7 +170,6 @@ export class DocteursFormPageComponent {
       email: this.form.email.trim(),
       role: Role.DOCTEUR,
       sexe: this.form.sexe === Sexe.H ? 'M' : 'F',
-      statut,
       telephone: this.form.telephone.trim(),
       adresse: this.form.adresse.trim(),
       dateNaissance: this.form.dateNaissance,
@@ -207,7 +196,6 @@ export class DocteursFormPageComponent {
             prenom: this.form.prenom.trim(),
             cin: this.form.cin.trim(),
             email: this.form.email.trim(),
-            statut,
             dateNaissance: this.form.dateNaissance,
             telephone: this.form.telephone.trim(),
             adresse: this.form.adresse.trim(),
@@ -238,7 +226,6 @@ export class DocteursFormPageComponent {
       prenom: this.form.prenom.trim(),
       cin: this.form.cin.trim(),
       email: this.form.email.trim(),
-      statut,
       dateNaissance: this.form.dateNaissance,
       telephone: this.form.telephone.trim(),
       adresse: this.form.adresse.trim(),
@@ -283,7 +270,6 @@ export class DocteursFormPageComponent {
       password: '',
       passwordConfirmation: '',
       sexe: Sexe.H,
-      statutValue: 'true' as 'true' | 'false',
       dateNaissance: '',
       telephone: '',
       adresse: '',

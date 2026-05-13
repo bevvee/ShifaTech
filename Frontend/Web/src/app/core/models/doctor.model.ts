@@ -8,7 +8,7 @@ export interface Doctor {
     cin: string;
     email: string;
     sexe: Sexe;
-    statut: boolean;
+    statut?: boolean;
     dateNaissance: string;
     telephone: string;
     adresse: string;

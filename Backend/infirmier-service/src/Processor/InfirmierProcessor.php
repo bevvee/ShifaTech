@@ -31,6 +31,10 @@ class InfirmierProcessor implements ProcessorInterface
         // ─── POST : Création d'un infirmier ───────────────────────────────────
         if ($method === 'POST') {
 
+            if (empty($data->id_utilisateur)) {
+                throw new BadRequestHttpException('id_utilisateur is required');
+            }
+
             // 1. Vérifier que l'utilisateur existe dans auth-db et a le rôle INFIRMIER
             $user = $this->fetchUserFromAuthDb($data->id_utilisateur);
 

@@ -3,25 +3,20 @@ import { ServiceRow } from '../models/service.model';
 
 const STORAGE_KEY = 'shifatech.services.v1';
 
-const DEFAULT_SERVICES: ServiceRow[] = [
-  {
-    id: 1,
-    label: 'Consultation',
-    description: 'Consultation médicale générale.',
-  },
-];
+// No hardcoded defaults — load services from persisted storage or from the server
+// Services are expected to be provided by the backend and cached in localStorage by sync jobs.
 
 @Injectable({ providedIn: 'root' })
 export class ServicesCatalogService {
   getAll(): ServiceRow[] {
-    if (typeof window === 'undefined') return [...DEFAULT_SERVICES];
+    if (typeof window === 'undefined') return [];
 
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [...DEFAULT_SERVICES];
+      if (!raw) return [];
 
       const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed)) return [...DEFAULT_SERVICES];
+      if (!Array.isArray(parsed)) return [];
 
       const normalized: ServiceRow[] = parsed
         .map((s: any) => ({
@@ -31,9 +26,9 @@ export class ServicesCatalogService {
         }))
         .filter((s) => Number.isFinite(s.id) && s.id > 0 && s.label.trim().length > 0);
 
-      return normalized.length ? normalized : [...DEFAULT_SERVICES];
+      return normalized;
     } catch {
-      return [...DEFAULT_SERVICES];
+      return [];
     }
   }
 

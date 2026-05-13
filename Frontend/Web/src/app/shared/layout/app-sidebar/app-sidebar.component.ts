@@ -58,11 +58,6 @@ export class AppSidebarComponent {
       name: "Rendez Vous",
       subItems: [
         {
-          name: "Liste de Rendez Vous",
-          roles: [Role.SECRETAIRE,Role.INFIRMIER,Role.ADMIN],
-          path: "/rendez-vous",
-        },
-        {
           name: "Ajouter Rendez Vous",
           roles: [Role.SECRETAIRE],
           path: "/rendez-vous/new",

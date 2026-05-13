@@ -44,5 +44,5 @@ export interface PatientCreateDto {
   adresse: string;
   assurance: AssuranceType;
   numeroAssurance: string;
-  statut: boolean;
+  statut?: boolean;
 }

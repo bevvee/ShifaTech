@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { environment } from '../../../environments/environment';
-import { switchMap, tap, catchError, throwError, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -11,18 +11,21 @@ import { switchMap, tap, catchError, throwError, of } from 'rxjs';
 export class SecretaireService extends ApiService {
 
   private authBase = environment.api.auth;
-  private secretaireBase = `${this.authBase}/api/secretaires`;
 
   constructor() {
     super(inject(HttpClient));
   }
 
   getAll() {
-    return this.get<any>(`${this.secretaireBase}`);
+    return this.get<any[]>(`${this.authBase}/users/role/SECRETAIRE`).pipe(
+      map((users) => (Array.isArray(users) ? users : []).map((u) => this.normalizeUser(u)))
+    );
   }
 
   getById(id: number) {
-    return this.get<any>(`${this.secretaireBase}/${id}`);
+    return this.get<any>(`${this.authBase}/user/${id}`).pipe(
+      map((response) => this.normalizeUser(response?.user ?? response))
+    );
   }
 
   create(dto: any) {
@@ -40,38 +43,34 @@ export class SecretaireService extends ApiService {
       adresse: dto.adresse,
     };
 
-    let createdUserId: number | null = null;
-
-    return this.post<any>(`${this.authBase}/register`, registerPayload).pipe(
-      tap((authResponse: any) => {
-        createdUserId = authResponse?.user?.idUser ?? null;
-      }),
-      switchMap((authResponse: any) => {
-        const userId = authResponse?.user?.idUser;
-        return this.post<any>(`${this.secretaireBase}`, {
-          id_utilisateur: userId,
-          statut: dto.statut ?? true,
-        });
-      }),
-      catchError((err) => {
-        if (createdUserId !== null) {
-          const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
-          const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-          return this.http.delete(`${this.authBase}/delete/${createdUserId}`, { headers }).pipe(
-            catchError(() => of(null)),
-            switchMap(() => throwError(() => err))
-          );
-        }
-        return throwError(() => err);
-      })
-    );
+    return this.post<any>(`${this.authBase}/register`, registerPayload);
   }
 
   update(id: number, dto: any) {
-    return this.put<any>(`${this.secretaireBase}/${id}`, dto);
+    const payload = {
+      nom: dto.nom,
+      prenom: dto.prenom,
+      cin: dto.cin,
+      email: dto.email,
+      motDePasse: dto.password,
+      sexe: dto.sexe,
+      dateNaissance: dto.dateNaissance,
+      telephone: dto.telephone,
+      adresse: dto.adresse,
+    };
+
+    return this.put<any>(`${this.authBase}/update/${id}`, payload);
   }
 
   deleteById(id: number) {
-    return this.delete(`${this.secretaireBase}/${id}`);
+    return this.delete(`${this.authBase}/delete/${id}`);
+  }
+
+  private normalizeUser(raw: any) {
+    return {
+      ...raw,
+      id: raw?.id ?? raw?.idUser,
+      id_utilisateur: raw?.id ?? raw?.idUser,
+    };
   }
 }
