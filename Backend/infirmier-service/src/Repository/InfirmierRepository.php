@@ -16,6 +16,34 @@ class InfirmierRepository extends ServiceEntityRepository
         parent::__construct($registry, Infirmier::class);
     }
 
+    /**
+     * Find all non-deleted infirmiers
+     * @return Infirmier[]
+     */
+    public function findAllActive(): array
+    {
+        return $this->createQueryBuilder('i')
+            ->andWhere('i.deleted_at IS NULL')
+            ->orderBy('i.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Find active infirmiers by speciality
+     * @return Infirmier[]
+     */
+    public function findBySpecialityActive(int $specialityId): array
+    {
+        return $this->createQueryBuilder('i')
+            ->andWhere('i.id_specialite = :speciality')
+            ->andWhere('i.deleted_at IS NULL')
+            ->setParameter('speciality', $specialityId)
+            ->orderBy('i.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Infirmier[] Returns an array of Infirmier objects
     //     */
@@ -41,3 +69,4 @@ class InfirmierRepository extends ServiceEntityRepository
     //        ;
     //    }
 }
+

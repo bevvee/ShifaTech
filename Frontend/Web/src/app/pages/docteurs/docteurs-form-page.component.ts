@@ -144,9 +144,35 @@ export class DocteursFormPageComponent {
     this.router.navigate(['/docteurs']);
   }
 
+  private formatDate(dateString: string): string {
+    if (!dateString) return '';
+    
+    // Ensure the date is in YYYY-MM-DD format
+    // HTML date input returns dates in YYYY-MM-DD format
+    const dateParts = dateString.split('-');
+    if (dateParts.length !== 3) {
+      return dateString; // Return as-is if unexpected format
+    }
+
+    const year = parseInt(dateParts[0], 10);
+    const month = dateParts[1];
+    const day = dateParts[2];
+
+    // Validate year is reasonable (between 1900 and current year)
+    const currentYear = new Date().getFullYear();
+    if (isNaN(year) || year < 1900 || year > currentYear) {
+      console.warn(`Invalid year detected: ${year}. Using original date string.`);
+    }
+
+    // Return formatted as YYYY-MM-DD
+    return `${dateParts[0]}-${month}-${day}`;
+  }
+
   save() {
     this.submitted = true;
     if (!this.isValid) return;
+
+    const formattedDate = this.formatDate(this.form.dateNaissance);
 
     // Auth-service user data (create)
     const authPayload: any = {
@@ -159,7 +185,7 @@ export class DocteursFormPageComponent {
       sexe: this.form.sexe === Sexe.H ? 'M' : 'F',
       telephone: this.form.telephone.trim(),
       adresse: this.form.adresse.trim(),
-      dateNaissance: this.form.dateNaissance,
+      dateNaissance: formattedDate,
       passwordConfirmation: this.form.passwordConfirmation.trim(),
     };
 
@@ -172,7 +198,7 @@ export class DocteursFormPageComponent {
       sexe: this.form.sexe === Sexe.H ? 'M' : 'F',
       telephone: this.form.telephone.trim(),
       adresse: this.form.adresse.trim(),
-      dateNaissance: this.form.dateNaissance,
+      dateNaissance: formattedDate,
       ...(this.form.password?.trim() ? { motDePasse: this.form.password.trim() } : {}),
     };
 
@@ -184,7 +210,7 @@ export class DocteursFormPageComponent {
              return;
           }
           
-          const newUserId = authRes?.user?.idUser;
+          const newUserId = authRes?.user?.id;
           if (!newUserId) {
              this.toastService.error('Erreur', 'Impossible de récupérer l\'ID utilisateur créé.');
              return;

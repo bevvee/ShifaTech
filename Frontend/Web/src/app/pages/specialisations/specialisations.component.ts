@@ -13,6 +13,7 @@ import { ServiceRow } from '../../core/models/service.model';
 import { ServicesCatalogService } from '../../core/services/services-catalog.service';
 import { ActivatedRoute } from '@angular/router';
 import { ToastService } from '../../shared/services/toast.service';
+import { AdminServicesService } from '../../core/services/admin-services.service';
 
 @Component({
   selector: 'app-specialisations',
@@ -31,7 +32,7 @@ import { ToastService } from '../../shared/services/toast.service';
 export class SpecialisationsComponent {
 
   owner: SpecialityOwner = 'doctor';
-
+  private readonly adminServicesService = inject(AdminServicesService);
   createTypeValue = '';
   createOptions = [
     { value: 'doctor', label: 'Ajouter pour Docteur' },
@@ -49,7 +50,7 @@ export class SpecialisationsComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly servicesCatalog = inject(ServicesCatalogService);
   private readonly toastService = inject(ToastService);
-
+  serviceMap = new Map<number, string>();
   ngOnInit() {
     const fromQuery = this.route.snapshot.queryParamMap.get('type');
     this.owner = fromQuery === 'infirmier' ? 'infirmier' : 'doctor';
@@ -57,6 +58,17 @@ export class SpecialisationsComponent {
     this.loadSpecialities();
   }
 
+  loadServices() {
+    this.adminServicesService.getAll().subscribe({
+      next: (data) => {
+        this.services = data;
+
+        this.serviceMap.clear();
+        data.forEach(s => this.serviceMap.set(s.id, s.label));
+      },
+      error: (err) => console.error('Error loading services', err)
+    });
+  }
   loadSpecialities() {
     this.loading = true;
     this.specialityService.getSpecialities(this.owner).subscribe({
@@ -85,13 +97,10 @@ export class SpecialisationsComponent {
     this.createTypeValue = '';
   }
 
-  loadServices() {
-    this.services = this.servicesCatalog.getAll();
-  }
 
   getServiceLabel(id: number | null | undefined): string {
     if (!id) return '';
-    return this.services.find((s) => s.id === id)?.label ?? `#${id}`;
+    return this.serviceMap.get(id) ?? `#${id}`;
   }
 
   get filteredSpecialities(): Speciality[] {

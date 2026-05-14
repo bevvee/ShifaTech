@@ -80,4 +80,10 @@ export class AdminServicesService extends ApiService {
   deleteService(id: number) {
     return this.delete(`${this.apiBase}/${id}`);
   }
+
+  getAll() {
+    return this.get<any[]>(`${this.apiBase}`).pipe(
+      map((items) => items.map(item => this.mapFromBackend(item)))
+    );
+  }
 }
