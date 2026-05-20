@@ -10,7 +10,7 @@ resource "aws_ecs_task_definition" "web_task" {
   container_definitions = jsonencode([
     {
       name  = "web-service"
-      image = "${aws_ecr_repository.web_repo.repository_url}:latest"
+      image = "${data.aws_ecr_repository.web_repo.repository_url}:latest"
 
       essential = true
 
@@ -32,7 +32,7 @@ resource "aws_ecs_service" "web_service" {
   desired_count   = 1
 
   network_configuration {
-    subnets          = data.aws_subnets.default.ids
+    subnets          = data.aws_subnets.selected.ids
     assign_public_ip = true
     security_groups  = [aws_security_group.web_sg.id]
   }
