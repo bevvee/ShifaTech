@@ -10,9 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # -----------------------------------
+      # 1. Checkout code
+      # -----------------------------------
       - name: Checkout Project
         uses: actions/checkout@v4
 
+      # -----------------------------------
+      # 2. Configure AWS credentials
+      # -----------------------------------
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -20,28 +26,43 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # -----------------------------------
+      # 3. Login to Amazon ECR
+      # -----------------------------------
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      # -----------------------------------
+      # 4. Build Docker image
+      # -----------------------------------
       - name: Build Docker Image
         run: |
           docker build -t shifatech-web ./Frontend/Web
 
+      # -----------------------------------
+      # 5. Tag image (using dynamic registry)
+      # -----------------------------------
       - name: Tag Docker Image
         run: |
           docker tag shifatech-web:latest \
-          708623999432.dkr.ecr.eu-west-1.amazonaws.com/shifatech-web:latest
+          ${{ steps.login-ecr.outputs.registry }}/shifatech-web:latest
 
+      # -----------------------------------
+      # 6. Push image to ECR
+      # -----------------------------------
       - name: Push Docker Image
         run: |
           docker push \
-          708623999432.dkr.ecr.eu-west-1.amazonaws.com/shifatech-web:latest
+          ${{ steps.login-ecr.outputs.registry }}/shifatech-web:latest
 
+      # -----------------------------------
+      # 7. Force ECS deployment refresh
+      # -----------------------------------
       - name: Force ECS Deployment
         run: |
           aws ecs update-service \
             --cluster shifatech-cluster \
             --service web-service \
             --force-new-deployment \
-            --region eu-west-1
+            --region ${{ secrets.AWS_REGION }}
