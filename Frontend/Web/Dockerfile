@@ -1,21 +1,21 @@
-FROM node:20-alpine
+# ---------- Build stage ----------
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Install dependencies first (better layer caching)
 COPY package.json package-lock.json ./
-
-#RUN npm ci
-RUN npm config set fetch-retries 5 \
- && npm config set fetch-retry-factor 2 \
- && npm config set fetch-retry-mintimeout 20000 \
- && npm config set fetch-retry-maxtimeout 120000 \
- && npm ci --prefer-offline 2>/dev/null || npm ci
+RUN npm install
 
 COPY . .
 
-ENV NODE_OPTIONS=--max_old_space_size=4096
+RUN npm run build --configuration production
 
-EXPOSE 4200
+# ---------- Production stage ----------
+FROM nginx:alpine
 
-CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--poll=2000"]
+# IMPORTANT: adjust path if needed
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
