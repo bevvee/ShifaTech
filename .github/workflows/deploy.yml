@@ -1,0 +1,63 @@
+# name: Deploy
+
+# on:
+#   push:
+#     branches:
+#       - deploy
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     env:
+#       AWS_REGION: eu-north-1
+#       IMAGE_TAG: ${{ github.sha }}
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       - uses: aws-actions/amazon-ecr-login@v2
+#         id: login-ecr
+
+#       - name: Build and push images
+#         env:
+#           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#         shell: bash
+#         run: |
+#           set -euo pipefail
+
+#           services=(
+#             "admin-service|Backend/admin-service"
+#             "auth-service|Backend/auth-service"
+#             "body-service|Backend/body-service"
+#             "doctor-service|Backend/doctor-service"
+#             "infirmier-service|Backend/infirmier-service"
+#             "patient-service|Backend/patient-service"
+#             "rdv-service|Backend/rdv-service"
+#             "wound-service|Backend/wound-image-service"
+#             "web-service|Frontend/Web"
+#           )
+
+#           for service in "${services[@]}"; do
+#             repo_name="${service%%|*}"
+#             context_path="${service##*|}"
+
+#             docker build -t "$ECR_REGISTRY/$repo_name:${IMAGE_TAG}" "$context_path"
+#             docker push "$ECR_REGISTRY/$repo_name:${IMAGE_TAG}"
+#             docker tag "$ECR_REGISTRY/$repo_name:${IMAGE_TAG}" "$ECR_REGISTRY/$repo_name:latest"
+#             docker push "$ECR_REGISTRY/$repo_name:latest"
+#           done
+
+#       - uses: hashicorp/setup-terraform@v3
+
+#       - run: terraform init
+#         working-directory: terraform
+
+#       - run: terraform apply -auto-approve -var="web_image_tag=${IMAGE_TAG}"
+#         working-directory: terraform
